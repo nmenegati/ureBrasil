@@ -57,6 +57,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        ure: {
+          blue: "hsl(var(--ure-blue))",
+          green: "hsl(var(--ure-green))",
+          yellow: "hsl(var(--ure-yellow))",
+          orange: "hsl(var(--ure-orange))",
+          dark: "hsl(var(--ure-dark))",
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
