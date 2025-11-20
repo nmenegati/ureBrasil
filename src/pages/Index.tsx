@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Menu, X, Sun, Moon, Check, Rocket, Calculator } from "lucide-react";
+import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 
 const Index = () => {
@@ -312,6 +312,88 @@ const Index = () => {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+              Economize de Verdade!
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Descontos e benefícios em todo Brasil
+            </p>
+          </div>
+
+          {/* Benefits Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            {/* Benefit 1 - Meia-Entrada */}
+            <Card className="bg-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-border">
+              <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-24 h-24 rounded-full bg-ure-blue/10 flex items-center justify-center">
+                  <Ticket className="w-12 h-12 text-ure-blue" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Meia-Entrada
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Cinemas, teatros, shows, eventos esportivos e culturais. Economize até 50%!
+                </p>
+                <div className="bg-ure-green/10 text-ure-green px-4 py-2 rounded-lg font-bold">
+                  Economia média: R$ 40/mês
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Benefit 2 - Transporte */}
+            <Card className="bg-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-border">
+              <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-24 h-24 rounded-full bg-ure-green/10 flex items-center justify-center">
+                  <Bus className="w-12 h-12 text-ure-green" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Transporte
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Descontos em transporte público e intermunicipal em diversas cidades.
+                </p>
+                <div className="bg-ure-green/10 text-ure-green px-4 py-2 rounded-lg font-bold">
+                  Economia média: R$ 80/mês
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Benefit 3 - Educação */}
+            <Card className="bg-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-border">
+              <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-24 h-24 rounded-full bg-ure-yellow/10 flex items-center justify-center">
+                  <GraduationCap className="w-12 h-12 text-ure-yellow" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Educação
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Cursos online, softwares, livros, plataformas de estudo e muito mais.
+                </p>
+                <div className="bg-ure-green/10 text-ure-green px-4 py-2 rounded-lg font-bold">
+                  Economia média: R$ 60/mês
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Savings Banner */}
+          <div className="bg-ure-green/10 dark:bg-ure-green/20 rounded-2xl p-8 text-center space-y-4 border-2 border-ure-green/20">
+            <p className="text-3xl sm:text-4xl font-black text-foreground">
+              💰 Potencial de economia: Até R$ 180/mês = R$ 2.160/ano!
+            </p>
+            <p className="text-lg text-muted-foreground font-medium">
+              Sua carteirinha se paga em menos de uma semana!
+            </p>
           </div>
         </div>
       </section>
