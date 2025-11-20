@@ -498,6 +498,230 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-[#F5F5F5] dark:bg-[#1A1A2E]">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+              Escolha Seu Plano
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Transparente, simples e sem surpresas
+            </p>
+          </div>
+
+          {/* Pricing Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Plan 1 - Digital Geral */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-blue relative">
+              <CardContent className="pt-8 pb-6 flex flex-col h-full">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Digital Geral
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ensino médio, superior, cursos
+                  </p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-black text-ure-blue">R$ 29</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6 flex-grow">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Carteirinha digital</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">QR Code de verificação</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Emissão em até 2h</span>
+                  </div>
+                </div>
+
+                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90 font-bold">
+                  Solicitar Agora
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Plan 2 - Digital + Física Geral */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-green relative">
+              <CardContent className="pt-8 pb-6 flex flex-col h-full">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Digital + Física
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Completo
+                  </p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-black text-ure-green">R$ 39</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6 flex-grow">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Carteirinha digital</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">QR Code de verificação</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Emissão em até 2h</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Carteirinha física em casa</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Envio em até 7 dias úteis</span>
+                  </div>
+                </div>
+
+                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90 font-bold">
+                  Solicitar Agora
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Plan 3 - Digital Direito */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-purple-600 relative">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white border-none px-4 py-1 text-xs font-bold">
+                JURISESTUDANTE
+              </Badge>
+              <CardContent className="pt-8 pb-6 flex flex-col h-full">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Digital Direito
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Para futuros advogados
+                  </p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-black text-purple-600">R$ 49</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6 flex-grow">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Carteirinha digital</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">QR Code de verificação</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Emissão em até 2h</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Benefícios exclusivos Direito</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Material de estudo OAB</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Descontos em cursos jurídicos</span>
+                  </div>
+                </div>
+
+                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold">
+                  Solicitar JurisEstudante
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Plan 4 - Digital + Física Direito */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-purple-600 relative ring-2 ring-ure-yellow/50">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white border-none px-4 py-1 text-xs font-bold">
+                JURISESTUDANTE
+              </Badge>
+              <CardContent className="pt-8 pb-6 flex flex-col h-full">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">
+                    Digital + Física Direito
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Pacote completo
+                  </p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-black text-purple-600">R$ 59</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6 flex-grow">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Carteirinha digital</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">QR Code de verificação</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground">Emissão em até 2h</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Carteirinha física em casa</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Envio em até 7 dias úteis</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Benefícios exclusivos Direito</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Material de estudo OAB</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Descontos em cursos jurídicos</span>
+                  </div>
+                </div>
+
+                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold">
+                  Solicitar JurisEstudante
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
