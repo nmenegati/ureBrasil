@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Menu, X, Sun, Moon, Check, Rocket, Calculator } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 
@@ -233,6 +234,84 @@ const Index = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 bg-[#F5F5F5] dark:bg-[#1A1A2E]">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+              Como Funciona? É Simples e Rápido!
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Sua carteirinha em 4 passos
+            </p>
+          </div>
+
+          {/* Steps Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Step 1 */}
+            <Card className="bg-background hover:-translate-y-2 transition-transform duration-300 border-border">
+              <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-20 h-20 rounded-full bg-ure-blue flex items-center justify-center">
+                  <span className="text-3xl font-black text-white">1</span>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Cadastre-se
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Crie sua conta com email e senha. Rápido e seguro.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Step 2 */}
+            <Card className="bg-background hover:-translate-y-2 transition-transform duration-300 border-border">
+              <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-20 h-20 rounded-full bg-ure-green flex items-center justify-center">
+                  <span className="text-3xl font-black text-white">2</span>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Envie Documentos
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Faça upload do RG, comprovante de matrícula e foto 3x4.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Step 3 */}
+            <Card className="bg-background hover:-translate-y-2 transition-transform duration-300 border-border">
+              <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-20 h-20 rounded-full bg-ure-yellow flex items-center justify-center">
+                  <span className="text-3xl font-black text-ure-dark">3</span>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Validação Express
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Nossa IA valida seus docs em minutos. Você recebe notificação.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Step 4 */}
+            <Card className="bg-background hover:-translate-y-2 transition-transform duration-300 border-border">
+              <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-20 h-20 rounded-full bg-ure-orange flex items-center justify-center">
+                  <span className="text-3xl font-black text-white">4</span>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Receba e Use!
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Carteirinha digital na hora. Física em até 7 dias (se escolher).
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
