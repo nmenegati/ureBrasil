@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap } from "lucide-react";
+import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
+import jurisStudentImage from "@/assets/juris-student.jpg";
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -394,6 +395,106 @@ const Index = () => {
             <p className="text-lg text-muted-foreground font-medium">
               Sua carteirinha se paga em menos de uma semana!
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* JurisEstudante Section */}
+      <section className="py-20 bg-gradient-to-br from-[#252543] to-[#3d3d5c] text-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-8">
+              {/* Badge */}
+              <Badge className="bg-ure-green text-white border-none px-4 py-2 text-sm font-bold">
+                ✨ Exclusivo para Direito
+              </Badge>
+
+              {/* Title */}
+              <div className="space-y-3">
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">
+                  JurisEstudante
+                </h2>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-16 bg-ure-yellow"></div>
+                  <p className="text-3xl sm:text-4xl font-black text-ure-yellow">
+                    Sua carreira começa aqui
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-lg sm:text-xl text-white/90 leading-relaxed">
+                Carteirinha especial para estudantes de Direito com benefícios exclusivos voltados para sua formação e preparação para OAB.
+              </p>
+
+              {/* Benefits */}
+              <div className="space-y-6">
+                {/* Benefit 1 */}
+                <div className="flex gap-4 items-start">
+                  <div className="w-14 h-14 rounded-full bg-ure-yellow flex items-center justify-center flex-shrink-0">
+                    <Scale className="w-7 h-7 text-[#1A1A2E]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">
+                      Descontos em Cursos Jurídicos
+                    </h3>
+                    <p className="text-white/80">
+                      Preparatórios OAB, pós-graduações e especializações
+                    </p>
+                  </div>
+                </div>
+
+                {/* Benefit 2 */}
+                <div className="flex gap-4 items-start">
+                  <div className="w-14 h-14 rounded-full bg-ure-yellow flex items-center justify-center flex-shrink-0">
+                    <BookOpen className="w-7 h-7 text-[#1A1A2E]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">
+                      Material de Estudo Exclusivo
+                    </h3>
+                    <p className="text-white/80">
+                      Simulados, cronogramas, e-books e videoaulas
+                    </p>
+                  </div>
+                </div>
+
+                {/* Benefit 3 */}
+                <div className="flex gap-4 items-start">
+                  <div className="w-14 h-14 rounded-full bg-ure-yellow flex items-center justify-center flex-shrink-0">
+                    <GraduationCap className="w-7 h-7 text-[#1A1A2E]" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">
+                      Eventos e Congressos
+                    </h3>
+                    <p className="text-white/80">
+                      Acesso facilitado a eventos jurídicos pelo Brasil
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <Button 
+                size="lg"
+                className="bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 text-lg px-8 py-6 h-auto font-bold w-full sm:w-auto"
+              >
+                Quero a JurisEstudante
+              </Button>
+            </div>
+
+            {/* Right Content - Image */}
+            <div className="relative">
+              <div className="rounded-3xl overflow-hidden shadow-2xl">
+                <img
+                  src={jurisStudentImage}
+                  alt="Estudante de Direito estudando com materiais jurídicos"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
