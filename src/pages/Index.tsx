@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,10 +12,16 @@ import {
 import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen, Instagram, Linkedin, Phone, Video, Star } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 import jurisStudentImage from "@/assets/juris-student.jpg";
+import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.png";
+import carteirinhaGeral2 from "@/assets/carteirinha-geral-2.png";
+import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.png";
+import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.png";
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -29,6 +35,24 @@ const Index = () => {
     "Planos",
     "FAQ",
   ];
+
+  const carteirinhaSlides = [
+    carteirinhaGeral1,
+    carteirinhaGeral2,
+    carteirinhaDireito1,
+    carteirinhaDireito2,
+  ];
+
+  // Auto-rotate carousel
+  useEffect(() => {
+    if (isHovering) return;
+    
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carteirinhaSlides.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [isHovering, carteirinhaSlides.length]);
 
   return (
     <div className="min-h-screen">
@@ -218,14 +242,57 @@ const Index = () => {
 
             {/* Right Content - Phone Mockup */}
             <div className="relative flex justify-center lg:justify-end mt-8 lg:mt-0">
-              <div className="relative animate-float">
-                <img
-                  src={heroPhoneMockup}
-                  alt="Carteirinha Digital URE no celular"
-                  className="w-full max-w-sm lg:max-w-md drop-shadow-2xl"
-                />
+              <div className="relative animate-float z-10">
+                {/* iPhone Frame */}
+                <div className="relative bg-gray-900 p-4 rounded-[3rem] shadow-2xl w-full max-w-[280px] sm:max-w-[320px]">
+                  {/* iPhone Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 sm:w-40 h-6 sm:h-8 bg-black rounded-b-3xl z-20"></div>
+                  
+                  {/* Phone Screen */}
+                  <div 
+                    className="bg-gradient-to-br from-ure-blue/10 to-ure-green/10 rounded-[2.5rem] overflow-hidden relative"
+                    style={{ aspectRatio: '9/19' }}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                  >
+                    {/* Carousel Container */}
+                    <div className="relative w-full h-full flex items-center justify-center p-6">
+                      {carteirinhaSlides.map((slide, index) => (
+                        <div
+                          key={index}
+                          className={`absolute inset-0 flex items-center justify-center p-6 transition-opacity duration-500 ${
+                            index === currentSlide ? 'opacity-100' : 'opacity-0'
+                          }`}
+                        >
+                          <img
+                            src={slide}
+                            alt={`Carteirinha ${index + 1}`}
+                            className="w-full h-auto rounded-2xl shadow-xl object-contain"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination Dots */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                      {carteirinhaSlides.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentSlide(index)}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            index === currentSlide 
+                              ? 'bg-ure-blue w-6' 
+                              : 'bg-white/50 hover:bg-white/80'
+                          }`}
+                          aria-label={`Ir para slide ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Floating Status Card */}
-                <div className="absolute -top-4 -right-4 sm:-right-8 bg-white dark:bg-card rounded-2xl shadow-2xl p-3 sm:p-4 animate-float backdrop-blur-lg border border-border">
+                <div className="absolute -top-4 -right-4 sm:-right-8 bg-white dark:bg-card rounded-2xl shadow-2xl p-3 sm:p-4 animate-float backdrop-blur-lg border border-border z-20">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="bg-ure-green rounded-full p-1.5 sm:p-2">
                       <Check className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
