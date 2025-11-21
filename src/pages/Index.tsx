@@ -2,6 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 import jurisStudentImage from "@/assets/juris-student.jpg";
@@ -720,6 +726,112 @@ const Index = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+          {/* Header */}
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+              Dúvidas Frequentes
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Tudo o que você precisa saber
+            </p>
+          </div>
+
+          {/* Accordion */}
+          <Accordion type="single" collapsible className="space-y-4">
+            <AccordionItem value="item-1" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  Como funciona a validação dos documentos?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                Utilizamos inteligência artificial para validar seus documentos automaticamente. Em casos duvidosos, nossa equipe faz revisão manual. Todo o processo leva em média 2 horas.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-2" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  A carteirinha é válida em todo Brasil?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                Sim! A carteirinha URE é válida em todo território nacional, seguindo a legislação de meia-entrada estudantil.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-3" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  Quanto tempo demora para receber?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                A versão digital fica disponível em até 2 horas após aprovação. A física é produzida e enviada em até 7 dias úteis.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  Quais documentos preciso enviar?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                RG ou CNH, comprovante de endereço recente (máx 3 meses), comprovante de matrícula ou declaração da instituição, e uma foto 3x4 ou selfie com fundo neutro.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-5" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  Posso cancelar e pedir reembolso?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                Sim, você tem 7 dias após a compra para solicitar reembolso total, conforme Código de Defesa do Consumidor.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-6" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  Como funciona a JurisEstudante?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                É nossa carteirinha especial para estudantes de Direito, com acesso a materiais de estudo para OAB, descontos em cursos jurídicos e eventos da área.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-7" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  A carteirinha física é obrigatória?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                Não! A versão digital já garante todos os benefícios. A física é opcional para quem prefere ter o documento físico também.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-8" className="border border-border rounded-lg px-6 bg-card">
+              <AccordionTrigger className="hover:no-underline text-left">
+                <span className="text-lg font-semibold text-foreground">
+                  Até quando vale minha carteirinha?
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">
+                Todas as carteirinhas emitidas valem até 31/03/2026, independente da data de emissão.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </section>
     </div>
