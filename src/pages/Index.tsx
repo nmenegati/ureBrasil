@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen, Instagram, Linkedin, Phone, Video } from "lucide-react";
+import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen, Instagram, Linkedin, Phone, Video, Star } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 import jurisStudentImage from "@/assets/juris-student.jpg";
 
@@ -401,6 +402,147 @@ const Index = () => {
             <p className="text-lg text-muted-foreground font-medium">
               Sua carteirinha se paga em menos de uma semana!
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Section */}
+      <section className="py-20 bg-gradient-to-b from-ure-blue/5 to-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">
+              Mais de 15.000 estudantes já confiam na URE
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              Veja o que nossos usuários dizem
+            </p>
+          </div>
+
+          {/* Testimonials Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {/* Testimonial 1 */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-border">
+              <CardContent className="pt-8 pb-6 space-y-4">
+                {/* Stars */}
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="w-5 h-5 fill-ure-yellow text-ure-yellow" />
+                  ))}
+                </div>
+                
+                {/* Review Text */}
+                <p className="text-foreground leading-relaxed text-base">
+                  "Recebi minha carteirinha em menos de 1 hora! Super rápido e fácil. Já usei no cinema e funcionou perfeitamente."
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-4">
+                  <Avatar className="h-12 w-12 bg-ure-green">
+                    <AvatarFallback className="bg-ure-green text-white font-bold text-lg">
+                      M
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-bold text-foreground">Maria Silva</p>
+                    <p className="text-sm text-muted-foreground">Estudante de Administração - SP</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 2 */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-border">
+              <CardContent className="pt-8 pb-6 space-y-4">
+                {/* Stars */}
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="w-5 h-5 fill-ure-yellow text-ure-yellow" />
+                  ))}
+                </div>
+                
+                {/* Review Text */}
+                <p className="text-foreground leading-relaxed text-base">
+                  "A JurisEstudante foi essencial na minha preparação para OAB. Os materiais exclusivos são excelentes!"
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-4">
+                  <Avatar className="h-12 w-12 bg-ure-blue">
+                    <AvatarFallback className="bg-ure-blue text-white font-bold text-lg">
+                      J
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-bold text-foreground">João Santos</p>
+                    <p className="text-sm text-muted-foreground">Estudante de Direito - RJ</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 3 */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-border">
+              <CardContent className="pt-8 pb-6 space-y-4">
+                {/* Stars */}
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="w-5 h-5 fill-ure-yellow text-ure-yellow" />
+                  ))}
+                </div>
+                
+                {/* Review Text */}
+                <p className="text-foreground leading-relaxed text-base">
+                  "Já economizei mais de R$ 200 em apenas 2 meses. A carteirinha se pagou várias vezes!"
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-4">
+                  <Avatar className="h-12 w-12 bg-ure-yellow">
+                    <AvatarFallback className="bg-ure-yellow text-ure-dark font-bold text-lg">
+                      A
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-bold text-foreground">Ana Costa</p>
+                    <p className="text-sm text-muted-foreground">Estudante de Enfermagem - MG</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Stat 1 */}
+            <div className="text-center space-y-2">
+              <p className="text-5xl sm:text-6xl font-black text-ure-blue">
+                15.000+
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                Estudantes ativos
+              </p>
+            </div>
+
+            {/* Stat 2 */}
+            <div className="text-center space-y-2">
+              <p className="text-5xl sm:text-6xl font-black text-ure-green">
+                R$ 2.160
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                Economia média/ano
+              </p>
+            </div>
+
+            {/* Stat 3 */}
+            <div className="text-center space-y-2">
+              <p className="text-5xl sm:text-6xl font-black text-ure-yellow">
+                4.8/5
+              </p>
+              <p className="text-lg font-semibold text-foreground">
+                Avaliação média
+              </p>
+            </div>
           </div>
         </div>
       </section>
