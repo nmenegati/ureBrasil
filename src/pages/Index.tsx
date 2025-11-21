@@ -977,6 +977,101 @@ const Index = () => {
         </div>
       </section>
 
+      {/* CTA FINAL */}
+      <section className="py-20 lg:py-24 bg-gradient-to-br from-ure-orange via-ure-orange to-red-700 text-white relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            {/* Pulsing Badge */}
+            <div className="inline-block">
+              <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm px-6 py-3 text-base font-bold animate-pulse">
+                ⏰ Oferta por tempo limitado
+              </Badge>
+            </div>
+
+            {/* Heading */}
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white">
+              Comece a Economizar Hoje!
+            </h2>
+            
+            {/* Subtitle */}
+            <p className="text-xl lg:text-2xl text-white/90 font-medium">
+              Sua carteirinha estudantil válida em todo Brasil em poucos minutos.
+            </p>
+
+            {/* Counters */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 py-8">
+              {/* Counter 1 */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300">
+                <div className="text-4xl lg:text-5xl font-black text-white mb-2">
+                  2 horas
+                </div>
+                <div className="text-sm lg:text-base text-white/80 font-medium">
+                  Tempo médio de emissão
+                </div>
+              </div>
+
+              {/* Counter 2 */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300">
+                <div className="text-4xl lg:text-5xl font-black text-white mb-2">
+                  R$ 29
+                </div>
+                <div className="text-sm lg:text-base text-white/80 font-medium">
+                  Preço a partir de
+                </div>
+              </div>
+
+              {/* Counter 3 */}
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300">
+                <div className="text-4xl lg:text-5xl font-black text-white mb-2">
+                  31/03/26
+                </div>
+                <div className="text-sm lg:text-base text-white/80 font-medium">
+                  Validade até
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+              <Button
+                size="lg"
+                className="bg-white text-ure-orange hover:bg-white/90 font-bold text-lg px-8 py-6 h-auto shadow-2xl hover:shadow-white/20 hover:scale-105 transition-all duration-300"
+              >
+                🚀 Solicitar Agora
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-2 border-white bg-transparent text-white hover:bg-white/10 font-semibold text-lg px-8 py-6 h-auto"
+              >
+                📱 Falar no WhatsApp
+              </Button>
+            </div>
+
+            {/* Trust Badges */}
+            <p className="text-sm lg:text-base text-white/90 pt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <span className="flex items-center gap-1">
+                ✅ Pagamento 100% seguro
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="flex items-center gap-1">
+                ✅ Suporte via WhatsApp
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="flex items-center gap-1">
+                ✅ Garantia de 7 dias
+              </span>
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="bg-ure-blue text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
