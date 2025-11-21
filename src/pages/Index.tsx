@@ -8,7 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen } from "lucide-react";
+import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen, Instagram, Linkedin, Phone, Video } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 import jurisStudentImage from "@/assets/juris-student.jpg";
 
@@ -834,6 +834,145 @@ const Index = () => {
           </Accordion>
         </div>
       </section>
+
+      {/* FOOTER */}
+      <footer className="bg-ure-blue text-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+            {/* COLUNA 1 - SOBRE */}
+            <div className="space-y-4">
+              <div className="flex flex-col leading-none mb-4">
+                <span className="text-3xl font-black text-white">URE</span>
+                <span className="text-sm font-semibold text-ure-yellow">BRASIL</span>
+              </div>
+              <p className="text-white/90 text-sm leading-relaxed">
+                Carteirinha estudantil digital e física, válida em todo território nacional. Economia real para estudantes.
+              </p>
+              <div className="flex items-center space-x-4 pt-2">
+                <a 
+                  href="#" 
+                  className="text-white hover:text-ure-yellow transition-all duration-300 hover:scale-110"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+                <a 
+                  href="#" 
+                  className="text-white hover:text-ure-yellow transition-all duration-300 hover:scale-110"
+                  aria-label="TikTok"
+                >
+                  <Video className="h-5 w-5" />
+                </a>
+                <a 
+                  href="#" 
+                  className="text-white hover:text-ure-yellow transition-all duration-300 hover:scale-110"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="h-5 w-5" />
+                </a>
+                <a 
+                  href="#" 
+                  className="text-white hover:text-ure-yellow transition-all duration-300 hover:scale-110"
+                  aria-label="WhatsApp"
+                >
+                  <Phone className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
+
+            {/* COLUNA 2 - LINKS RÁPIDOS */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white">Links Rápidos</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Como Funciona
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Benefícios
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    JurisEstudante
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Planos
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    FAQ
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Validar Carteirinha
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Área do Aluno
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* COLUNA 3 - LEGAL */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white">Institucional</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Termos de Uso
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Política de Privacidade
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Sobre Nós
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Contato
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Trabalhe Conosco
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200">
+                    Suporte
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* RODAPÉ FINAL */}
+          <div className="mt-12 pt-8 border-t border-white/20">
+            <div className="text-center space-y-2">
+              <p className="text-white/80 text-sm">
+                © 2025 URE Brasil - União Representativa dos Estudantes e Juventude do Brasil. Todos os direitos reservados.
+              </p>
+              <p className="text-white/60 text-xs">
+                CNPJ: XX.XXX.XXX/0001-XX
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
