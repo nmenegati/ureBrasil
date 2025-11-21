@@ -12,10 +12,10 @@ import {
 import { Menu, X, Sun, Moon, Check, Rocket, Calculator, Ticket, Bus, GraduationCap, Scale, BookOpen, Instagram, Linkedin, Phone, Video, Star } from "lucide-react";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 import jurisStudentImage from "@/assets/juris-student.jpg";
-import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.png";
-import carteirinhaGeral2 from "@/assets/carteirinha-geral-2.png";
-import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.png";
-import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.png";
+import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.jpeg";
+import carteirinhaGeral2 from "@/assets/carteirinha-geral-2.jpeg";
+import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.jpg";
+import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.jpg";
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -267,7 +267,7 @@ const Index = () => {
                           <img
                             src={slide}
                             alt={`Carteirinha ${index + 1}`}
-                            className="w-full h-auto rounded-2xl shadow-xl object-contain border border-gray-200 dark:border-gray-300"
+                            className="w-full h-auto rounded-3xl shadow-xl object-contain border-2 border-gray-300 dark:border-gray-400"
                           />
                         </div>
                       ))}
