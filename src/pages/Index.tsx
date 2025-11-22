@@ -420,9 +420,18 @@ const Index = () => {
                   Potencial de economia: Até R$ 180/mês = R$ 2.160/ano!
                 </p>
               </div>
-              <p className="text-gray-700 dark:text-gray-300 text-lg">
+              <p className="text-gray-700 dark:text-gray-300 text-lg mb-6">
                 Sua carteirinha se paga em menos de uma semana!
               </p>
+              <Button 
+                variant="hero-primary" 
+                size="lg"
+                className="text-lg px-8 py-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                <Rocket className="mr-2 h-5 w-5" />
+                Quero Economizar!
+              </Button>
             </div>
           </div>
         </div>
