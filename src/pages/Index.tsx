@@ -368,7 +368,7 @@ const Index = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-muted/30 dark:bg-muted/20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -438,8 +438,8 @@ const Index = () => {
           </div>
 
           {/* Savings Banner */}
-          <div className="bg-ure-green/10 dark:bg-ure-green/20 rounded-2xl p-8 text-center space-y-4 border-2 border-ure-green/20">
-            <p className="text-3xl sm:text-4xl font-black text-foreground">
+          <div className="bg-gradient-to-br from-ure-green/20 to-ure-green/30 dark:from-ure-green/25 dark:to-ure-green/35 rounded-2xl p-8 text-center space-y-4 border-2 border-ure-green shadow-[0_0_40px_rgba(34,197,94,0.15)] dark:shadow-[0_0_50px_rgba(34,197,94,0.25)] hover:shadow-[0_0_50px_rgba(34,197,94,0.25)] dark:hover:shadow-[0_0_60px_rgba(34,197,94,0.35)] transition-all duration-300">
+            <p className="text-3xl sm:text-4xl font-black text-foreground drop-shadow-sm">
               💰 Potencial de economia: Até R$ 180/mês = R$ 2.160/ano!
             </p>
             <p className="text-lg text-muted-foreground font-medium">
