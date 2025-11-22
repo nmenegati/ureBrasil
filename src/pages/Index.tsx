@@ -17,6 +17,7 @@ import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.jpeg";
 import carteirinhaGeral2 from "@/assets/carteirinha-geral-2.jpeg";
 import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.jpg";
 import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.jpg";
+import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
 
 const Index = () => {
   const { theme, setTheme } = useTheme();
@@ -62,10 +63,11 @@ const Index = () => {
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
             <div className="flex items-center space-x-2">
-              <div className="flex flex-col leading-none">
-                <span className="text-2xl sm:text-3xl font-black text-ure-blue">URE</span>
-                <span className="text-xs sm:text-sm font-semibold text-ure-green">BRASIL</span>
-              </div>
+              <img 
+                src={ureBrasilLogo} 
+                alt="URE Brasil - União Representativa dos Estudantes" 
+                className="h-10 sm:h-12 w-auto object-contain"
+              />
             </div>
 
             {/* Desktop Menu */}
