@@ -161,10 +161,10 @@ const Index = () => {
                   <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-ure-yellow min-h-[80px] sm:min-h-[96px] lg:min-h-[112px] xl:min-h-[128px] flex items-center">
                     <Typewriter
                       text={[
-                        "em Minutos.! ⏱️",
-                        "100% na Nuvem! ☁️",
-                        "Vale em Todo Brasil! 🇧🇷",
-                        "Economiza de Verdade! 💵",
+                        "⏱️ Em Minutos!",
+                        "☁️ 100% na Nuvem!",
+                        "🇧🇷 Vale em Todo Brasil!",
+                        "💵 Economiza de Verdade!",
                       ]}
                       speed={70}
                       deleteSpeed={40}
