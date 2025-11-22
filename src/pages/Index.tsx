@@ -423,11 +423,11 @@ const Index = () => {
               <p className="text-gray-700 dark:text-gray-300 text-lg mb-6">
                 Sua carteirinha se paga em menos de uma semana!
               </p>
-              <Button 
-                variant="hero-primary" 
+              <Button
+                variant="hero-primary"
                 size="lg"
                 className="text-lg px-8 py-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
-                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
               >
                 <Rocket className="mr-2 h-5 w-5" />
                 Quero Economizar!
@@ -574,13 +574,12 @@ const Index = () => {
               <div className="space-y-3">
                 <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">JurisEstudante</h2>
                 <div className="flex items-center gap-3">
-                  <div className="h-1.5 w-16 bg-ure-yellow"></div>
                   <Typewriter
                     text={[
                       "🚀 Sua Carreira Começa Aqui!",
                       "💰 Prepare-se Gastando Menos!",
                       "⚖️ Da Faculdade à Aprovação!",
-                      "🤝 Networking Que Abre Portas!"
+                      "🤝 Networking Que Abre Portas!",
                     ]}
                     className="text-3xl sm:text-4xl font-black text-ure-yellow"
                     speed={50}
