@@ -46,15 +46,15 @@ const Index = () => {
   const scrollToSection = (sectionName: string) => {
     const sectionIds: Record<string, string> = {
       "Como Funciona": "como-funciona",
-      "Benefícios": "beneficios",
-      "JurisEstudante": "juris-estudante",
-      "Planos": "planos",
-      "FAQ": "faq",
+      Benefícios: "beneficios",
+      JurisEstudante: "juris-estudante",
+      Planos: "planos",
+      FAQ: "faq",
     };
-    
+
     const sectionId = sectionIds[sectionName];
     const element = document.getElementById(sectionId);
-    
+
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
       setIsMobileMenuOpen(false);
@@ -94,9 +94,9 @@ const Index = () => {
             {/* Desktop Menu */}
             <nav className="hidden lg:flex items-center space-x-1">
               {menuItems.map((item) => (
-                <Button 
-                  key={item} 
-                  variant="ghost" 
+                <Button
+                  key={item}
+                  variant="ghost"
                   className="text-foreground hover:text-primary font-medium"
                   onClick={() => scrollToSection(item)}
                 >
@@ -138,9 +138,9 @@ const Index = () => {
           {isMobileMenuOpen && (
             <div className="lg:hidden py-4 space-y-2 animate-fade-in">
               {menuItems.map((item) => (
-                <Button 
-                  key={item} 
-                  variant="ghost" 
+                <Button
+                  key={item}
+                  variant="ghost"
                   className="w-full justify-start text-foreground hover:text-primary"
                   onClick={() => scrollToSection(item)}
                 >
@@ -595,7 +595,7 @@ const Index = () => {
             <div className="space-y-8">
               {/* Badge */}
               <Badge className="bg-ure-green text-white border-none px-4 py-2 text-sm font-bold">
-                ✨ Exclusivo para Direito
+                ✨ Exclusivo para Estudante de Direito
               </Badge>
 
               {/* Title */}
