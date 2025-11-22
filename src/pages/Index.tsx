@@ -575,7 +575,20 @@ const Index = () => {
                 <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">JurisEstudante</h2>
                 <div className="flex items-center gap-3">
                   <div className="h-1.5 w-16 bg-ure-yellow"></div>
-                  <p className="text-3xl sm:text-4xl font-black text-ure-yellow">Sua carreira começa aqui</p>
+                  <Typewriter
+                    text={[
+                      "🚀 Sua Carreira Começa Aqui!",
+                      "💰 Prepare-se Gastando Menos!",
+                      "⚖️ Da Faculdade à Aprovação!",
+                      "🤝 Networking Que Abre Portas!"
+                    ]}
+                    className="text-3xl sm:text-4xl font-black text-ure-yellow"
+                    speed={50}
+                    deleteSpeed={30}
+                    waitTime={3000}
+                    loop={true}
+                    showCursor={false}
+                  />
                 </div>
               </div>
 
