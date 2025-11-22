@@ -171,8 +171,7 @@ const Index = () => {
                       waitTime={2000}
                       loop={true}
                       className="inline-block"
-                      cursorChar="|"
-                      cursorClassName="text-ure-yellow"
+                      showCursor={false}
                     />
                   </h2>
                 </div>
