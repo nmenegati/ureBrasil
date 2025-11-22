@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,14 +19,13 @@ import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.jpg";
 import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.jpg";
 
 const Index = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark");
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   const menuItems = [
@@ -90,7 +90,7 @@ const Index = () => {
                 onClick={toggleDarkMode}
                 className="hover:bg-muted"
               >
-                {isDarkMode ? (
+                {theme === "dark" ? (
                   <Sun className="h-5 w-5" />
                 ) : (
                   <Moon className="h-5 w-5" />
