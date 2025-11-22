@@ -151,7 +151,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-20 sm:pt-24 gradient-hero overflow-hidden">
+      <section className="relative min-h-screen flex items-center pt-20 sm:pt-24 bg-gradient-to-br from-[#0D7DBF] to-[#00A859] overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -292,7 +292,7 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-50/80 dark:bg-white/[0.03]">
+      <section className="py-20 bg-white dark:bg-[#1A1A2E]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -370,7 +370,7 @@ const Index = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-gray-50 dark:bg-[#252543]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -452,7 +452,7 @@ const Index = () => {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-20 bg-gray-50/80 dark:bg-white/[0.03]">
+      <section className="py-20 bg-white dark:bg-[#1A1A2E]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -693,7 +693,7 @@ const Index = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 bg-[#F5F5F5] dark:bg-[#1A1A2E]">
+      <section className="py-20 bg-gray-50 dark:bg-[#1A1A2E]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -917,7 +917,7 @@ const Index = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-background">
+      <section className="py-20 bg-white dark:bg-[#252543]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -1023,7 +1023,7 @@ const Index = () => {
       </section>
 
       {/* CTA FINAL */}
-      <section className="py-20 lg:py-24 bg-gradient-to-br from-ure-orange via-ure-orange to-red-700 text-white relative overflow-hidden">
+      <section className="py-20 lg:py-24 bg-gradient-to-br from-[#FF6B35] to-[#FF5722] text-white relative overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
@@ -1118,7 +1118,7 @@ const Index = () => {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-ure-blue text-white">
+      <footer className="bg-[#0D7DBF] text-white py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
             {/* COLUNA 1 - SOBRE */}
