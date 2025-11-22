@@ -43,6 +43,24 @@ const Index = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
+  const scrollToSection = (sectionName: string) => {
+    const sectionIds: Record<string, string> = {
+      "Como Funciona": "como-funciona",
+      "Benefícios": "beneficios",
+      "JurisEstudante": "juris-estudante",
+      "Planos": "planos",
+      "FAQ": "faq",
+    };
+    
+    const sectionId = sectionIds[sectionName];
+    const element = document.getElementById(sectionId);
+    
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      setIsMobileMenuOpen(false);
+    }
+  };
+
   const menuItems = ["Como Funciona", "Benefícios", "JurisEstudante", "Planos", "FAQ"];
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
@@ -76,7 +94,12 @@ const Index = () => {
             {/* Desktop Menu */}
             <nav className="hidden lg:flex items-center space-x-1">
               {menuItems.map((item) => (
-                <Button key={item} variant="ghost" className="text-foreground hover:text-primary font-medium">
+                <Button 
+                  key={item} 
+                  variant="ghost" 
+                  className="text-foreground hover:text-primary font-medium"
+                  onClick={() => scrollToSection(item)}
+                >
                   {item}
                 </Button>
               ))}
@@ -115,7 +138,12 @@ const Index = () => {
           {isMobileMenuOpen && (
             <div className="lg:hidden py-4 space-y-2 animate-fade-in">
               {menuItems.map((item) => (
-                <Button key={item} variant="ghost" className="w-full justify-start text-foreground hover:text-primary">
+                <Button 
+                  key={item} 
+                  variant="ghost" 
+                  className="w-full justify-start text-foreground hover:text-primary"
+                  onClick={() => scrollToSection(item)}
+                >
                   {item}
                 </Button>
               ))}
@@ -273,7 +301,7 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-white dark:bg-[#1A1A2E]">
+      <section id="como-funciona" className="py-20 bg-white dark:bg-[#1A1A2E]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -560,7 +588,7 @@ const Index = () => {
       </section>
 
       {/* JurisEstudante Section */}
-      <section className="py-20 bg-gradient-to-br from-[#252543] to-[#3d3d5c] text-white">
+      <section id="juris-estudante" className="py-20 bg-gradient-to-br from-[#252543] to-[#3d3d5c] text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -657,7 +685,7 @@ const Index = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 bg-gray-50 dark:bg-[#1A1A2E]">
+      <section id="planos" className="py-20 bg-gray-50 dark:bg-[#1A1A2E]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -861,7 +889,7 @@ const Index = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-white dark:bg-[#252543]">
+      <section id="faq" className="py-20 bg-white dark:bg-[#252543]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
