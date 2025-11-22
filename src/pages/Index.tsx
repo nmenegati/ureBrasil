@@ -139,7 +139,7 @@ const Index = () => {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 lg:py-0">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 items-center py-12 lg:py-16">
             {/* Left Content */}
             <div className="space-y-4 sm:space-y-6 text-center lg:text-left relative z-20">
               {/* Promo Badge */}
