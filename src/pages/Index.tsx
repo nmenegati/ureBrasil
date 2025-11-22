@@ -141,7 +141,7 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 lg:py-0">
             {/* Left Content */}
-            <div className="space-y-6 sm:space-y-8 text-center lg:text-left relative z-20">
+            <div className="space-y-4 sm:space-y-6 text-center lg:text-left relative z-20">
               {/* Promo Badge */}
               <div className="inline-block">
                 <Badge className="bg-ure-yellow text-ure-dark px-4 py-2 text-sm sm:text-base font-bold animate-pulse-slow">
@@ -150,7 +150,7 @@ const Index = () => {
               </div>
 
               {/* Main Heading */}
-              <div className="space-y-2 sm:space-y-4">
+              <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight">
                   Sua Carteirinha
                   <br />
