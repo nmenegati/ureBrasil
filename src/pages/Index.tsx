@@ -292,7 +292,7 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-[#F5F5F5] dark:bg-[#1A1A2E]">
+      <section className="py-20 bg-gray-50/80 dark:bg-gray-900/50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -370,7 +370,7 @@ const Index = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-muted/30 dark:bg-muted/20">
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -452,7 +452,7 @@ const Index = () => {
       </section>
 
       {/* Social Proof Section */}
-      <section className="py-20 bg-gradient-to-b from-ure-blue/5 to-background">
+      <section className="py-20 bg-gray-50/80 dark:bg-gray-900/50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
