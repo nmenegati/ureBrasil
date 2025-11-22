@@ -208,27 +208,14 @@ const Index = () => {
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 justify-center lg:justify-start pt-4 sm:pt-6 max-w-2xl">
+              <div className="flex justify-center lg:justify-start pt-4 sm:pt-6">
                 <Button
                   variant="hero-primary"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto flex-shrink-0"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto"
                 >
                   <Rocket className="mr-2 h-5 w-5" />
                   Solicitar Minha Carteirinha
-                </Button>
-                <Button
-                  variant="hero-secondary"
-                  size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto flex-shrink-0"
-                  onClick={() => {
-                    document.querySelector('section:nth-of-type(2)')?.scrollIntoView({ 
-                      behavior: 'smooth',
-                      block: 'start'
-                    });
-                  }}
-                >
-                  Ver Como Funciona
                 </Button>
               </div>
 
