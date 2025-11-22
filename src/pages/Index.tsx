@@ -240,62 +240,50 @@ const Index = () => {
               </p>
             </div>
 
-            {/* Right Content - Phone Mockup */}
+            {/* Right Content - Carousel de Carteirinhas */}
             <div className="relative flex justify-center lg:justify-end mt-8 lg:mt-0">
-              <div className="relative animate-float isolate z-10">
-                {/* iPhone Frame */}
-                <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 p-4 rounded-[3rem] phone-mockup-shadow ring-4 ring-white/20 w-full max-w-[320px] sm:max-w-[380px] lg:max-w-[420px]">
-                  {/* iPhone Notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 sm:w-44 h-6 sm:h-8 bg-black rounded-b-3xl shadow-inner z-30"></div>
-                  
-                  {/* Phone Screen */}
-                  <div 
-                    className="bg-white dark:bg-gray-100 rounded-[2.5rem] overflow-hidden relative min-h-[360px] sm:min-h-[420px]"
-                    style={{ aspectRatio: '9/19.5' }}
-                    onMouseEnter={() => setIsHovering(true)}
-                    onMouseLeave={() => setIsHovering(false)}
-                  >
-                    {/* Carousel Container */}
-                    <div className="relative w-full h-full flex items-center justify-center p-4">
-                      {carteirinhaSlides.map((slide, index) => (
-                        <div
-                          key={index}
-                          className={`absolute inset-0 z-10 flex items-center justify-center p-4 bg-white transition-opacity duration-500 ${
-                            index === currentSlide ? 'opacity-100' : 'opacity-0'
-                          }`}
-                        >
-                          <img
-                            src={slide}
-                            alt={`Carteirinha ${index + 1}`}
-                            className="w-full h-auto rounded-3xl shadow-xl object-contain border-2 border-gray-300 dark:border-gray-400"
-                          />
-                        </div>
-                      ))}
+              <div className="relative w-full max-w-[380px] sm:max-w-[440px] lg:max-w-[500px]">
+                {/* Carousel Container */}
+                <div 
+                  className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden"
+                  onMouseEnter={() => setIsHovering(true)}
+                  onMouseLeave={() => setIsHovering(false)}
+                >
+                  {/* Carousel Slides */}
+                  {carteirinhaSlides.map((slide, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 transition-opacity duration-500 ${
+                        index === currentSlide ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    >
+                      <img
+                        src={slide}
+                        alt={`Carteirinha de estudante ${index + 1}`}
+                        className="w-full h-full rounded-3xl shadow-2xl object-cover border-2 border-white/20"
+                      />
                     </div>
+                  ))}
 
-                    {/* Glass Glare Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-20"></div>
-
-                    {/* Pagination Dots */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30">
-                      {carteirinhaSlides.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setCurrentSlide(index)}
-                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                            index === currentSlide 
-                              ? 'bg-ure-blue w-6' 
-                              : 'bg-gray-400 hover:bg-gray-600'
-                          }`}
-                          aria-label={`Ir para slide ${index + 1}`}
-                        />
-                      ))}
-                    </div>
+                  {/* Pagination Dots */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                    {carteirinhaSlides.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentSlide(index)}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          index === currentSlide 
+                            ? 'bg-white w-8' 
+                            : 'bg-white/40 hover:bg-white/60 w-2'
+                        }`}
+                        aria-label={`Ir para slide ${index + 1}`}
+                      />
+                    ))}
                   </div>
                 </div>
 
                 {/* Floating Status Card */}
-                <div className="absolute -top-4 -right-4 sm:-right-8 bg-white dark:bg-card rounded-2xl shadow-2xl p-3 sm:p-4 animate-float backdrop-blur-lg border border-border z-30">
+                <div className="absolute -top-6 -right-6 bg-white dark:bg-card rounded-2xl shadow-2xl p-3 sm:p-4 animate-float backdrop-blur-lg border border-border z-30">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="bg-ure-green rounded-full p-1.5 sm:p-2">
                       <Check className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
