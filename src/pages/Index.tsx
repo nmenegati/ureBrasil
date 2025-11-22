@@ -369,6 +369,114 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Economize de Verdade Section */}
+      <section 
+        id="beneficios" 
+        className="py-20 bg-gray-100 dark:bg-gray-800 transition-colors"
+      >
+        <div className="container mx-auto px-4">
+          {/* Cabeçalho */}
+          <div className="text-center mb-12">
+            {/* Linha decorativa amarela */}
+            <div className="w-24 h-1 bg-[#FFD100] mx-auto mb-6"></div>
+            
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
+              Economize de Verdade!
+            </h2>
+            
+            <p className="text-lg text-gray-700 dark:text-gray-300">
+              Descontos e benefícios em todo Brasil
+            </p>
+          </div>
+
+          {/* Grid de 3 Cards */}
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1 - Meia-Entrada */}
+            <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              {/* Círculo com ícone */}
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                <Ticket className="w-10 h-10 text-blue-600 dark:text-blue-300" />
+              </div>
+              
+              {/* Título */}
+              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">
+                Meia-Entrada
+              </h3>
+              
+              {/* Descrição */}
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Cinemas, teatros, shows, eventos esportivos e culturais. Economize até 50%!
+              </p>
+              
+              {/* Economia */}
+              <div className="text-[#00A859] dark:text-[#4ade80] font-semibold text-lg">
+                Economia média: R$ 40/mês
+              </div>
+            </div>
+
+            {/* Card 2 - Transporte */}
+            <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              {/* Círculo com ícone */}
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                <Bus className="w-10 h-10 text-green-600 dark:text-green-300" />
+              </div>
+              
+              {/* Título */}
+              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">
+                Transporte
+              </h3>
+              
+              {/* Descrição */}
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Descontos em transporte público e intermunicipal em diversas cidades.
+              </p>
+              
+              {/* Economia */}
+              <div className="text-[#00A859] dark:text-[#4ade80] font-semibold text-lg">
+                Economia média: R$ 80/mês
+              </div>
+            </div>
+
+            {/* Card 3 - Educação */}
+            <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              {/* Círculo com ícone */}
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
+                <GraduationCap className="w-10 h-10 text-yellow-600 dark:text-yellow-300" />
+              </div>
+              
+              {/* Título */}
+              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">
+                Educação
+              </h3>
+              
+              {/* Descrição */}
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Cursos online, softwares, livros, plataformas de estudo e muito mais.
+              </p>
+              
+              {/* Economia */}
+              <div className="text-[#00A859] dark:text-[#4ade80] font-semibold text-lg">
+                Economia média: R$ 60/mês
+              </div>
+            </div>
+          </div>
+
+          {/* Banner de Economia Total */}
+          <div className="mt-12 text-center">
+            <div className="inline-block bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 p-8 rounded-2xl max-w-3xl">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <span className="text-4xl">💰</span>
+                <p className="text-2xl md:text-3xl font-bold text-green-800 dark:text-green-200">
+                  Potencial de economia: Até R$ 180/mês = R$ 2.160/ano!
+                </p>
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 text-lg">
+                Sua carteirinha se paga em menos de uma semana!
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Social Proof Section */}
       <section className="py-20 bg-white dark:bg-[#1A1A2E]">
