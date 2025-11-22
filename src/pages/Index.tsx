@@ -179,7 +179,7 @@ const Index = () => {
                 </h1>
                 <div className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start">
                   <div className="h-1 sm:h-1.5 w-12 sm:w-16 bg-ure-yellow"></div>
-                  <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-ure-yellow">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-ure-yellow min-h-[80px] sm:min-h-[96px] lg:min-h-[112px] xl:min-h-[128px] flex items-center">
                     <Typewriter
                       text={[
                         "em Minutos! ⏱️",
