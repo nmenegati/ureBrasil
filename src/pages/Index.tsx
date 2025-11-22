@@ -163,7 +163,7 @@ const Index = () => {
                         "⏱️ Em Minutos!",
                         "☁️ 100% na Nuvem!",
                         "🇧🇷 Vale em Todo Brasil!",
-                        "💵 Economiza de Verdade!",
+                        "💵 Economia de Verdade!",
                       ]}
                       speed={70}
                       deleteSpeed={40}
