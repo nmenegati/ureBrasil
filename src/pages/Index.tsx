@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Typewriter } from "@/components/ui/typewriter";
 import { 
   Accordion,
   AccordionContent,
@@ -179,16 +180,30 @@ const Index = () => {
                 <div className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start">
                   <div className="h-1 sm:h-1.5 w-12 sm:w-16 bg-ure-yellow"></div>
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-ure-yellow">
-                    em Minutos!
+                    <Typewriter
+                      text={[
+                        "em Minutos! ⏱️",
+                        "100% na Nuvem! ☁️",
+                        "Vale em Todo Brasil! 🇧🇷",
+                        "Economiza de Verdade! 💵"
+                      ]}
+                      speed={70}
+                      deleteSpeed={40}
+                      waitTime={2000}
+                      loop={true}
+                      className="inline-block"
+                      cursorChar="|"
+                      cursorClassName="text-ure-yellow"
+                    />
                   </h2>
                 </div>
               </div>
 
               {/* Subtitle */}
               <p className="text-base sm:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                100% digital, válida em todo Brasil, com tecnologia de verificação
-                por QR Code. Aproveite descontos em cultura, transporte, educação e
-                muito mais!
+                Chega de pagar inteira! Com verificação por QR Code e validade nacional, 
+                sua carteirinha te garante até 50% de desconto em cinema, shows, transporte, 
+                cursos e mais. Aproveita!
               </p>
 
               {/* Feature Badges */}
@@ -196,7 +211,6 @@ const Index = () => {
                 {[
                   "Emissão em até 2 horas",
                   "Válida nacionalmente",
-                  "Verificação por IA",
                 ].map((feature) => (
                   <Badge
                     key={feature}
