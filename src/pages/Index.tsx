@@ -250,7 +250,7 @@ const Index = () => {
                   
                   {/* Phone Screen */}
                   <div 
-                    className="bg-white dark:bg-gray-100 rounded-[2.5rem] overflow-hidden relative"
+                    className="bg-white dark:bg-gray-100 rounded-[2.5rem] overflow-hidden relative min-h-[360px] sm:min-h-[420px]"
                     style={{ aspectRatio: '9/19.5' }}
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
@@ -260,7 +260,7 @@ const Index = () => {
                       {carteirinhaSlides.map((slide, index) => (
                         <div
                           key={index}
-                          className={`absolute inset-0 flex items-center justify-center p-4 transition-opacity duration-500 ${
+                          className={`absolute inset-0 z-10 flex items-center justify-center p-4 bg-white transition-opacity duration-500 ${
                             index === currentSlide ? 'opacity-100' : 'opacity-0'
                           }`}
                         >
