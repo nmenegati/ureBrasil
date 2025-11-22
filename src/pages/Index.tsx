@@ -157,9 +157,9 @@ const Index = () => {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center py-12 lg:py-0">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 lg:py-0">
             {/* Left Content */}
-            <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
+            <div className="space-y-6 sm:space-y-8 text-center lg:text-left relative z-20">
               {/* Promo Badge */}
               <div className="inline-block">
                 <Badge className="bg-ure-yellow text-ure-dark px-4 py-2 text-sm sm:text-base font-bold animate-pulse-slow">
@@ -208,7 +208,7 @@ const Index = () => {
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 sm:pt-6">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start pt-4 sm:pt-6">
                 <Button
                   variant="hero-primary"
                   size="lg"
@@ -221,16 +221,14 @@ const Index = () => {
                   variant="hero-outline"
                   size="lg"
                   className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto"
+                  onClick={() => {
+                    document.querySelector('section:nth-of-type(2)')?.scrollIntoView({ 
+                      behavior: 'smooth',
+                      block: 'start'
+                    });
+                  }}
                 >
                   Ver Como Funciona
-                </Button>
-                <Button
-                  variant="hero-accent"
-                  size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto hidden xl:inline-flex"
-                >
-                  <Calculator className="mr-2 h-5 w-5" />
-                  Calcular Economia
                 </Button>
               </div>
 
@@ -241,7 +239,7 @@ const Index = () => {
             </div>
 
             {/* Right Content - Carousel de Carteirinhas */}
-            <div className="relative flex justify-center lg:justify-end mt-8 lg:mt-0">
+            <div className="relative flex justify-center lg:justify-end mt-8 lg:mt-0 z-10">
               <div className="relative w-full max-w-[380px] sm:max-w-[440px] lg:max-w-[500px]">
                 {/* Carousel Container */}
                 <div 
