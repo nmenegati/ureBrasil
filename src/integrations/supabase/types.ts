@@ -424,25 +424,25 @@ export type Database = {
       student_profiles: {
         Row: {
           birth_date: string
-          cep: string
-          city: string
+          cep: string | null
+          city: string | null
           complement: string | null
-          course: string
+          course: string | null
           cpf: string
           created_at: string
-          enrollment_number: string
+          enrollment_number: string | null
           full_name: string
           id: string
-          institution: string
-          neighborhood: string
-          number: string
-          period: string
+          institution: string | null
+          neighborhood: string | null
+          number: string | null
+          period: string | null
           phone: string
           plan_id: string | null
           profile_completed: boolean
-          rg: string
-          state: string
-          street: string
+          rg: string | null
+          state: string | null
+          street: string | null
           terms_accepted: boolean
           terms_accepted_at: string | null
           terms_ip_address: unknown
@@ -451,25 +451,25 @@ export type Database = {
         }
         Insert: {
           birth_date: string
-          cep: string
-          city: string
+          cep?: string | null
+          city?: string | null
           complement?: string | null
-          course: string
+          course?: string | null
           cpf: string
           created_at?: string
-          enrollment_number: string
+          enrollment_number?: string | null
           full_name: string
           id?: string
-          institution: string
-          neighborhood: string
-          number: string
-          period: string
+          institution?: string | null
+          neighborhood?: string | null
+          number?: string | null
+          period?: string | null
           phone: string
           plan_id?: string | null
           profile_completed?: boolean
-          rg: string
-          state: string
-          street: string
+          rg?: string | null
+          state?: string | null
+          street?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
           terms_ip_address?: unknown
@@ -478,25 +478,25 @@ export type Database = {
         }
         Update: {
           birth_date?: string
-          cep?: string
-          city?: string
+          cep?: string | null
+          city?: string | null
           complement?: string | null
-          course?: string
+          course?: string | null
           cpf?: string
           created_at?: string
-          enrollment_number?: string
+          enrollment_number?: string | null
           full_name?: string
           id?: string
-          institution?: string
-          neighborhood?: string
-          number?: string
-          period?: string
+          institution?: string | null
+          neighborhood?: string | null
+          number?: string | null
+          period?: string | null
           phone?: string
           plan_id?: string | null
           profile_completed?: boolean
-          rg?: string
-          state?: string
-          street?: string
+          rg?: string | null
+          state?: string | null
+          street?: string | null
           terms_accepted?: boolean
           terms_accepted_at?: string | null
           terms_ip_address?: unknown

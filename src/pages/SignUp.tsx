@@ -180,42 +180,11 @@ export default function SignUp() {
     }
 
     if (data.user) {
-      // Salvar dados iniciais no student_profiles
-      const { error: profileError } = await supabase
-        .from('student_profiles')
-        .insert({
-          user_id: data.user.id,
-          full_name: fullName,
-          cpf: cpf.replace(/\D/g, ''),
-          phone: cleanPhone,
-          birth_date: format(birthDate, 'yyyy-MM-dd'),
-          terms_accepted: true,
-          terms_accepted_at: new Date().toISOString(),
-          profile_completed: false,
-          // Campos obrigatórios com valores temporários
-          rg: '',
-          street: '',
-          number: '',
-          neighborhood: '',
-          city: '',
-          state: '',
-          cep: '',
-          institution: '',
-          course: '',
-          period: '',
-          enrollment_number: '',
-        });
-
-      if (profileError) {
-        console.error('Erro ao criar perfil:', profileError);
-        toast.error('Erro ao criar perfil. Tente novamente.');
-        setLoading(false);
-        return;
-      }
-
-      toast.success('Conta criada com sucesso!');
+      toast.success('Conta criada com sucesso! Complete seu perfil.');
       navigate('/complete-profile');
     }
+    
+    setLoading(false);
   };
 
   const handleGoogleSignup = () => {
