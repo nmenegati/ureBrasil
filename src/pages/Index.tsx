@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +26,7 @@ import {
   Video,
   Star,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 import jurisStudentImage from "@/assets/juris-student.jpg";
 import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.jpeg";
@@ -35,6 +37,7 @@ import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
 
 const Index = () => {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
@@ -112,15 +115,21 @@ const Index = () => {
                 {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
 
-              {/* Login Button - Hidden on mobile */}
-              <Button variant="header-outline" className="hidden sm:inline-flex">
-                Login
-              </Button>
-
-              {/* CTA Button */}
-              <Button className="bg-ure-orange text-white hover:bg-ure-orange/90 hidden sm:inline-flex">
-                Solicitar Agora
-              </Button>
+              {/* Auth Buttons - Hidden on mobile */}
+              {user ? (
+                <Button asChild variant="hero-primary" className="hidden sm:inline-flex">
+                  <Link to="/dashboard">Dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild variant="header-outline" className="hidden sm:inline-flex">
+                    <Link to="/login">Entrar</Link>
+                  </Button>
+                  <Button asChild className="bg-ure-orange text-white hover:bg-ure-orange/90 hidden sm:inline-flex">
+                    <Link to="/signup">Cadastrar</Link>
+                  </Button>
+                </>
+              )}
 
               {/* Mobile Menu Toggle */}
               <Button
@@ -148,10 +157,20 @@ const Index = () => {
                 </Button>
               ))}
               <div className="pt-4 space-y-2">
-                <Button variant="header-outline" className="w-full">
-                  Login
-                </Button>
-                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90">Solicitar Agora</Button>
+                {user ? (
+                  <Button asChild variant="hero-primary" className="w-full">
+                    <Link to="/dashboard">Dashboard</Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button asChild variant="header-outline" className="w-full">
+                      <Link to="/login">Entrar</Link>
+                    </Button>
+                    <Button asChild className="w-full bg-ure-orange text-white hover:bg-ure-orange/90">
+                      <Link to="/signup">Cadastrar</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}
