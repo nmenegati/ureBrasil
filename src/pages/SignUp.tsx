@@ -5,21 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { validateCPF, formatCPF, formatPhone } from '@/lib/validators';
 import { toast } from 'sonner';
-import { Eye, EyeOff, CalendarIcon } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 export default function SignUp() {
   const [fullName, setFullName] = useState('');
   const [cpf, setCpf] = useState('');
-  const [birthDate, setBirthDate] = useState<Date>();
+  const [cpfError, setCpfError] = useState<string>('');
+  const [isCpfValid, setIsCpfValid] = useState(false);
+  const [birthDay, setBirthDay] = useState<string>('');
+  const [birthMonth, setBirthMonth] = useState<string>('');
+  const [birthYear, setBirthYear] = useState<string>('');
+  const [dateError, setDateError] = useState<string>('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -31,8 +34,66 @@ export default function SignUp() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  // Constantes para os dropdowns de data
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const months = [
+    { value: '01', label: 'Janeiro' },
+    { value: '02', label: 'Fevereiro' },
+    { value: '03', label: 'Março' },
+    { value: '04', label: 'Abril' },
+    { value: '05', label: 'Maio' },
+    { value: '06', label: 'Junho' },
+    { value: '07', label: 'Julho' },
+    { value: '08', label: 'Agosto' },
+    { value: '09', label: 'Setembro' },
+    { value: '10', label: 'Outubro' },
+    { value: '11', label: 'Novembro' },
+    { value: '12', label: 'Dezembro' },
+  ];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i);
+
   const handleCpfChange = (value: string) => {
-    setCpf(formatCPF(value));
+    const formatted = formatCPF(value);
+    setCpf(formatted);
+    
+    // Validar apenas quando tiver 14 caracteres (formato completo: 000.000.000-00)
+    if (formatted.length === 14) {
+      const isValid = validateCPF(formatted);
+      setIsCpfValid(isValid);
+      
+      if (!isValid) {
+        setCpfError('CPF inválido');
+      } else {
+        setCpfError('');
+      }
+    } else {
+      setIsCpfValid(false);
+      setCpfError('');
+    }
+  };
+
+  const getBirthDate = (): Date | null => {
+    if (!birthDay || !birthMonth || !birthYear) return null;
+    
+    const day = parseInt(birthDay);
+    const month = parseInt(birthMonth) - 1; // JavaScript months são 0-indexed
+    const year = parseInt(birthYear);
+    
+    const date = new Date(year, month, day);
+    
+    // Validar se a data é válida (ex: 31 de fevereiro não existe)
+    if (
+      date.getDate() !== day ||
+      date.getMonth() !== month ||
+      date.getFullYear() !== year
+    ) {
+      setDateError('Data inválida');
+      return null;
+    }
+    
+    setDateError('');
+    return date;
   };
 
   const handlePhoneChange = (value: string) => {
@@ -53,14 +114,21 @@ export default function SignUp() {
       return;
     }
 
+    const birthDate = getBirthDate();
     if (!birthDate) {
-      toast.error('Selecione sua data de nascimento');
+      toast.error('Selecione uma data de nascimento válida');
       return;
     }
 
-    // Verificar se é maior de 16 anos
-    const age = new Date().getFullYear() - birthDate.getFullYear();
-    if (age < 16) {
+    // Validar idade (mínimo 16 anos)
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+    
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+    
+    if (actualAge < 16) {
       toast.error('Você deve ter pelo menos 16 anos');
       return;
     }
@@ -189,39 +257,82 @@ export default function SignUp() {
               value={cpf}
               onChange={(e) => handleCpfChange(e.target.value)}
               maxLength={14}
-              className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
+              className={cn(
+                "bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20",
+                cpfError && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+                isCpfValid && "border-green-500 focus:border-green-500 focus:ring-green-500/20"
+              )}
               required
             />
+            {cpfError && (
+              <p className="text-red-400 text-sm mt-1">{cpfError}</p>
+            )}
+            {isCpfValid && !cpfError && (
+              <p className="text-green-400 text-sm mt-1">✓ CPF válido</p>
+            )}
           </div>
 
           {/* Data de nascimento */}
           <div className="space-y-2">
             <Label className="text-white">Data de nascimento</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal bg-slate-700/50 text-white border-slate-600 hover:bg-slate-700/70 hover:text-white",
-                    !birthDate && "text-slate-400"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {birthDate ? format(birthDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Selecione a data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={birthDate}
-                  onSelect={setBirthDate}
-                  disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                  initialFocus
-                  locale={ptBR}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="grid grid-cols-3 gap-2">
+              {/* Dia */}
+              <Select value={birthDay} onValueChange={setBirthDay}>
+                <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
+                  <SelectValue placeholder="Dia" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
+                  {days.map((day) => (
+                    <SelectItem 
+                      key={day} 
+                      value={day.toString().padStart(2, '0')}
+                      className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                    >
+                      {day}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Mês */}
+              <Select value={birthMonth} onValueChange={setBirthMonth}>
+                <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
+                  {months.map((month) => (
+                    <SelectItem 
+                      key={month.value} 
+                      value={month.value}
+                      className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                    >
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Ano */}
+              <Select value={birthYear} onValueChange={setBirthYear}>
+                <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
+                  {years.map((year) => (
+                    <SelectItem 
+                      key={year} 
+                      value={year.toString()}
+                      className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                    >
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {dateError && (
+              <p className="text-red-400 text-sm mt-1">{dateError}</p>
+            )}
           </div>
 
           {/* Email */}
@@ -315,8 +426,8 @@ export default function SignUp() {
           {/* Botão Criar conta */}
           <Button
             type="submit"
-            disabled={loading}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold"
+            disabled={loading || !isCpfValid || cpf.length < 14}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Criando conta...' : 'Criar conta'}
           </Button>
