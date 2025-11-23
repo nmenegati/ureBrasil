@@ -599,7 +599,7 @@ const Index = () => {
               </Badge>
 
               {/* Title */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">JurisEstudante</h2>
                 <div className="flex items-start gap-3 min-h-[100px] sm:min-h-[100px]">
                   <Typewriter
