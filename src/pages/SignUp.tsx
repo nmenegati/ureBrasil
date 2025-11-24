@@ -161,30 +161,60 @@ export default function SignUp() {
 
     setLoading(true);
 
-    // Criar conta
-    const { data, error } = await signUp(email, password, {
-      full_name: fullName,
-      cpf: cpf.replace(/\D/g, ''),
-      phone: cleanPhone,
-      birth_date: format(birthDate, 'yyyy-MM-dd'),
-    });
+    try {
+      // Preparar metadata com TODOS os campos que o trigger espera
+      const metadata = {
+        full_name: fullName.trim(),
+        cpf: cpf.replace(/\D/g, ''),
+        birth_date: format(birthDate, 'yyyy-MM-dd'),
+        phone: cleanPhone,
+        terms_accepted: true
+      };
 
-    if (error) {
-      if (error.message.includes('User already registered')) {
-        toast.error('Este email já está cadastrado');
-      } else {
-        toast.error('Erro ao criar conta. Tente novamente.');
+      // LOG 1: Ver o que está sendo enviado
+      console.log('📤 Metadata sendo enviado:', metadata);
+
+      // Fazer signUp
+      const { data, error } = await signUp(email, password, metadata);
+
+      // LOG 2: Ver resposta do Supabase
+      console.log('📥 SignUp response:', { data, error });
+
+      if (error) {
+        console.error('❌ Erro no signUp:', error);
+
+        if (error.message.includes('already registered') || 
+            error.message.includes('User already registered')) {
+          toast.error('Este email já está cadastrado');
+        } else {
+          toast.error('Erro ao criar conta: ' + error.message);
+        }
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-      return;
-    }
 
-    if (data.user) {
-      toast.success('Conta criada com sucesso! Complete seu perfil.');
-      navigate('/complete-profile');
+      if (data.user) {
+        console.log('✅ Usuário criado:', data.user.id);
+        console.log('📋 Metadata salvo:', data.user.user_metadata);
+
+        toast.success('Conta criada com sucesso!');
+
+        // Aguardar 1 segundo para garantir que o trigger executou
+        console.log('⏳ Aguardando trigger...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        console.log('🚀 Redirecionando para /complete-profile');
+        navigate('/complete-profile');
+      } else {
+        toast.error('Erro inesperado ao criar conta');
+        setLoading(false);
+      }
+
+    } catch (err: any) {
+      console.error('💥 Exception no cadastro:', err);
+      toast.error('Erro ao criar conta: ' + err.message);
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleGoogleSignup = () => {
