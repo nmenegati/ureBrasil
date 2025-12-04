@@ -1129,46 +1129,6 @@ const Index = () => {
                     href="#"
                     className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
                   >
-                    Como Funciona
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
-                  >
-                    Benefícios
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
-                  >
-                    JurisEstudante
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
-                  >
-                    Planos
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
-                  >
-                    Dúvidas
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
-                  >
                     Validar Carteirinha
                   </a>
                 </li>
