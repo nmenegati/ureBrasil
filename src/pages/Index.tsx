@@ -52,7 +52,7 @@ const Index = () => {
       Benefícios: "beneficios",
       JurisEstudante: "juris-estudante",
       Planos: "planos",
-      FAQ: "faq",
+      Dúvidas: "faq",
     };
 
     const sectionId = sectionIds[sectionName];
@@ -64,7 +64,7 @@ const Index = () => {
     }
   };
 
-  const menuItems = ["Como Funciona", "Benefícios", "JurisEstudante", "Planos", "FAQ"];
+  const menuItems = ["Como Funciona", "Benefícios", "JurisEstudante", "Planos", "Dúvidas"];
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
 
@@ -225,8 +225,7 @@ const Index = () => {
 
               {/* Subtitle */}
               <p className="text-base sm:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Chega de pagar inteira! Com verificação por QR Code e validade nacional, sua carteirinha te garante até
-                50% de desconto em cinema, shows, transporte, cursos e mais. Aproveita!
+                Chega de pagar inteira! A sua carteirinha URE te garante até 50% de desconto em cinema, shows, transporte, cursos e mais. Não é só uma carteirinha é acesso, é vantagem. Aproveita!
               </p>
 
               {/* Feature Badges */}
@@ -1162,7 +1161,7 @@ const Index = () => {
                     href="#"
                     className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
                   >
-                    FAQ
+                    Dúvidas
                   </a>
                 </li>
                 <li>
@@ -1218,22 +1217,6 @@ const Index = () => {
                     className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
                   >
                     Contato
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
-                  >
-                    Trabalhe Conosco
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-white/90 text-sm hover:text-white hover:underline transition-all duration-200"
-                  >
-                    Suporte
                   </a>
                 </li>
               </ul>
