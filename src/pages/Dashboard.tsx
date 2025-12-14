@@ -81,11 +81,7 @@ export default function Dashboard() {
         return;
       }
 
-      if (!profileData) {
-        navigate('/complete-profile');
-        return;
-      }
-      
+      // Se não tem perfil, deixar o Dashboard mostrar UI apropriada
       setProfile(profileData);
 
       // 2. Buscar documentos
@@ -278,7 +274,48 @@ export default function Dashboard() {
     );
   }
 
-  if (!user || !profile) return null;
+  if (!user) return null;
+
+  // Se não tem perfil, mostrar tela para completar
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-700/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center gap-3">
+                <img src={ureLogo} alt="URE Brasil" className="h-10 w-auto" />
+                <span className="text-white font-semibold hidden sm:block">Carteirinha Estudantil</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-slate-400 hover:text-red-400 hover:bg-slate-700/50"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 text-center max-w-lg mx-auto">
+            <AlertCircle className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white">Complete seu Perfil</h2>
+            <p className="text-slate-400 mt-2">
+              Para acessar todas as funcionalidades e obter sua carteirinha estudantil, complete seu cadastro.
+            </p>
+            <Button 
+              className="mt-6 bg-cyan-500 hover:bg-cyan-600 text-white"
+              onClick={() => navigate('/complete-profile')}
+            >
+              Completar Perfil <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const nextStep = getNextStep();
   const percentage = getPercentage();
