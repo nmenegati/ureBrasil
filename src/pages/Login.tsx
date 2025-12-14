@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -43,19 +43,11 @@ export default function Login() {
     }
 
     if (data.user) {
-      // Verificar se perfil está completo
-      const { data: profile } = await supabase
-        .from('student_profiles')
-        .select('profile_completed')
-        .eq('user_id', data.user.id)
-        .single();
-
-      if (profile?.profile_completed) {
-        navigate('/dashboard');
-      } else {
-        navigate('/complete-profile');
-      }
+      toast.success('Login realizado com sucesso!');
+      navigate('/dashboard');
     }
+    
+    setLoading(false);
   };
 
   const handleGoogleLogin = () => {
