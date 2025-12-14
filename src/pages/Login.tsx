@@ -44,7 +44,8 @@ export default function Login() {
 
     if (data.user) {
       toast.success('Login realizado com sucesso!');
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
+      return;
     }
     
     setLoading(false);
