@@ -8,23 +8,33 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Configurar listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    let mounted = true;
+    let initialSessionChecked = false;
+
+    // PASSO 1: Buscar sessão existente PRIMEIRO
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        initialSessionChecked = true;
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
-    );
-
-    // Buscar sessão inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // PASSO 2: Configurar listener DEPOIS (para mudanças futuras)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (mounted && initialSessionChecked) {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      }
+    );
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
