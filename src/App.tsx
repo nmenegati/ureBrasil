@@ -12,6 +12,8 @@ import CompleteProfile from "./pages/CompleteProfile";
 import Dashboard from "./pages/Dashboard";
 import VerificarEmail from "./pages/VerificarEmail";
 import AdminEditEmail from "./pages/AdminEditEmail";
+import UploadDocumentos from "./pages/UploadDocumentos";
+import EscolherPlano from "./pages/EscolherPlano";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,16 @@ const App = () => (
             <Route path="/admin/edit-email" element={
               <ProtectedRoute>
                 <AdminEditEmail />
+              </ProtectedRoute>
+            } />
+            <Route path="/upload-documentos" element={
+              <ProtectedRoute>
+                <UploadDocumentos />
+              </ProtectedRoute>
+            } />
+            <Route path="/escolher-plano" element={
+              <ProtectedRoute>
+                <EscolherPlano />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
