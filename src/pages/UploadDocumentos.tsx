@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 import { 
   ArrowLeft, 
   FileText, 
-  Home, 
   GraduationCap, 
   Camera, 
   UserCircle, 
@@ -22,7 +21,7 @@ import {
   File
 } from 'lucide-react';
 
-type DocumentType = 'rg' | 'endereco' | 'matricula' | 'foto' | 'selfie';
+type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
 interface DocumentConfig {
   type: DocumentType;
@@ -56,14 +55,6 @@ const documentConfigs: DocumentConfig[] = [
     label: 'RG ou CNH',
     description: 'Frente e verso do documento',
     icon: FileText,
-    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
-    maxSizeMB: 5
-  },
-  {
-    type: 'endereco',
-    label: 'Comprovante de Endereço',
-    description: 'Conta de luz, água ou fatura recente',
-    icon: Home,
     acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
     maxSizeMB: 5
   },
@@ -459,7 +450,7 @@ export default function UploadDocumentos() {
   };
 
   const uploadedCount = Object.keys(documents).length;
-  const allDocsUploaded = uploadedCount >= 5;
+  const allDocsUploaded = uploadedCount >= 4;
 
   if (authLoading || loadingProfile) {
     return (
@@ -511,7 +502,7 @@ export default function UploadDocumentos() {
         </div>
         
         {/* Grid de cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           {documentConfigs.map(config => (
             <DocumentCard key={config.type} config={config} />
           ))}
@@ -520,10 +511,10 @@ export default function UploadDocumentos() {
         {/* Contador de progresso */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-center justify-between">
           <span className="text-slate-300">
-            Documentos enviados: <span className="text-cyan-500 font-semibold">{uploadedCount}</span> de 5
+            Documentos enviados: <span className="text-cyan-500 font-semibold">{uploadedCount}</span> de 4
           </span>
           <Progress 
-            value={(uploadedCount / 5) * 100} 
+            value={(uploadedCount / 4) * 100} 
             className="w-32 h-2"
           />
         </div>
@@ -536,7 +527,7 @@ export default function UploadDocumentos() {
         >
           {allDocsUploaded 
             ? 'Continuar para Escolha de Plano' 
-            : `Envie todos os ${5 - uploadedCount} documentos restantes`
+            : `Envie todos os ${4 - uploadedCount} documentos restantes`
           }
         </Button>
       </div>
