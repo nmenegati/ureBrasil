@@ -682,6 +682,36 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_logs: {
+        Row: {
+          event_type: string
+          id: string
+          payload: Json
+          record_id: string
+          response: Json | null
+          sent_at: string | null
+          table_name: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          payload: Json
+          record_id: string
+          response?: Json | null
+          sent_at?: string | null
+          table_name: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          payload?: Json
+          record_id?: string
+          response?: Json | null
+          sent_at?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_dashboard: {
@@ -789,6 +819,20 @@ export type Database = {
     Functions: {
       calculate_card_validity: { Args: { issue_date: string }; Returns: string }
       generate_card_number: { Args: never; Returns: string }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["user_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       card_status:
@@ -804,7 +848,7 @@ export type Database = {
         | "direito_digital"
         | "direito_fisica"
       document_status: "pending" | "approved" | "rejected"
-      document_type: "rg" | "endereco" | "matricula" | "foto"
+      document_type: "rg" | "endereco" | "matricula" | "foto" | "selfie"
       payment_method: "pix" | "credit_card" | "debit_card"
       payment_status:
         | "pending"
@@ -967,7 +1011,7 @@ export const Constants = {
         "direito_fisica",
       ],
       document_status: ["pending", "approved", "rejected"],
-      document_type: ["rg", "endereco", "matricula", "foto"],
+      document_type: ["rg", "endereco", "matricula", "foto", "selfie"],
       payment_method: ["pix", "credit_card", "debit_card"],
       payment_status: [
         "pending",
