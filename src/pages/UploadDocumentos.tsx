@@ -172,11 +172,18 @@ export default function UploadDocumentos() {
   };
 
   const handleUpload = async (file: File, type: DocumentType) => {
-    console.log('🔄 Iniciando upload:', type, file.name, file.size);
+    console.log('═══════════════════════════════════');
+    console.log('🚀 INICIANDO UPLOAD');
+    console.log('═══════════════════════════════════');
+    console.log('📁 Arquivo:', file.name, '| Tamanho:', file.size);
+    console.log('📋 Tipo:', type);
+    console.log('👤 User ID (auth.uid):', user?.id);
+    console.log('📝 Profile ID (student_profiles.id):', profile?.id);
+    console.log('═══════════════════════════════════');
     
-    if (!profile) {
-      console.log('❌ Profile não encontrado');
-      toast.error('Perfil não encontrado');
+    if (!profile?.id || !user?.id) {
+      console.error('❌ ERRO: profile.id ou user.id não existe!');
+      toast.error('Perfil não carregado. Recarregue a página.');
       return;
     }
     
@@ -213,10 +220,12 @@ export default function UploadDocumentos() {
         }));
       }, 200);
       
-      // Path único
+      // Path usando USER.ID para satisfazer RLS policy do storage
+      // A policy verifica: (storage.foldername(name))[1] = (auth.uid())::text
       const ext = file.name.split('.').pop();
-      const filePath = `${profile.id}/${type}/${Date.now()}.${ext}`;
-      console.log('📤 Enviando para storage:', filePath);
+      const filePath = `${user.id}/${type}/${Date.now()}.${ext}`;
+      console.log('📤 Storage path:', filePath);
+      console.log('   └─ Primeiro folder (user.id):', user.id);
       
       // Upload para Storage
       const { error: storageError } = await supabase.storage
