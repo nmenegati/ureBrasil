@@ -21,7 +21,7 @@ const brazilianStates = [
 const periods = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º'];
 
 export default function CompleteProfile() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { fetchAddress, loading: cepLoading } = useViaCep();
 
@@ -39,10 +39,22 @@ export default function CompleteProfile() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
+    if (!authLoading && !user) {
+      navigate('/login', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
+
+  // Mostrar loading enquanto verifica autenticação
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-cyan-500 animate-spin mx-auto" />
+          <p className="text-slate-400 mt-4">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCepChange = async (value: string) => {
     const formatted = formatCEP(value);
