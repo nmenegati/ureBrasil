@@ -38,10 +38,10 @@ interface Progress {
 }
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   
-  const [loading, setLoading] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [card, setCard] = useState<StudentCard | null>(null);
   const [documentsApproved, setDocumentsApproved] = useState(0);
@@ -53,67 +53,56 @@ export default function Dashboard() {
     card: false
   });
 
+  // Redirecionar se não autenticado
   useEffect(() => {
-    console.log('=== DASHBOARD useEffect ===');
-    console.log('🕐 Timestamp:', new Date().toISOString());
-    console.log('👤 user do useAuth:', user ? user.email : 'NULL');
-    
-    if (!user) {
-      console.log('❌ SEM USER - redirecionando para /login');
-      navigate('/login');
-      return;
+    if (!loading && !user) {
+      navigate('/login', { replace: true });
     }
-    
-    console.log('✅ User existe, chamando fetchData()');
-    fetchData();
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
+  // Buscar dados quando tiver usuário
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   const fetchData = async () => {
-    console.log('🔄 fetchData() iniciou');
+    if (!user) return;
     
-    if (!user) {
-      console.log('❌ fetchData: user é null, abortando');
-      return;
-    }
-    
-    console.log('👤 Buscando dados para user.id:', user.id);
-    setLoading(true);
+    setLoadingData(true);
     
     try {
       // 1. Buscar perfil
-      console.log('📋 Buscando perfil...');
       const { data: profileData, error: profileError } = await supabase
         .from('student_profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('📦 Perfil retornado:', profileData ? 'ENCONTRADO' : 'NULL');
-      console.log('  - error:', profileError);
-
       if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
         toast.error('Erro ao carregar dados');
-        setLoading(false);
+        setLoadingData(false);
         return;
       }
 
-      // Se não tem perfil, deixar o Dashboard mostrar UI apropriada
       setProfile(profileData);
 
+      if (!profileData) {
+        setLoadingData(false);
+        return;
+      }
+
       // 2. Buscar documentos
-      console.log('📄 Buscando documentos...');
       const { data: docs } = await supabase
         .from('documents')
         .select('status')
         .eq('student_id', profileData.id);
 
       const approved = docs?.filter(d => d.status === 'approved').length || 0;
-      console.log('  - docs aprovados:', approved);
       setDocumentsApproved(approved);
 
       // 3. Buscar pagamento aprovado
-      console.log('💳 Buscando pagamento...');
       const { data: payment } = await supabase
         .from('payments')
         .select('status')
@@ -121,36 +110,29 @@ export default function Dashboard() {
         .eq('status', 'approved')
         .maybeSingle();
 
-      console.log('  - pagamento aprovado:', !!payment);
       setPaymentApproved(!!payment);
 
       // 4. Buscar carteirinha
-      console.log('🎫 Buscando carteirinha...');
       const { data: cardData } = await supabase
         .from('student_cards')
         .select('*')
         .eq('student_id', profileData.id)
         .maybeSingle();
 
-      console.log('  - carteirinha:', cardData ? 'ENCONTRADA' : 'NULL');
       setCard(cardData);
       
       // 5. Calcular progresso
-      const prog = {
+      setProgress({
         profile: profileData.profile_completed,
         documents: approved >= 4,
         payment: !!payment,
         card: cardData?.status === 'active'
-      };
-      console.log('📊 Progresso calculado:', prog);
-      setProgress(prog);
+      });
       
     } catch (error) {
-      console.error('💥 EXCEPTION em fetchData:', error);
       toast.error('Erro ao carregar dados');
     } finally {
-      console.log('✅ fetchData() finalizado');
-      setLoading(false);
+      setLoadingData(false);
     }
   };
 
@@ -288,7 +270,7 @@ export default function Dashboard() {
     },
   ];
 
-  if (loading) {
+  if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
