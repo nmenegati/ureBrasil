@@ -172,25 +172,38 @@ export default function UploadDocumentos() {
   };
 
   const handleUpload = async (file: File, type: DocumentType) => {
+    console.log('🔄 Iniciando upload:', type, file.name, file.size);
+    
     if (!profile) {
+      console.log('❌ Profile não encontrado');
       toast.error('Perfil não encontrado');
       return;
     }
+    
+    const config = documentConfigs.find(d => d.type === type);
+    if (!config) {
+      console.log('❌ Config não encontrada para tipo:', type);
+      toast.error('Tipo de documento inválido');
+      return;
+    }
+    
+    // Toast de loading
+    const toastId = `upload-${type}`;
+    toast.loading(`Enviando ${config.label}...`, { id: toastId });
     
     try {
       setUploading(prev => ({ ...prev, [type]: true }));
       setUploadProgress(prev => ({ ...prev, [type]: 0 }));
       
-      const config = documentConfigs.find(d => d.type === type);
-      if (!config) throw new Error('Tipo inválido');
-      
       // Validações
+      console.log('📝 Validando arquivo...');
       if (file.size > config.maxSizeMB * 1024 * 1024) {
         throw new Error(`Arquivo maior que ${config.maxSizeMB}MB`);
       }
       if (!config.acceptedTypes.includes(file.type)) {
         throw new Error('Tipo de arquivo não aceito');
       }
+      console.log('✅ Validação OK');
       
       // Simular progresso
       const progressInterval = setInterval(() => {
@@ -203,15 +216,21 @@ export default function UploadDocumentos() {
       // Path único
       const ext = file.name.split('.').pop();
       const filePath = `${profile.id}/${type}/${Date.now()}.${ext}`;
+      console.log('📤 Enviando para storage:', filePath);
       
       // Upload para Storage
       const { error: storageError } = await supabase.storage
         .from('documents')
         .upload(filePath, file, { upsert: true });
         
-      if (storageError) throw storageError;
+      if (storageError) {
+        console.error('❌ Erro storage:', storageError);
+        throw storageError;
+      }
+      console.log('✅ Storage OK');
       
       // Verificar se já existe documento deste tipo para este estudante
+      console.log('💾 Verificando documento existente...');
       const { data: existingDoc } = await supabase
         .from('documents')
         .select('id')
@@ -220,7 +239,7 @@ export default function UploadDocumentos() {
         .maybeSingle();
       
       if (existingDoc) {
-        // Atualizar documento existente
+        console.log('📝 Atualizando documento existente:', existingDoc.id);
         const { error: dbError } = await supabase
           .from('documents')
           .update({
@@ -232,9 +251,12 @@ export default function UploadDocumentos() {
           })
           .eq('id', existingDoc.id);
           
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error('❌ Erro banco (update):', dbError);
+          throw dbError;
+        }
       } else {
-        // Inserir novo documento
+        console.log('📝 Inserindo novo documento');
         const { error: dbError } = await supabase
           .from('documents')
           .insert({
@@ -247,19 +269,25 @@ export default function UploadDocumentos() {
             status: 'pending'
           });
           
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error('❌ Erro banco (insert):', dbError);
+          throw dbError;
+        }
       }
+      console.log('✅ Banco OK');
       
       clearInterval(progressInterval);
       setUploadProgress(prev => ({ ...prev, [type]: 100 }));
       
-      toast.success('Documento enviado com sucesso!');
+      toast.success(`${config.label} enviado com sucesso!`, { id: toastId });
+      console.log('🎉 Upload completo!');
       await fetchDocuments();
       
     } catch (error: any) {
-      console.error('Erro no upload:', error);
-      toast.error(error.message || 'Erro ao enviar documento');
+      console.error('❌ ERRO GERAL:', error);
+      toast.error(error.message || 'Erro ao enviar documento', { id: toastId });
     } finally {
+      console.log('🏁 Finalizando upload');
       setUploading(prev => ({ ...prev, [type]: false }));
       setTimeout(() => {
         setUploadProgress(prev => ({ ...prev, [type]: 0 }));
@@ -270,7 +298,6 @@ export default function UploadDocumentos() {
   // Componente interno do Card de Documento
   const DocumentCard = ({ config }: { config: DocumentConfig }) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
     
     const doc = documents[config.type];
     const preview = previews[config.type];
@@ -278,16 +305,29 @@ export default function UploadDocumentos() {
     const progress = uploadProgress[config.type] || 0;
     const IconComponent = config.icon;
     
+    const handleDragOver = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    
     const handleDrop = (e: React.DragEvent) => {
       e.preventDefault();
-      setIsDragging(false);
+      e.stopPropagation();
+      console.log('📁 Drop detectado');
       const file = e.dataTransfer.files[0];
-      if (file) handleUpload(file, config.type);
+      if (file) {
+        console.log('📁 Arquivo via drop:', file.name);
+        handleUpload(file, config.type);
+      }
     };
     
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      console.log('📁 Arquivo selecionado via input:', e.target.files);
       const file = e.target.files?.[0];
-      if (file) handleUpload(file, config.type);
+      if (file) {
+        console.log('📁 Chamando handleUpload para:', file.name);
+        handleUpload(file, config.type);
+      }
       // Reset input para permitir reenvio do mesmo arquivo
       e.target.value = '';
     };
@@ -331,13 +371,10 @@ export default function UploadDocumentos() {
     return (
       <div 
         className={cn(
-          "bg-slate-800/50 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-all duration-200",
-          isDragging && "border-cyan-500 bg-cyan-500/10",
-          doc && "border-solid border-slate-700",
-          !doc && !isDragging && "border-slate-600 hover:border-slate-500"
+          "bg-slate-800/50 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors",
+          doc ? "border-solid border-slate-700" : "border-slate-600 hover:border-cyan-500/50"
         )}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
+        onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
         {/* Header do card */}
