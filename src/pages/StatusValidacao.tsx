@@ -70,15 +70,15 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
   };
 
   return (
-    <div className="bg-card/80 backdrop-blur-sm rounded-xl border border-border p-4">
+    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border border-white/20 p-4 shadow-lg shadow-black/5">
       <div className="flex items-start gap-3">
         <div className="p-2 bg-primary/10 rounded-lg">
           <Icon className="w-6 h-6 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground">{config.label}</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-white">{config.label}</h3>
           {doc && (
-            <p className="text-sm text-muted-foreground truncate mt-1">{doc.file_name}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300 truncate mt-1">{doc.file_name}</p>
           )}
           <div className="mt-3">
             {getStatusBadge()}
@@ -205,27 +205,32 @@ export default function StatusValidacao() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
       <Header variant="app" />
       
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="relative z-10 p-4 sm:p-6 lg:p-8">
         <div className="max-w-2xl mx-auto">
 
         {/* Título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
             {allPending ? (
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <Loader2 className="w-8 h-8 text-white animate-spin" />
             ) : hasRejected ? (
-              <XCircle className="w-8 h-8 text-destructive" />
+              <XCircle className="w-8 h-8 text-red-300" />
             ) : (
-              <CheckCircle className="w-8 h-8 text-green-500" />
+              <CheckCircle className="w-8 h-8 text-green-300" />
             )}
           </div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-bold text-white">
             {hasRejected ? 'Documentos Precisam de Correção' : 'Validando seus Documentos'}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-white/80 mt-2">
             {hasRejected 
               ? 'Alguns documentos foram rejeitados. Veja os motivos abaixo.'
               : 'Aguarde enquanto analisamos seus documentos'
@@ -272,10 +277,10 @@ export default function StatusValidacao() {
         {/* Info de tempo */}
         {allPending && (
           <div className="text-center mb-6">
-            <p className="text-muted-foreground text-sm">
+            <p className="text-white/80 text-sm">
               ⏱️ Tempo estimado: 2 a 5 minutos
             </p>
-            <p className="text-muted-foreground/70 text-xs mt-1">
+            <p className="text-white/60 text-xs mt-1">
               A página atualiza automaticamente a cada 5 segundos
             </p>
           </div>
