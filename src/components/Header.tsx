@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, Sun, Moon, User, LogOut, Home, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Sun, Moon, User, LogOut, Home } from 'lucide-react';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 
 interface HeaderProps {
@@ -118,27 +118,14 @@ export function Header({ variant = 'app' }: HeaderProps) {
             {/* Auth Section */}
             {user ? (
               <>
-                {/* Dashboard Button - Only when not on dashboard pages and not PWA */}
-                {!isPWA && isLandingPage && (
+                {/* Início Button - Only when logged in and not PWA */}
+                {!isPWA && user && (
                   <Button
-                    variant="hero-primary"
                     onClick={() => navigate('/dashboard')}
-                    className="hidden sm:inline-flex"
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                    <span className="hidden sm:inline">Dashboard</span>
-                  </Button>
-                )}
-                
-                {/* Home Button - Only on app pages (not landing) and not PWA */}
-                {!isPWA && !isLandingPage && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate('/')}
-                    className="text-muted-foreground hover:text-foreground hover:bg-muted gap-2"
+                    className="bg-orange-500 hover:bg-orange-600 text-white gap-2"
                   >
                     <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline">Início</span>
+                    Início
                   </Button>
                 )}
                 
@@ -158,13 +145,6 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   </DropdownMenuTrigger>
                   
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/dashboard')}
-                      className="cursor-pointer"
-                    >
-                      <LayoutDashboard className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => navigate('/perfil')}
                       className="cursor-pointer"
