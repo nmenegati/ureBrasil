@@ -99,6 +99,9 @@ export default function UploadDocumentos() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showFullTerms, setShowFullTerms] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAlreadyAccepted, setTermsAlreadyAccepted] = useState(false);
+  const [termsAcceptedDate, setTermsAcceptedDate] = useState<string | null>(null);
+  const [termsVersion, setTermsVersion] = useState<string>('');
 
   // Redirecionar se não autenticado
   useEffect(() => {
@@ -119,6 +122,28 @@ export default function UploadDocumentos() {
     if (profile) {
       fetchDocuments();
     }
+  }, [profile]);
+
+  // Verificar se já aceitou os termos
+  useEffect(() => {
+    const checkTerms = async () => {
+      if (!profile?.id) return;
+      
+      const { data } = await supabase
+        .from('student_profiles')
+        .select('terms_accepted, terms_accepted_at, terms_version')
+        .eq('id', profile.id)
+        .maybeSingle();
+      
+      if (data?.terms_accepted) {
+        setTermsAccepted(true);
+        setTermsAlreadyAccepted(true);
+        setTermsAcceptedDate(data.terms_accepted_at);
+        setTermsVersion(data.terms_version || '1.0');
+      }
+    };
+    
+    checkTerms();
   }, [profile]);
 
   const fetchProfile = async () => {
@@ -503,6 +528,61 @@ export default function UploadDocumentos() {
   const uploadedCount = Object.keys(documents).length;
   const allDocsUploaded = uploadedCount >= 4;
 
+  const handleSubmit = async () => {
+    if (!termsAccepted && !termsAlreadyAccepted) {
+      toast.error('Você precisa aceitar a declaração de veracidade');
+      return;
+    }
+
+    // Se já aceitou antes, só redireciona
+    if (termsAlreadyAccepted) {
+      navigate('/status-validacao');
+      return;
+    }
+
+    try {
+      // Pegar IP do usuário
+      let ip = 'unknown';
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ip = ipData.ip;
+      } catch (e) {
+        console.log('Não foi possível obter IP:', e);
+      }
+
+      // Salvar aceitação dos termos no banco
+      const { error } = await supabase
+        .from('student_profiles')
+        .update({
+          terms_accepted: true,
+          terms_accepted_at: new Date().toISOString(),
+          terms_ip_address: ip,
+          terms_version: '1.0'
+        })
+        .eq('id', profile!.id);
+
+      if (error) {
+        console.error('Erro ao salvar termos:', error);
+        toast.error('Erro ao salvar aceitação do termo');
+        return;
+      }
+
+      console.log('✅ Termo aceito e salvo:', {
+        timestamp: new Date().toISOString(),
+        ip: ip,
+        version: '1.0'
+      });
+
+      toast.success('Termo aceito com sucesso!');
+      navigate('/status-validacao');
+      
+    } catch (error) {
+      console.error('Erro ao processar aceite:', error);
+      toast.error('Erro ao processar. Tente novamente.');
+    }
+  };
+
   if (authLoading || loadingProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -570,8 +650,8 @@ export default function UploadDocumentos() {
           />
         </div>
         
-        {/* Termo de Veracidade */}
-        {allDocsUploaded && (
+        {/* Termo de Veracidade - Só mostra se ainda NÃO aceitou */}
+        {allDocsUploaded && !termsAlreadyAccepted && (
           <div className="mb-6">
             {/* Card expandível */}
             <div className="border border-slate-600 rounded-xl overflow-hidden mb-4">
@@ -643,18 +723,34 @@ export default function UploadDocumentos() {
             </div>
           </div>
         )}
+
+        {/* Mensagem de termo já aceito */}
+        {allDocsUploaded && termsAlreadyAccepted && (
+          <Alert className="mb-6 bg-green-500/10 border-green-500/30">
+            <CheckCircle className="h-4 w-4 text-green-400" />
+            <AlertDescription className="text-green-300">
+              ✅ Você já aceitou o Termo de Responsabilidade
+              <br />
+              <span className="text-xs text-green-400/70">
+                Data: {termsAcceptedDate ? new Date(termsAcceptedDate).toLocaleString('pt-BR') : 'N/A'} • Versão: {termsVersion || '1.0'}
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
         
         {/* Botão continuar */}
         <Button
-          disabled={!allDocsUploaded || !termsAccepted}
-          onClick={() => navigate('/status-validacao')}
+          disabled={!allDocsUploaded || (!termsAccepted && !termsAlreadyAccepted)}
+          onClick={handleSubmit}
           className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
         >
           {!allDocsUploaded 
             ? `Envie todos os ${4 - uploadedCount} documentos restantes`
-            : !termsAccepted
+            : (!termsAccepted && !termsAlreadyAccepted)
               ? 'Aceite o termo de responsabilidade'
-              : 'Enviar para Validação'
+              : termsAlreadyAccepted
+                ? 'Ir para Validação'
+                : 'Enviar para Validação'
           }
         </Button>
       </div>
