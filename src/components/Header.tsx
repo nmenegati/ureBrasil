@@ -145,7 +145,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 {!isPWA && !isLandingPage && (
                   <Button
                     variant="ghost"
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/')}
                     className="text-slate-300 hover:text-white hover:bg-slate-700/50 gap-2"
                   >
                     <Home className="w-4 h-4" />
