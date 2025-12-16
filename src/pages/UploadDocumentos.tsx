@@ -286,7 +286,13 @@ export default function UploadDocumentos() {
             file_name: file.name,
             file_size: file.size,
             mime_type: file.type,
-            status: 'pending'
+            status: 'pending',
+            // Limpar campos de rejeição ao reenviar
+            rejection_reason: null,
+            rejection_notes: null,
+            rejection_reason_id: null,
+            validated_at: null,
+            validated_by: null
           })
           .eq('id', existingDoc.id);
           
@@ -520,6 +526,17 @@ export default function UploadDocumentos() {
               {doc.rejection_reason}
             </AlertDescription>
           </Alert>
+        )}
+        
+        {/* Botão destacado para reenviar documento rejeitado */}
+        {doc?.status === 'rejected' && (
+          <Button 
+            onClick={() => inputRef.current?.click()}
+            className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Enviar Novo Documento
+          </Button>
         )}
       </div>
     );
