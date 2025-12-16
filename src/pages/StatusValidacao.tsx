@@ -154,13 +154,13 @@ export default function StatusValidacao() {
     }
   }, [user, loadData]);
 
-  // Polling a cada 10 segundos
+  // Polling a cada 5 segundos
   useEffect(() => {
     if (!profileId) return;
     
     const interval = setInterval(() => {
       loadDocuments(profileId);
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [profileId, loadDocuments]);
@@ -179,6 +179,8 @@ export default function StatusValidacao() {
       if (allApproved) {
         toast.success('Todos os documentos foram aprovados! 🎉');
         setTimeout(() => navigate('/escolher-plano'), 2000);
+      } else if (documents.some(d => d.status === 'rejected')) {
+        toast.error('Alguns documentos precisam ser corrigidos');
       }
     }
   }, [documents, navigate]);
@@ -235,6 +237,34 @@ export default function StatusValidacao() {
           </p>
         </div>
 
+        {/* Status Alerts */}
+        {documents.length === 4 && documents.every(d => d.status === 'approved') && (
+          <Alert className="mb-6 bg-green-500/10 border-green-500/30">
+            <CheckCircle className="h-4 w-4 text-green-400" />
+            <AlertDescription className="text-green-300">
+              Todos os documentos foram aprovados! Redirecionando para escolha de plano...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {hasRejected && (
+          <Alert className="mb-6 bg-red-500/10 border-red-500/30">
+            <XCircle className="h-4 w-4 text-red-400" />
+            <AlertDescription className="text-red-300">
+              Alguns documentos foram rejeitados. Corrija-os e envie novamente.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {allPending && documents.length > 0 && (
+          <Alert className="mb-6 bg-cyan-500/10 border-cyan-500/30">
+            <Loader2 className="h-4 w-4 text-cyan-400 animate-spin" />
+            <AlertDescription className="text-cyan-300">
+              Validação em andamento... A página atualiza automaticamente a cada 5 segundos.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Cards de Documentos */}
         <div className="space-y-4 mb-8">
           {documentConfigs.map(config => {
@@ -250,7 +280,7 @@ export default function StatusValidacao() {
               ⏱️ Tempo estimado: 2 a 5 minutos
             </p>
             <p className="text-slate-500 text-xs mt-1">
-              A página atualiza automaticamente a cada 10 segundos
+              A página atualiza automaticamente a cada 5 segundos
             </p>
           </div>
         )}
@@ -277,6 +307,15 @@ export default function StatusValidacao() {
               className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white"
             >
               Corrigir Documentos
+            </Button>
+          )}
+          
+          {documents.length === 4 && documents.every(d => d.status === 'approved') && (
+            <Button
+              onClick={() => navigate('/escolher-plano')}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+            >
+              Escolher Plano →
             </Button>
           )}
         </div>
