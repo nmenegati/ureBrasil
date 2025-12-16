@@ -118,12 +118,12 @@ export function Header({ variant = 'app' }: HeaderProps) {
             {/* Auth Section */}
             {user ? (
               <>
-                {/* Início Button - Only when logged in and not PWA */}
-                {!isPWA && user && (
+                {/* Início Button - Only when logged in, not PWA, and not on dashboard */}
+                {!isPWA && user && location.pathname !== '/dashboard' && (
                   <Button
                     type="button"
                     onClick={() => navigate('/dashboard')}
-                    className="bg-[#0D7DBF] hover:bg-[#0a6ca8] text-white gap-2"
+                    className="bg-ure-orange hover:bg-ure-orange/90 text-white gap-2"
                   >
                     <Home className="w-4 h-4" />
                     Início
