@@ -380,7 +380,7 @@ export default function UploadDocumentos() {
     const getStatusBadge = () => {
       if (!doc) {
         return (
-          <Badge variant="secondary" className="bg-slate-700 text-slate-300">
+          <Badge variant="secondary" className="bg-muted text-muted-foreground">
             <Clock className="w-3 h-3 mr-1" />
             Pendente
           </Badge>
@@ -389,21 +389,21 @@ export default function UploadDocumentos() {
       switch (doc.status) {
         case 'pending':
           return (
-            <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400">
+            <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">
               <Clock className="w-3 h-3 mr-1" />
               Em análise
             </Badge>
           );
         case 'approved':
           return (
-            <Badge className="bg-green-500/20 text-green-400">
+            <Badge className="bg-green-500/20 text-green-600 dark:text-green-400">
               <CheckCircle className="w-3 h-3 mr-1" />
               Aprovado
             </Badge>
           );
         case 'rejected':
           return (
-            <Badge variant="destructive" className="bg-red-500/20 text-red-400">
+            <Badge variant="destructive" className="bg-red-500/20 text-red-600 dark:text-red-400">
               <AlertCircle className="w-3 h-3 mr-1" />
               Rejeitado
             </Badge>
@@ -416,8 +416,8 @@ export default function UploadDocumentos() {
     return (
       <div 
         className={cn(
-          "bg-slate-800/50 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors",
-          doc ? "border-solid border-slate-700" : "border-slate-600 hover:border-cyan-500/50"
+          "bg-card/80 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors",
+          doc ? "border-solid border-border" : "border-muted-foreground/30 hover:border-primary/50"
         )}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -425,12 +425,12 @@ export default function UploadDocumentos() {
         {/* Header do card */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/10 rounded-lg">
-              <IconComponent className="w-6 h-6 text-cyan-500" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <IconComponent className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-white">{config.label}</h3>
-              <p className="text-sm text-slate-400">{config.description}</p>
+              <h3 className="font-semibold text-foreground">{config.label}</h3>
+              <p className="text-sm text-muted-foreground">{config.description}</p>
             </div>
           </div>
           {getStatusBadge()}
@@ -440,7 +440,7 @@ export default function UploadDocumentos() {
         {isUploading ? (
           <div className="mt-4">
             <Progress value={progress} className="h-2" />
-            <p className="text-sm text-slate-400 mt-2 text-center">
+            <p className="text-sm text-muted-foreground mt-2 text-center">
               Enviando... {progress}%
             </p>
           </div>
@@ -452,12 +452,12 @@ export default function UploadDocumentos() {
               className="w-full h-40 object-cover rounded-lg"
             />
             <div className="flex items-center justify-between mt-2">
-              <p className="text-sm text-slate-400 truncate flex-1">{doc.file_name}</p>
+              <p className="text-sm text-muted-foreground truncate flex-1">{doc.file_name}</p>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => inputRef.current?.click()}
-                className="text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10"
+                className="text-primary hover:text-primary/80 hover:bg-primary/10"
               >
                 Trocar
               </Button>
@@ -472,16 +472,16 @@ export default function UploadDocumentos() {
           </div>
         ) : doc && !preview ? (
           <div className="mt-4">
-            <div className="p-4 bg-slate-700/50 rounded-lg flex items-center gap-3">
-              <File className="w-8 h-8 text-slate-400" />
-              <p className="text-sm text-slate-300 truncate flex-1">{doc.file_name}</p>
+            <div className="p-4 bg-muted/50 rounded-lg flex items-center gap-3">
+              <File className="w-8 h-8 text-muted-foreground" />
+              <p className="text-sm text-foreground truncate flex-1">{doc.file_name}</p>
             </div>
             <div className="flex justify-end mt-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => inputRef.current?.click()}
-                className="text-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10"
+                className="text-primary hover:text-primary/80 hover:bg-primary/10"
               >
                 Trocar
               </Button>
@@ -506,12 +506,12 @@ export default function UploadDocumentos() {
             <Button 
               onClick={() => inputRef.current?.click()}
               variant="outline"
-              className="w-full border-dashed border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-white"
+              className="w-full"
             >
               <Upload className="w-4 h-4 mr-2" />
               Escolher arquivo
             </Button>
-            <p className="text-xs text-slate-500 mt-2 text-center">
+            <p className="text-xs text-muted-foreground mt-2 text-center">
               {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')} 
               {' • '}Máx {config.maxSizeMB}MB
             </p>
@@ -522,7 +522,7 @@ export default function UploadDocumentos() {
         {doc?.status === 'rejected' && doc.rejection_reason && (
           <Alert variant="destructive" className="mt-4 bg-red-500/10 border-red-500/30">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-red-300">
+            <AlertDescription className="text-red-600 dark:text-red-300">
               {doc.rejection_reason}
             </AlertDescription>
           </Alert>
@@ -532,7 +532,7 @@ export default function UploadDocumentos() {
         {doc?.status === 'rejected' && (
           <Button 
             onClick={() => inputRef.current?.click()}
-            className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+            className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 border border-red-500/30"
           >
             <Upload className="w-4 h-4 mr-2" />
             Enviar Novo Documento
@@ -602,10 +602,10 @@ export default function UploadDocumentos() {
 
   if (authLoading || loadingProfile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto" />
-          <p className="text-slate-400 mt-4">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+          <p className="text-muted-foreground mt-4">Carregando...</p>
         </div>
       </div>
     );
@@ -613,14 +613,14 @@ export default function UploadDocumentos() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h1 className="text-xl text-white font-bold">Perfil não encontrado</h1>
-          <p className="text-slate-400 mt-2">Complete seu perfil antes de enviar documentos.</p>
+          <h1 className="text-xl text-foreground font-bold">Perfil não encontrado</h1>
+          <p className="text-muted-foreground mt-2">Complete seu perfil antes de enviar documentos.</p>
           <Button 
             onClick={() => navigate('/complete-profile')} 
-            className="mt-6 bg-cyan-500 hover:bg-cyan-600"
+            className="mt-6 bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             Completar Perfil
           </Button>
@@ -630,17 +630,17 @@ export default function UploadDocumentos() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
       
       <main className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Envie seus Documentos
             </h1>
-            <p className="text-slate-400 mt-2">
+            <p className="text-muted-foreground mt-2">
               Passo 2 de 4 - Validação de documentos
             </p>
           </div>
@@ -653,9 +653,9 @@ export default function UploadDocumentos() {
         </div>
         
         {/* Contador de progresso */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-center justify-between">
-          <span className="text-slate-300">
-            Documentos enviados: <span className="text-cyan-500 font-semibold">{uploadedCount}</span> de 4
+        <div className="bg-card/80 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-center justify-between">
+          <span className="text-muted-foreground">
+            Documentos enviados: <span className="text-primary font-semibold">{uploadedCount}</span> de 4
           </span>
           <Progress 
             value={(uploadedCount / 4) * 100} 
@@ -667,52 +667,52 @@ export default function UploadDocumentos() {
         {allDocsUploaded && !termsAlreadyAccepted && (
           <div className="mb-6">
             {/* Card expandível */}
-            <div className="border border-slate-600 rounded-xl overflow-hidden mb-4">
+            <div className="border border-border rounded-xl overflow-hidden mb-4">
               <button
                 onClick={() => setShowFullTerms(!showFullTerms)}
-                className="w-full p-4 flex items-center justify-between bg-slate-800/70 hover:bg-slate-700/70 transition-colors"
+                className="w-full p-4 flex items-center justify-between bg-card/70 hover:bg-card transition-colors"
               >
-                <span className="font-semibold text-white flex items-center gap-2">
+                <span className="font-semibold text-foreground flex items-center gap-2">
                   📄 Termo de Responsabilidade por Veracidade dos Documentos
                 </span>
                 <ChevronDown className={cn(
-                  "w-5 h-5 text-slate-400 transition-transform duration-200",
+                  "w-5 h-5 text-muted-foreground transition-transform duration-200",
                   showFullTerms && "rotate-180"
                 )} />
               </button>
               
               {showFullTerms && (
-                <div className="p-4 bg-slate-800/30 text-sm text-slate-300 space-y-3 border-t border-slate-700">
+                <div className="p-4 bg-card/30 text-sm text-muted-foreground space-y-3 border-t border-border">
                   <p>
-                    Eu, <strong className="text-white">{profile?.full_name}</strong>, portador(a) do CPF nº
-                    <strong className="text-white"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
+                    Eu, <strong className="text-foreground">{profile?.full_name}</strong>, portador(a) do CPF nº
+                    <strong className="text-foreground"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
                   </p>
                   
                   <ol className="list-decimal list-inside space-y-2 ml-2">
                     <li>
                       Os documentos enviados (RG/CNH, comprovante de matrícula e 
-                      fotografias) são <strong className="text-white">VERDADEIROS, AUTÊNTICOS</strong> e 
-                      de minha <strong className="text-white">TITULARIDADE</strong>.
+                      fotografias) são <strong className="text-foreground">VERDADEIROS, AUTÊNTICOS</strong> e 
+                      de minha <strong className="text-foreground">TITULARIDADE</strong>.
                     </li>
                     <li>
-                      Sou o <strong className="text-white">ÚNICO RESPONSÁVEL</strong> pela veracidade das 
-                      informações fornecidas, <strong className="text-white">ISENTANDO a URE BRASIL</strong> de 
+                      Sou o <strong className="text-foreground">ÚNICO RESPONSÁVEL</strong> pela veracidade das 
+                      informações fornecidas, <strong className="text-foreground">ISENTANDO a URE BRASIL</strong> de 
                       qualquer responsabilidade civil ou criminal decorrente de 
                       falsificação ou adulteração.
                     </li>
                     <li>
-                      Estou <strong className="text-white">CIENTE</strong> de que a falsificação de documentos 
-                      constitui <strong className="text-white">CRIME</strong> previsto nos Artigos 297, 298 e 
+                      Estou <strong className="text-foreground">CIENTE</strong> de que a falsificação de documentos 
+                      constitui <strong className="text-foreground">CRIME</strong> previsto nos Artigos 297, 298 e 
                       299 do Código Penal Brasileiro (reclusão de 1 a 5 anos e multa).
                     </li>
                     <li>
-                      Em caso de <strong className="text-white">FALSIDADE</strong> comprovada, meu cadastro será
-                      <strong className="text-white"> CANCELADO</strong> imediatamente, sem direito a reembolso, 
+                      Em caso de <strong className="text-foreground">FALSIDADE</strong> comprovada, meu cadastro será
+                      <strong className="text-foreground"> CANCELADO</strong> imediatamente, sem direito a reembolso, 
                       e o caso será comunicado às autoridades competentes.
                     </li>
                   </ol>
                   
-                  <div className="mt-4 pt-4 border-t border-slate-700 text-xs text-slate-500">
+                  <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground/70">
                     <p>Data: {new Date().toLocaleString('pt-BR')}</p>
                   </div>
                 </div>
@@ -727,8 +727,8 @@ export default function UploadDocumentos() {
                   onCheckedChange={(checked) => setTermsAccepted(checked === true)}
                   className="mt-0.5 border-yellow-500/50 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
                 />
-                <span className="text-sm text-slate-300">
-                  Declaro que li e concordo com o <strong className="text-yellow-400">Termo de Responsabilidade</strong> acima. 
+                <span className="text-sm text-muted-foreground">
+                  Declaro que li e concordo com o <strong className="text-yellow-600 dark:text-yellow-400">Termo de Responsabilidade</strong> acima. 
                   Estou ciente de que a falsificação de documentos é crime 
                   (Arts. 297-299 do Código Penal).
                 </span>
@@ -740,11 +740,11 @@ export default function UploadDocumentos() {
         {/* Mensagem de termo já aceito */}
         {allDocsUploaded && termsAlreadyAccepted && (
           <Alert className="mb-6 bg-green-500/10 border-green-500/30">
-            <CheckCircle className="h-4 w-4 text-green-400" />
-            <AlertDescription className="text-green-300">
+            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-600 dark:text-green-300">
               ✅ Você já aceitou o Termo de Responsabilidade
               <br />
-              <span className="text-xs text-green-400/70">
+              <span className="text-xs text-green-600/70 dark:text-green-400/70">
                 Data: {termsAcceptedDate ? new Date(termsAcceptedDate).toLocaleString('pt-BR') : 'N/A'} • Versão: {termsVersion || '1.0'}
               </span>
             </AlertDescription>
@@ -755,7 +755,7 @@ export default function UploadDocumentos() {
         <Button
           disabled={!allDocsUploaded || (!termsAccepted && !termsAlreadyAccepted)}
           onClick={handleSubmit}
-          className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
         >
           {!allDocsUploaded 
             ? `Envie todos os ${4 - uploadedCount} documentos restantes`

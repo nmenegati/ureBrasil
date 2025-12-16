@@ -71,10 +71,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
   const menuItems = ['Como Funciona', 'Benefícios', 'JurisEstudante', 'Planos', 'Dúvidas'];
   
-  // Determine background based on variant
-  const headerBg = variant === 'landing' 
-    ? 'bg-background/80 backdrop-blur-lg border-b border-border'
-    : 'bg-slate-900/95 backdrop-blur-md border-b border-slate-700/50';
+  // Determine background based on variant - both use CSS variables for theme support
+  const headerBg = 'bg-background/95 backdrop-blur-lg border-b border-border';
   
   return (
     <header className={`sticky top-0 z-50 ${headerBg}`}>
@@ -96,10 +94,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 <Button
                   key={item}
                   variant="ghost"
-                  className={variant === 'landing' 
-                    ? 'text-foreground hover:text-primary font-medium'
-                    : 'text-slate-300 hover:text-white font-medium'
-                  }
+                  className="text-foreground hover:text-primary font-medium"
                   onClick={() => scrollToSection(item)}
                 >
                   {item}
@@ -115,10 +110,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
               variant="ghost" 
               size="icon" 
               onClick={toggleDarkMode} 
-              className={variant === 'landing' 
-                ? 'hover:bg-muted'
-                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-              }
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
@@ -129,12 +121,9 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 {/* Dashboard Button - Only when not on dashboard pages and not PWA */}
                 {!isPWA && isLandingPage && (
                   <Button
-                    variant={variant === 'landing' ? 'hero-primary' : 'ghost'}
+                    variant="hero-primary"
                     onClick={() => navigate('/dashboard')}
-                    className={variant === 'app' 
-                      ? 'text-slate-300 hover:text-white hover:bg-slate-700/50 gap-2 hidden sm:inline-flex'
-                      : 'hidden sm:inline-flex'
-                    }
+                    className="hidden sm:inline-flex"
                   >
                     <LayoutDashboard className="w-4 h-4" />
                     <span className="hidden sm:inline">Dashboard</span>
@@ -146,7 +135,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   <Button
                     variant="ghost"
                     onClick={() => navigate('/')}
-                    className="text-slate-300 hover:text-white hover:bg-slate-700/50 gap-2"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted gap-2"
                   >
                     <Home className="w-4 h-4" />
                     <span className="hidden sm:inline">Início</span>
@@ -157,12 +146,12 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-                      <Avatar className={`h-9 w-9 border-2 ${variant === 'landing' ? 'border-primary' : 'border-cyan-500'}`}>
-                        <AvatarFallback className="bg-cyan-500 text-white font-semibold">
+                      <Avatar className="h-9 w-9 border-2 border-primary">
+                        <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
-                      <span className={`font-medium hidden sm:block ${variant === 'landing' ? 'text-foreground' : 'text-white'}`}>
+                      <span className="font-medium hidden sm:block text-foreground">
                         {firstName}
                       </span>
                     </button>
