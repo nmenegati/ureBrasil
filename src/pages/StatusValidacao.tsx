@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Header } from '@/components/Header';
 import { 
-  ArrowLeft, FileText, GraduationCap, Camera, UserCircle,
+  FileText, GraduationCap, Camera, UserCircle,
   Loader2, CheckCircle, XCircle, RefreshCw, Clock
 } from 'lucide-react';
 
@@ -204,16 +205,11 @@ export default function StatusValidacao() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <button 
-          onClick={() => navigate('/dashboard')} 
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-6"
-        >
-          <ArrowLeft size={20} />
-          Voltar ao Dashboard
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Header variant="app" />
+      
+      <main className="p-4 sm:p-6 lg:p-8">
+        <div className="max-w-2xl mx-auto">
 
         {/* Título */}
         <div className="text-center mb-8">
@@ -319,7 +315,8 @@ export default function StatusValidacao() {
             </Button>
           )}
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

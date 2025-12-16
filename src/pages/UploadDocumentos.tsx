@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { Header } from '@/components/Header';
 import { 
-  ArrowLeft, 
   FileText, 
   GraduationCap, 
   Camera, 
@@ -630,24 +630,20 @@ export default function UploadDocumentos() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button 
-            onClick={() => navigate('/dashboard')} 
-            className="flex items-center gap-2 text-slate-400 hover:text-white mb-4 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            Voltar ao Dashboard
-          </button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">
-            Envie seus Documentos
-          </h1>
-          <p className="text-slate-400 mt-2">
-            Passo 2 de 4 - Validação de documentos
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Header variant="app" />
+      
+      <main className="p-4 sm:p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+              Envie seus Documentos
+            </h1>
+            <p className="text-slate-400 mt-2">
+              Passo 2 de 4 - Validação de documentos
+            </p>
+          </div>
         
         {/* Grid de cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
@@ -770,7 +766,8 @@ export default function UploadDocumentos() {
                 : 'Enviar para Validação'
           }
         </Button>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

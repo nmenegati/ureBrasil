@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +7,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Typewriter } from "@/components/ui/typewriter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
-  Menu,
-  X,
-  Sun,
-  Moon,
   Check,
   Rocket,
   Calculator,
@@ -26,7 +21,7 @@ import {
   Video,
   Star,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { Header } from "@/components/Header";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
 import jurisStudentImage from "@/assets/juris-student.jpg";
 import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.jpeg";
@@ -36,35 +31,8 @@ import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.jpg";
 import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
 
 const Index = () => {
-  const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
-
-  const toggleDarkMode = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
-  const scrollToSection = (sectionName: string) => {
-    const sectionIds: Record<string, string> = {
-      "Como Funciona": "como-funciona",
-      Benefícios: "beneficios",
-      JurisEstudante: "juris-estudante",
-      Planos: "planos",
-      Dúvidas: "faq",
-    };
-
-    const sectionId = sectionIds[sectionName];
-    const element = document.getElementById(sectionId);
-
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-      setIsMobileMenuOpen(false);
-    }
-  };
-
-  const menuItems = ["Como Funciona", "Benefícios", "JurisEstudante", "Planos", "Dúvidas"];
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
 
@@ -81,101 +49,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <img
-                src={ureBrasilLogo}
-                alt="URE Brasil - União Representativa dos Estudantes"
-                className="h-10 sm:h-12 w-auto object-contain"
-              />
-            </div>
-
-            {/* Desktop Menu */}
-            <nav className="hidden lg:flex items-center space-x-1">
-              {menuItems.map((item) => (
-                <Button
-                  key={item}
-                  variant="ghost"
-                  className="text-foreground hover:text-primary font-medium"
-                  onClick={() => scrollToSection(item)}
-                >
-                  {item}
-                </Button>
-              ))}
-            </nav>
-
-            {/* Right Section */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Dark Mode Toggle */}
-              <Button variant="ghost" size="icon" onClick={toggleDarkMode} className="hover:bg-muted">
-                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </Button>
-
-              {/* Auth Buttons - Hidden on mobile */}
-              {user ? (
-                <Button asChild variant="hero-primary" className="hidden sm:inline-flex">
-                  <Link to="/dashboard">Dashboard</Link>
-                </Button>
-              ) : (
-                <>
-                  <Button asChild variant="header-outline" className="hidden sm:inline-flex">
-                    <Link to="/login">Entrar</Link>
-                  </Button>
-                  <Button asChild className="bg-ure-orange text-white hover:bg-ure-orange/90 hidden sm:inline-flex">
-                    <Link to="/signup">Cadastrar</Link>
-                  </Button>
-                </>
-              )}
-
-              {/* Mobile Menu Toggle */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="lg:hidden py-4 space-y-2 animate-fade-in">
-              {menuItems.map((item) => (
-                <Button
-                  key={item}
-                  variant="ghost"
-                  className="w-full justify-start text-foreground hover:text-primary"
-                  onClick={() => scrollToSection(item)}
-                >
-                  {item}
-                </Button>
-              ))}
-              <div className="pt-4 space-y-2">
-                {user ? (
-                  <Button asChild variant="hero-primary" className="w-full">
-                    <Link to="/dashboard">Dashboard</Link>
-                  </Button>
-                ) : (
-                  <>
-                    <Button asChild variant="header-outline" className="w-full">
-                      <Link to="/login">Entrar</Link>
-                    </Button>
-                    <Button asChild className="w-full bg-ure-orange text-white hover:bg-ure-orange/90">
-                      <Link to="/signup">Cadastrar</Link>
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
+      <Header variant="landing" />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-20 sm:pt-24 bg-gradient-to-br from-[#0D7DBF] to-[#00A859] overflow-hidden">
