@@ -4,12 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Header } from '@/components/Header';
 import { 
   CheckCircle, Clock, User, FileText, CreditCard, 
-  HelpCircle, Settings, LogOut, ChevronRight, 
+  HelpCircle, ChevronRight, 
   AlertCircle, Download, QrCode
 } from 'lucide-react';
-import ureLogo from '@/assets/ure-brasil-logo.png';
 
 interface StudentProfile {
   id: string;
@@ -287,24 +287,7 @@ export default function Dashboard() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-3">
-                <img src={ureLogo} alt="URE Brasil" className="h-10 w-auto" />
-                <span className="text-white font-semibold hidden sm:block">Carteirinha Estudantil</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-slate-400 hover:text-red-400 hover:bg-slate-700/50"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </header>
+        <Header variant="app" />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 text-center max-w-lg mx-auto">
             <AlertCircle className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
@@ -329,43 +312,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <img src={ureLogo} alt="URE Brasil" className="h-10 w-auto" />
-              <span className="text-white font-semibold hidden sm:block">Carteirinha Estudantil</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-slate-400 hover:text-white hover:bg-slate-700/50"
-                onClick={() => toast.info('Em breve!')}
-              >
-                <HelpCircle className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-slate-400 hover:text-white hover:bg-slate-700/50"
-                onClick={() => toast.info('Em breve!')}
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-slate-400 hover:text-red-400 hover:bg-slate-700/50"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header variant="app" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Saudação */}

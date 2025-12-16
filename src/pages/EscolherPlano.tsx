@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Check, FileText, Scale, CreditCard, Award, ArrowLeft, Loader2 } from 'lucide-react';
+import { Header } from '@/components/Header';
+import { Check, FileText, Scale, CreditCard, Award, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Configuração visual dos planos (ordem e benefícios)
@@ -149,19 +150,13 @@ export default function EscolherPlano() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar ao Dashboard
-          </button>
-          
-          <div className="text-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Header variant="app" />
+      
+      <main className="py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Escolha seu Plano
             </h1>
@@ -169,7 +164,6 @@ export default function EscolherPlano() {
               Todas as opções incluem validade de 1 ano
             </p>
           </div>
-        </div>
 
         {/* Grid de Planos */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -238,11 +232,13 @@ export default function EscolherPlano() {
         </div>
 
         {/* Footer */}
+        {/* Footer */}
         <div className="mt-10 text-center text-sm text-slate-500">
           <p>🔒 Pagamento 100% seguro</p>
           <p className="mt-2">Dúvidas? contato@urebrasil.com.br</p>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
