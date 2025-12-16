@@ -446,6 +446,7 @@ export type Database = {
           terms_accepted: boolean
           terms_accepted_at: string | null
           terms_ip_address: unknown
+          terms_version: string | null
           updated_at: string
           user_id: string
         }
@@ -473,6 +474,7 @@ export type Database = {
           terms_accepted?: boolean
           terms_accepted_at?: string | null
           terms_ip_address?: unknown
+          terms_version?: string | null
           updated_at?: string
           user_id: string
         }
@@ -500,6 +502,7 @@ export type Database = {
           terms_accepted?: boolean
           terms_accepted_at?: string | null
           terms_ip_address?: unknown
+          terms_version?: string | null
           updated_at?: string
           user_id?: string
         }
