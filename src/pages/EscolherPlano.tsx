@@ -143,24 +143,24 @@ export default function EscolherPlano() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
       
       <main className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
               Escolha seu Plano
             </h1>
-            <p className="text-lg text-slate-400">
+            <p className="text-lg text-muted-foreground">
               Todas as opções incluem validade de 1 ano
             </p>
           </div>
@@ -175,39 +175,39 @@ export default function EscolherPlano() {
             return (
               <Card 
                 key={plan.id}
-                className={`relative p-6 bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 transition-all ${
-                  isPopular ? 'border-2 border-cyan-500 shadow-lg shadow-cyan-500/20' : ''
+                className={`relative p-6 bg-card/80 border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all ${
+                  isPopular ? 'border-2 border-primary shadow-lg shadow-primary/20' : ''
                 }`}
               >
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-cyan-500 text-white px-4 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
+                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
                       ⭐ MAIS POPULAR
                     </span>
                   </div>
                 )}
 
                 <div className="flex items-center gap-3 mb-4 mt-2">
-                  <div className={`p-2 rounded-lg ${isPopular ? 'bg-cyan-500/20' : 'bg-slate-700'}`}>
-                    <Icon className={`w-6 h-6 ${isPopular ? 'text-cyan-400' : 'text-slate-300'}`} />
+                  <div className={`p-2 rounded-lg ${isPopular ? 'bg-primary/20' : 'bg-muted'}`}>
+                    <Icon className={`w-6 h-6 ${isPopular ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className="text-xl font-bold text-foreground">
                     {plan.name}
                   </h3>
                 </div>
 
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-white">
+                  <span className="text-4xl font-bold text-foreground">
                     R$ {Number(plan.price).toFixed(0)}
                   </span>
-                  <span className="text-slate-400 ml-2">/ ano</span>
+                  <span className="text-muted-foreground ml-2">/ ano</span>
                 </div>
 
                 <ul className="space-y-3 mb-6">
                   {config.benefits.map((benefit, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                      <span className="text-slate-300">{benefit}</span>
+                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-muted-foreground">{benefit}</span>
                     </li>
                   ))}
                 </ul>
@@ -217,8 +217,8 @@ export default function EscolherPlano() {
                   disabled={selecting !== null}
                   className={`w-full ${
                     isPopular 
-                      ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                      : 'bg-muted hover:bg-muted/80 text-foreground'
                   }`}
                 >
                   {selecting === plan.id ? (
@@ -232,8 +232,7 @@ export default function EscolherPlano() {
         </div>
 
         {/* Footer */}
-        {/* Footer */}
-        <div className="mt-10 text-center text-sm text-slate-500">
+        <div className="mt-10 text-center text-sm text-muted-foreground">
           <p>🔒 Pagamento 100% seguro</p>
           <p className="mt-2">Dúvidas? contato@urebrasil.com.br</p>
         </div>

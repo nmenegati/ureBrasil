@@ -272,10 +272,10 @@ export default function Dashboard() {
 
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto"></div>
-          <p className="text-slate-400 mt-4">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-4">Carregando...</p>
         </div>
       </div>
     );
@@ -286,17 +286,17 @@ export default function Dashboard() {
   // Se não tem perfil, mostrar tela para completar
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen bg-background">
         <Header variant="app" />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 text-center max-w-lg mx-auto">
-            <AlertCircle className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white">Complete seu Perfil</h2>
-            <p className="text-slate-400 mt-2">
+          <div className="bg-card/80 backdrop-blur-lg border border-border rounded-2xl p-8 text-center max-w-lg mx-auto">
+            <AlertCircle className="w-16 h-16 text-primary mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-foreground">Complete seu Perfil</h2>
+            <p className="text-muted-foreground mt-2">
               Para acessar todas as funcionalidades e obter sua carteirinha estudantil, complete seu cadastro.
             </p>
             <Button 
-              className="mt-6 bg-cyan-500 hover:bg-cyan-600 text-white"
+              className="mt-6 bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => navigate('/complete-profile')}
             >
               Completar Perfil <ChevronRight className="w-4 h-4 ml-2" />
@@ -311,29 +311,29 @@ export default function Dashboard() {
   const percentage = getPercentage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Saudação */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Olá, {profile.full_name.split(' ')[0]}! 👋
           </h1>
-          <p className="text-slate-400 mt-1">{getWelcomeMessage()}</p>
+          <p className="text-muted-foreground mt-1">{getWelcomeMessage()}</p>
         </div>
 
         {/* Barra de Progresso */}
-        <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6 mb-8">
+        <div className="bg-card/80 backdrop-blur-lg border border-border rounded-2xl p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Seu Progresso</h2>
-            <span className="text-cyan-400 font-bold">{percentage}%</span>
+            <h2 className="text-lg font-semibold text-foreground">Seu Progresso</h2>
+            <span className="text-primary font-bold">{percentage}%</span>
           </div>
           
           {/* Barra */}
-          <div className="h-3 bg-slate-700 rounded-full overflow-hidden mb-6">
+          <div className="h-3 bg-muted rounded-full overflow-hidden mb-6">
             <div 
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -345,21 +345,21 @@ export default function Dashboard() {
                 key={index}
                 className={`p-4 rounded-xl border transition-all ${
                   step.completed 
-                    ? 'bg-cyan-500/10 border-cyan-500/30' 
-                    : 'bg-slate-700/30 border-slate-600/30'
+                    ? 'bg-primary/10 border-primary/30' 
+                    : 'bg-muted/30 border-border'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   {step.completed ? (
-                    <CheckCircle className="h-5 w-5 text-green-400" />
+                    <CheckCircle className="h-5 w-5 text-green-500" />
                   ) : (
-                    <Clock className="h-5 w-5 text-slate-500" />
+                    <Clock className="h-5 w-5 text-muted-foreground" />
                   )}
-                  <span className={`font-medium ${step.completed ? 'text-white' : 'text-slate-400'}`}>
+                  <span className={`font-medium ${step.completed ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {step.label}
                   </span>
                 </div>
-                <p className={`text-sm ${step.completed ? 'text-cyan-400' : 'text-slate-500'}`}>
+                <p className={`text-sm ${step.completed ? 'text-primary' : 'text-muted-foreground'}`}>
                   {step.subtitle}
                 </p>
               </div>
@@ -372,33 +372,33 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-6">
             {/* Card da Carteirinha ou Próximo Passo */}
             {progress.card && card ? (
-              <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-2xl p-6">
+              <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-2xl p-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div>
-                    <p className="text-cyan-400 text-sm font-medium">Carteirinha Digital</p>
-                    <h2 className="text-white text-2xl font-bold mt-1">{profile.full_name}</h2>
+                    <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
+                    <h2 className="text-foreground text-2xl font-bold mt-1">{profile.full_name}</h2>
                     {profile.institution && (
-                      <p className="text-slate-400 text-sm">{profile.institution}</p>
+                      <p className="text-muted-foreground text-sm">{profile.institution}</p>
                     )}
                     {profile.course && (
-                      <p className="text-slate-400 text-sm">{profile.course}</p>
+                      <p className="text-muted-foreground text-sm">{profile.course}</p>
                     )}
                     <div className="mt-4 space-y-1">
-                      <p className="text-slate-300">Nº: {card.card_number}</p>
-                      <p className="text-slate-300">Válida até: {formatDate(card.valid_until)}</p>
+                      <p className="text-foreground/80">Nº: {card.card_number}</p>
+                      <p className="text-foreground/80">Válida até: {formatDate(card.valid_until)}</p>
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3 mt-6">
                   <Button 
-                    className="bg-cyan-500 hover:bg-cyan-600 text-white"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => toast.info('Em breve!')}
                   >
                     <Download className="w-4 h-4 mr-2" /> Baixar PDF
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="border-cyan-500 text-cyan-400 hover:bg-cyan-500/10"
+                    className="border-primary text-primary hover:bg-primary/10"
                     onClick={() => toast.info('Em breve!')}
                   >
                     <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
@@ -406,25 +406,25 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6">
+              <div className="bg-card/80 backdrop-blur-lg border border-border rounded-2xl p-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-cyan-500/10 rounded-full">
+                  <div className="p-3 bg-primary/10 rounded-full">
                     {nextStep.hasButton ? (
-                      <AlertCircle className="w-6 h-6 text-cyan-400" />
+                      <AlertCircle className="w-6 h-6 text-primary" />
                     ) : (
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500" />
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                     )}
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">
+                    <h3 className="text-foreground font-bold text-lg">
                       {nextStep.hasButton ? 'Próximo Passo' : 'Processando...'}
                     </h3>
-                    <p className="text-slate-400">{nextStep.message}</p>
+                    <p className="text-muted-foreground">{nextStep.message}</p>
                   </div>
                 </div>
                 {nextStep.hasButton && nextStep.route && (
                   <Button 
-                    className="mt-4 bg-cyan-500 hover:bg-cyan-600 text-white"
+                    className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
                     onClick={() => navigate(nextStep.route!)}
                   >
                     {nextStep.buttonText} <ChevronRight className="w-4 h-4 ml-2" />
@@ -438,7 +438,7 @@ export default function Dashboard() {
               {navigationCards.map((card, index) => (
                 <div 
                   key={index}
-                  className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-4 hover:bg-slate-700/50 cursor-pointer transition-all group"
+                  className="bg-card/80 backdrop-blur-lg border border-border rounded-xl p-4 hover:bg-card cursor-pointer transition-all group"
                   onClick={() => {
                     if (card.route === '/perfil' || card.route === '/suporte') {
                       toast.info('Em breve!');
@@ -448,11 +448,11 @@ export default function Dashboard() {
                   }}
                 >
                   <div className="flex justify-between items-start">
-                    <card.icon className="w-6 h-6 text-cyan-400" />
-                    <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-slate-300 transition-colors" />
+                    <card.icon className="w-6 h-6 text-primary" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                   </div>
-                  <h3 className="text-white font-bold mt-4">{card.title}</h3>
-                  <p className="text-slate-400 text-sm">{card.subtitle}</p>
+                  <h3 className="text-foreground font-bold mt-4">{card.title}</h3>
+                  <p className="text-muted-foreground text-sm">{card.subtitle}</p>
                 </div>
               ))}
             </div>
@@ -461,30 +461,30 @@ export default function Dashboard() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Suas Informações */}
-            <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-4">
-              <h3 className="text-white font-bold mb-4">Suas Informações</h3>
+            <div className="bg-card/80 backdrop-blur-lg border border-border rounded-xl p-4">
+              <h3 className="text-foreground font-bold mb-4">Suas Informações</h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="text-slate-500">CPF</p>
-                  <p className="text-white">{formatCPF(profile.cpf)}</p>
+                  <p className="text-muted-foreground">CPF</p>
+                  <p className="text-foreground">{formatCPF(profile.cpf)}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Telefone</p>
-                  <p className="text-white">{formatPhone(profile.phone)}</p>
+                  <p className="text-muted-foreground">Telefone</p>
+                  <p className="text-foreground">{formatPhone(profile.phone)}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">Email</p>
-                  <p className="text-white break-all">{user.email}</p>
+                  <p className="text-muted-foreground">Email</p>
+                  <p className="text-foreground break-all">{user.email}</p>
                 </div>
               </div>
             </div>
 
             {/* Card de Ajuda */}
-            <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-xl p-4">
-              <h3 className="text-white font-bold">Precisa de Ajuda?</h3>
-              <p className="text-slate-300 text-sm mt-1">Nossa equipe está pronta para te ajudar!</p>
+            <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-xl p-4">
+              <h3 className="text-foreground font-bold">Precisa de Ajuda?</h3>
+              <p className="text-muted-foreground text-sm mt-1">Nossa equipe está pronta para te ajudar!</p>
               <Button 
-                className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white"
+                className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={() => toast.info('Em breve!')}
               >
                 Abrir Ticket

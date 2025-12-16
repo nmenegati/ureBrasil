@@ -35,7 +35,7 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
   const getStatusBadge = () => {
     if (!doc) {
       return (
-        <Badge variant="secondary" className="bg-slate-700 text-slate-300">
+        <Badge variant="secondary" className="bg-muted text-muted-foreground">
           <Clock className="w-3 h-3 mr-1" />
           Não enviado
         </Badge>
@@ -45,21 +45,21 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
     switch (doc.status) {
       case 'pending':
         return (
-          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30">
             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
             Aguardando validação...
           </Badge>
         );
       case 'approved':
         return (
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+          <Badge className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
             <CheckCircle className="w-3 h-3 mr-1" />
             Aprovado
           </Badge>
         );
       case 'rejected':
         return (
-          <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/30">
+          <Badge variant="destructive" className="bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30">
             <XCircle className="w-3 h-3 mr-1" />
             Rejeitado
           </Badge>
@@ -70,22 +70,22 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
   };
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4">
+    <div className="bg-card/80 backdrop-blur-sm rounded-xl border border-border p-4">
       <div className="flex items-start gap-3">
-        <div className="p-2 bg-cyan-500/10 rounded-lg">
-          <Icon className="w-6 h-6 text-cyan-500" />
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <Icon className="w-6 h-6 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white">{config.label}</h3>
+          <h3 className="font-semibold text-foreground">{config.label}</h3>
           {doc && (
-            <p className="text-sm text-slate-400 truncate mt-1">{doc.file_name}</p>
+            <p className="text-sm text-muted-foreground truncate mt-1">{doc.file_name}</p>
           )}
           <div className="mt-3">
             {getStatusBadge()}
           </div>
           {doc?.status === 'rejected' && (doc.rejection_reason || doc.rejection_notes) && (
             <Alert variant="destructive" className="mt-3 bg-red-500/10 border-red-500/30">
-              <AlertDescription className="text-red-300 text-sm">
+              <AlertDescription className="text-red-600 dark:text-red-300 text-sm">
                 {doc.rejection_reason || doc.rejection_notes}
               </AlertDescription>
             </Alert>
@@ -198,14 +198,14 @@ export default function StatusValidacao() {
 
   if (authLoading || loadingDocs) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
       
       <main className="p-4 sm:p-6 lg:p-8">
@@ -213,19 +213,19 @@ export default function StatusValidacao() {
 
         {/* Título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/10 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             {allPending ? (
-              <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
             ) : hasRejected ? (
-              <XCircle className="w-8 h-8 text-red-500" />
+              <XCircle className="w-8 h-8 text-destructive" />
             ) : (
               <CheckCircle className="w-8 h-8 text-green-500" />
             )}
           </div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {hasRejected ? 'Documentos Precisam de Correção' : 'Validando seus Documentos'}
           </h1>
-          <p className="text-slate-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             {hasRejected 
               ? 'Alguns documentos foram rejeitados. Veja os motivos abaixo.'
               : 'Aguarde enquanto analisamos seus documentos'
@@ -236,8 +236,8 @@ export default function StatusValidacao() {
         {/* Status Alerts */}
         {documents.length === 4 && documents.every(d => d.status === 'approved') && (
           <Alert className="mb-6 bg-green-500/10 border-green-500/30">
-            <CheckCircle className="h-4 w-4 text-green-400" />
-            <AlertDescription className="text-green-300">
+            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-600 dark:text-green-300">
               Todos os documentos foram aprovados! Redirecionando para escolha de plano...
             </AlertDescription>
           </Alert>
@@ -245,17 +245,17 @@ export default function StatusValidacao() {
 
         {hasRejected && (
           <Alert className="mb-6 bg-red-500/10 border-red-500/30">
-            <XCircle className="h-4 w-4 text-red-400" />
-            <AlertDescription className="text-red-300">
+            <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <AlertDescription className="text-red-600 dark:text-red-300">
               Alguns documentos foram rejeitados. Corrija-os e envie novamente.
             </AlertDescription>
           </Alert>
         )}
 
         {allPending && documents.length > 0 && (
-          <Alert className="mb-6 bg-cyan-500/10 border-cyan-500/30">
-            <Loader2 className="h-4 w-4 text-cyan-400 animate-spin" />
-            <AlertDescription className="text-cyan-300">
+          <Alert className="mb-6 bg-primary/10 border-primary/30">
+            <Loader2 className="h-4 w-4 text-primary animate-spin" />
+            <AlertDescription className="text-primary">
               Validação em andamento... A página atualiza automaticamente a cada 5 segundos.
             </AlertDescription>
           </Alert>
@@ -272,10 +272,10 @@ export default function StatusValidacao() {
         {/* Info de tempo */}
         {allPending && (
           <div className="text-center mb-6">
-            <p className="text-slate-400 text-sm">
+            <p className="text-muted-foreground text-sm">
               ⏱️ Tempo estimado: 2 a 5 minutos
             </p>
-            <p className="text-slate-500 text-xs mt-1">
+            <p className="text-muted-foreground/70 text-xs mt-1">
               A página atualiza automaticamente a cada 5 segundos
             </p>
           </div>
@@ -287,7 +287,7 @@ export default function StatusValidacao() {
             variant="outline"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex-1 border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700"
+            className="flex-1"
           >
             {refreshing ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -300,7 +300,7 @@ export default function StatusValidacao() {
           {hasRejected && (
             <Button
               onClick={() => navigate('/upload-documentos')}
-              className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Corrigir Documentos
             </Button>
