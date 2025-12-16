@@ -568,11 +568,11 @@ export default function UploadDocumentos() {
         {/* Botão continuar */}
         <Button
           disabled={!allDocsUploaded}
-          onClick={() => navigate('/escolher-plano')}
+          onClick={() => navigate('/status-validacao')}
           className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
         >
           {allDocsUploaded 
-            ? 'Continuar para Escolha de Plano' 
+            ? 'Enviar para Validação' 
             : `Envie todos os ${4 - uploadedCount} documentos restantes`
           }
         </Button>
