@@ -150,17 +150,22 @@ export default function EscolherPlano() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
       <Header variant="app" />
       
-      <main className="py-8 px-4">
+      <main className="relative z-10 py-8 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
               Escolha seu Plano
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-white/80">
               Todas as opções incluem validade de 1 ano
             </p>
           </div>
@@ -175,8 +180,8 @@ export default function EscolherPlano() {
             return (
               <Card 
                 key={plan.id}
-                className={`relative p-6 bg-card/80 border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all ${
-                  isPopular ? 'border-2 border-primary shadow-lg shadow-primary/20' : ''
+                className={`relative p-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-white/20 shadow-xl shadow-black/10 hover:shadow-2xl hover:scale-[1.02] transition-all ${
+                  isPopular ? 'border-2 border-primary ring-2 ring-primary/20' : ''
                 }`}
               >
                 {isPopular && (
@@ -188,26 +193,26 @@ export default function EscolherPlano() {
                 )}
 
                 <div className="flex items-center gap-3 mb-4 mt-2">
-                  <div className={`p-2 rounded-lg ${isPopular ? 'bg-primary/20' : 'bg-muted'}`}>
-                    <Icon className={`w-6 h-6 ${isPopular ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <div className={`p-2 rounded-lg ${isPopular ? 'bg-primary/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
+                    <Icon className={`w-6 h-6 ${isPopular ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`} />
                   </div>
-                  <h3 className="text-xl font-bold text-foreground">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                     {plan.name}
                   </h3>
                 </div>
 
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-foreground">
+                  <span className="text-4xl font-bold text-slate-900 dark:text-white">
                     R$ {Number(plan.price).toFixed(0)}
                   </span>
-                  <span className="text-muted-foreground ml-2">/ ano</span>
+                  <span className="text-slate-500 dark:text-slate-400 ml-2">/ ano</span>
                 </div>
 
                 <ul className="space-y-3 mb-6">
                   {config.benefits.map((benefit, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-muted-foreground">{benefit}</span>
+                      <span className="text-slate-600 dark:text-slate-300">{benefit}</span>
                     </li>
                   ))}
                 </ul>
@@ -232,7 +237,7 @@ export default function EscolherPlano() {
         </div>
 
         {/* Footer */}
-        <div className="mt-10 text-center text-sm text-muted-foreground">
+        <div className="mt-10 text-center text-sm text-white/80">
           <p>🔒 Pagamento 100% seguro</p>
           <p className="mt-2">Dúvidas? contato@urebrasil.com.br</p>
         </div>

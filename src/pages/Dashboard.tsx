@@ -285,14 +285,19 @@ export default function Dashboard() {
 
   // Se não tem perfil, mostrar tela para completar
   if (!profile) {
-    return (
-      <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
         <Header variant="app" />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-card/80 backdrop-blur-lg border border-border rounded-2xl p-8 text-center max-w-lg mx-auto">
+        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-lg mx-auto shadow-xl shadow-black/10">
             <AlertCircle className="w-16 h-16 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-foreground">Complete seu Perfil</h2>
-            <p className="text-muted-foreground mt-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Complete seu Perfil</h2>
+            <p className="text-slate-600 dark:text-slate-300 mt-2">
               Para acessar todas as funcionalidades e obter sua carteirinha estudantil, complete seu cadastro.
             </p>
             <Button 
@@ -311,27 +316,32 @@ export default function Dashboard() {
   const percentage = getPercentage();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
       <Header variant="app" />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Saudação */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">
             Olá, {profile.full_name.split(' ')[0]}! 👋
           </h1>
-          <p className="text-muted-foreground mt-1">{getWelcomeMessage()}</p>
+          <p className="text-white/80 mt-1">{getWelcomeMessage()}</p>
         </div>
 
         {/* Barra de Progresso */}
-        <div className="bg-card/80 backdrop-blur-lg border border-border rounded-2xl p-6 mb-8">
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-8 shadow-xl shadow-black/10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Seu Progresso</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Seu Progresso</h2>
             <span className="text-primary font-bold">{percentage}%</span>
           </div>
           
           {/* Barra */}
-          <div className="h-3 bg-muted rounded-full overflow-hidden mb-6">
+          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
             <div 
               className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
               style={{ width: `${percentage}%` }}
@@ -346,20 +356,20 @@ export default function Dashboard() {
                 className={`p-4 rounded-xl border transition-all ${
                   step.completed 
                     ? 'bg-primary/10 border-primary/30' 
-                    : 'bg-muted/30 border-border'
+                    : 'bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   {step.completed ? (
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   ) : (
-                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    <Clock className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                   )}
-                  <span className={`font-medium ${step.completed ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  <span className={`font-medium ${step.completed ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                     {step.label}
                   </span>
                 </div>
-                <p className={`text-sm ${step.completed ? 'text-primary' : 'text-muted-foreground'}`}>
+                <p className={`text-sm ${step.completed ? 'text-primary' : 'text-slate-500 dark:text-slate-400'}`}>
                   {step.subtitle}
                 </p>
               </div>
@@ -372,20 +382,20 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-6">
             {/* Card da Carteirinha ou Próximo Passo */}
             {progress.card && card ? (
-              <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-2xl p-6">
+              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div>
                     <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
-                    <h2 className="text-foreground text-2xl font-bold mt-1">{profile.full_name}</h2>
+                    <h2 className="text-slate-900 dark:text-white text-2xl font-bold mt-1">{profile.full_name}</h2>
                     {profile.institution && (
-                      <p className="text-muted-foreground text-sm">{profile.institution}</p>
+                      <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.institution}</p>
                     )}
                     {profile.course && (
-                      <p className="text-muted-foreground text-sm">{profile.course}</p>
+                      <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.course}</p>
                     )}
                     <div className="mt-4 space-y-1">
-                      <p className="text-foreground/80">Nº: {card.card_number}</p>
-                      <p className="text-foreground/80">Válida até: {formatDate(card.valid_until)}</p>
+                      <p className="text-slate-700 dark:text-slate-200">Nº: {card.card_number}</p>
+                      <p className="text-slate-700 dark:text-slate-200">Válida até: {formatDate(card.valid_until)}</p>
                     </div>
                   </div>
                 </div>
@@ -406,7 +416,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="bg-card/80 backdrop-blur-lg border border-border rounded-2xl p-6">
+              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-primary/10 rounded-full">
                     {nextStep.hasButton ? (
@@ -416,10 +426,10 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-foreground font-bold text-lg">
+                    <h3 className="text-slate-900 dark:text-white font-bold text-lg">
                       {nextStep.hasButton ? 'Próximo Passo' : 'Processando...'}
                     </h3>
-                    <p className="text-muted-foreground">{nextStep.message}</p>
+                    <p className="text-slate-600 dark:text-slate-300">{nextStep.message}</p>
                   </div>
                 </div>
                 {nextStep.hasButton && nextStep.route && (
@@ -438,7 +448,7 @@ export default function Dashboard() {
               {navigationCards.map((card, index) => (
                 <div 
                   key={index}
-                  className="bg-card/80 backdrop-blur-lg border border-border rounded-xl p-4 hover:bg-card cursor-pointer transition-all group"
+                  className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:scale-[1.02] cursor-pointer transition-all group shadow-lg shadow-black/5"
                   onClick={() => {
                     if (card.route === '/perfil' || card.route === '/suporte') {
                       toast.info('Em breve!');
@@ -449,10 +459,10 @@ export default function Dashboard() {
                 >
                   <div className="flex justify-between items-start">
                     <card.icon className="w-6 h-6 text-primary" />
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
                   </div>
-                  <h3 className="text-foreground font-bold mt-4">{card.title}</h3>
-                  <p className="text-muted-foreground text-sm">{card.subtitle}</p>
+                  <h3 className="text-slate-900 dark:text-white font-bold mt-4">{card.title}</h3>
+                  <p className="text-slate-600 dark:text-slate-300 text-sm">{card.subtitle}</p>
                 </div>
               ))}
             </div>
@@ -461,28 +471,28 @@ export default function Dashboard() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Suas Informações */}
-            <div className="bg-card/80 backdrop-blur-lg border border-border rounded-xl p-4">
-              <h3 className="text-foreground font-bold mb-4">Suas Informações</h3>
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
+              <h3 className="text-slate-900 dark:text-white font-bold mb-4">Suas Informações</h3>
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="text-muted-foreground">CPF</p>
-                  <p className="text-foreground">{formatCPF(profile.cpf)}</p>
+                  <p className="text-slate-500 dark:text-slate-400">CPF</p>
+                  <p className="text-slate-900 dark:text-white">{formatCPF(profile.cpf)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Telefone</p>
-                  <p className="text-foreground">{formatPhone(profile.phone)}</p>
+                  <p className="text-slate-500 dark:text-slate-400">Telefone</p>
+                  <p className="text-slate-900 dark:text-white">{formatPhone(profile.phone)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Email</p>
-                  <p className="text-foreground break-all">{user.email}</p>
+                  <p className="text-slate-500 dark:text-slate-400">Email</p>
+                  <p className="text-slate-900 dark:text-white break-all">{user.email}</p>
                 </div>
               </div>
             </div>
 
             {/* Card de Ajuda */}
-            <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 rounded-xl p-4">
-              <h3 className="text-foreground font-bold">Precisa de Ajuda?</h3>
-              <p className="text-muted-foreground text-sm mt-1">Nossa equipe está pronta para te ajudar!</p>
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
+              <h3 className="text-slate-900 dark:text-white font-bold">Precisa de Ajuda?</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">Nossa equipe está pronta para te ajudar!</p>
               <Button 
                 className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={() => toast.info('Em breve!')}

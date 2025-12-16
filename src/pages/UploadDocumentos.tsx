@@ -380,7 +380,7 @@ export default function UploadDocumentos() {
     const getStatusBadge = () => {
       if (!doc) {
         return (
-          <Badge variant="secondary" className="bg-muted text-muted-foreground">
+          <Badge variant="secondary" className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
             <Clock className="w-3 h-3 mr-1" />
             Pendente
           </Badge>
@@ -416,8 +416,8 @@ export default function UploadDocumentos() {
     return (
       <div 
         className={cn(
-          "bg-card/80 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors",
-          doc ? "border-solid border-border" : "border-muted-foreground/30 hover:border-primary/50"
+          "bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors shadow-lg shadow-black/5",
+          doc ? "border-solid border-white/20" : "border-slate-300 dark:border-slate-600 hover:border-primary/50"
         )}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -429,8 +429,8 @@ export default function UploadDocumentos() {
               <IconComponent className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">{config.label}</h3>
-              <p className="text-sm text-muted-foreground">{config.description}</p>
+              <h3 className="font-semibold text-slate-900 dark:text-white">{config.label}</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300">{config.description}</p>
             </div>
           </div>
           {getStatusBadge()}
@@ -440,7 +440,7 @@ export default function UploadDocumentos() {
         {isUploading ? (
           <div className="mt-4">
             <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground mt-2 text-center">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 text-center">
               Enviando... {progress}%
             </p>
           </div>
@@ -452,7 +452,7 @@ export default function UploadDocumentos() {
               className="w-full h-40 object-cover rounded-lg"
             />
             <div className="flex items-center justify-between mt-2">
-              <p className="text-sm text-muted-foreground truncate flex-1">{doc.file_name}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-300 truncate flex-1">{doc.file_name}</p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -472,9 +472,9 @@ export default function UploadDocumentos() {
           </div>
         ) : doc && !preview ? (
           <div className="mt-4">
-            <div className="p-4 bg-muted/50 rounded-lg flex items-center gap-3">
-              <File className="w-8 h-8 text-muted-foreground" />
-              <p className="text-sm text-foreground truncate flex-1">{doc.file_name}</p>
+            <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex items-center gap-3">
+              <File className="w-8 h-8 text-slate-500 dark:text-slate-400" />
+              <p className="text-sm text-slate-900 dark:text-white truncate flex-1">{doc.file_name}</p>
             </div>
             <div className="flex justify-end mt-2">
               <Button
@@ -511,7 +511,7 @@ export default function UploadDocumentos() {
               <Upload className="w-4 h-4 mr-2" />
               Escolher arquivo
             </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
               {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')} 
               {' • '}Máx {config.maxSizeMB}MB
             </p>
@@ -630,17 +630,22 @@ export default function UploadDocumentos() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
       <Header variant="app" />
       
-      <main className="p-4 sm:p-6 lg:p-8">
+      <main className="relative z-10 p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">
               Envie seus Documentos
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-white/80 mt-2">
               Passo 2 de 4 - Validação de documentos
             </p>
           </div>
@@ -653,8 +658,8 @@ export default function UploadDocumentos() {
         </div>
         
         {/* Contador de progresso */}
-        <div className="bg-card/80 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-center justify-between">
-          <span className="text-muted-foreground">
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-center justify-between shadow-lg shadow-black/5 border border-white/20">
+          <span className="text-slate-600 dark:text-slate-300">
             Documentos enviados: <span className="text-primary font-semibold">{uploadedCount}</span> de 4
           </span>
           <Progress 
@@ -667,52 +672,52 @@ export default function UploadDocumentos() {
         {allDocsUploaded && !termsAlreadyAccepted && (
           <div className="mb-6">
             {/* Card expandível */}
-            <div className="border border-border rounded-xl overflow-hidden mb-4">
+            <div className="border border-white/20 rounded-xl overflow-hidden mb-4 shadow-lg shadow-black/5">
               <button
                 onClick={() => setShowFullTerms(!showFullTerms)}
-                className="w-full p-4 flex items-center justify-between bg-card/70 hover:bg-card transition-colors"
+                className="w-full p-4 flex items-center justify-between bg-white/95 dark:bg-slate-800/95 hover:bg-white dark:hover:bg-slate-800 transition-colors"
               >
-                <span className="font-semibold text-foreground flex items-center gap-2">
+                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   📄 Termo de Responsabilidade por Veracidade dos Documentos
                 </span>
                 <ChevronDown className={cn(
-                  "w-5 h-5 text-muted-foreground transition-transform duration-200",
+                  "w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform duration-200",
                   showFullTerms && "rotate-180"
                 )} />
               </button>
               
               {showFullTerms && (
-                <div className="p-4 bg-card/30 text-sm text-muted-foreground space-y-3 border-t border-border">
+                <div className="p-4 bg-white/80 dark:bg-slate-800/80 text-sm text-slate-600 dark:text-slate-300 space-y-3 border-t border-white/20">
                   <p>
-                    Eu, <strong className="text-foreground">{profile?.full_name}</strong>, portador(a) do CPF nº
-                    <strong className="text-foreground"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
+                    Eu, <strong className="text-slate-900 dark:text-white">{profile?.full_name}</strong>, portador(a) do CPF nº
+                    <strong className="text-slate-900 dark:text-white"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
                   </p>
                   
                   <ol className="list-decimal list-inside space-y-2 ml-2">
                     <li>
                       Os documentos enviados (RG/CNH, comprovante de matrícula e 
-                      fotografias) são <strong className="text-foreground">VERDADEIROS, AUTÊNTICOS</strong> e 
-                      de minha <strong className="text-foreground">TITULARIDADE</strong>.
+                      fotografias) são <strong className="text-slate-900 dark:text-white">VERDADEIROS, AUTÊNTICOS</strong> e 
+                      de minha <strong className="text-slate-900 dark:text-white">TITULARIDADE</strong>.
                     </li>
                     <li>
-                      Sou o <strong className="text-foreground">ÚNICO RESPONSÁVEL</strong> pela veracidade das 
-                      informações fornecidas, <strong className="text-foreground">ISENTANDO a URE BRASIL</strong> de 
+                      Sou o <strong className="text-slate-900 dark:text-white">ÚNICO RESPONSÁVEL</strong> pela veracidade das 
+                      informações fornecidas, <strong className="text-slate-900 dark:text-white">ISENTANDO a URE BRASIL</strong> de 
                       qualquer responsabilidade civil ou criminal decorrente de 
                       falsificação ou adulteração.
                     </li>
                     <li>
-                      Estou <strong className="text-foreground">CIENTE</strong> de que a falsificação de documentos 
-                      constitui <strong className="text-foreground">CRIME</strong> previsto nos Artigos 297, 298 e 
+                      Estou <strong className="text-slate-900 dark:text-white">CIENTE</strong> de que a falsificação de documentos 
+                      constitui <strong className="text-slate-900 dark:text-white">CRIME</strong> previsto nos Artigos 297, 298 e 
                       299 do Código Penal Brasileiro (reclusão de 1 a 5 anos e multa).
                     </li>
                     <li>
-                      Em caso de <strong className="text-foreground">FALSIDADE</strong> comprovada, meu cadastro será
-                      <strong className="text-foreground"> CANCELADO</strong> imediatamente, sem direito a reembolso, 
+                      Em caso de <strong className="text-slate-900 dark:text-white">FALSIDADE</strong> comprovada, meu cadastro será
+                      <strong className="text-slate-900 dark:text-white"> CANCELADO</strong> imediatamente, sem direito a reembolso, 
                       e o caso será comunicado às autoridades competentes.
                     </li>
                   </ol>
                   
-                  <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground/70">
+                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400">
                     <p>Data: {new Date().toLocaleString('pt-BR')}</p>
                   </div>
                 </div>
@@ -727,7 +732,7 @@ export default function UploadDocumentos() {
                   onCheckedChange={(checked) => setTermsAccepted(checked === true)}
                   className="mt-0.5 border-yellow-500/50 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
                 />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-slate-600 dark:text-slate-300">
                   Declaro que li e concordo com o <strong className="text-yellow-600 dark:text-yellow-400">Termo de Responsabilidade</strong> acima. 
                   Estou ciente de que a falsificação de documentos é crime 
                   (Arts. 297-299 do Código Penal).
