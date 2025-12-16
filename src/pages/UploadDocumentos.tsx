@@ -18,8 +18,10 @@ import {
   CheckCircle, 
   Clock, 
   AlertCircle,
-  File
+  File,
+  ChevronDown
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
@@ -46,6 +48,7 @@ interface StudentProfile {
   id: string;
   user_id: string;
   full_name: string;
+  cpf: string;
   profile_completed: boolean;
 }
 
@@ -94,6 +97,8 @@ export default function UploadDocumentos() {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [showFullTerms, setShowFullTerms] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Redirecionar se não autenticado
   useEffect(() => {
@@ -565,15 +570,91 @@ export default function UploadDocumentos() {
           />
         </div>
         
+        {/* Termo de Veracidade */}
+        {allDocsUploaded && (
+          <div className="mb-6">
+            {/* Card expandível */}
+            <div className="border border-slate-600 rounded-xl overflow-hidden mb-4">
+              <button
+                onClick={() => setShowFullTerms(!showFullTerms)}
+                className="w-full p-4 flex items-center justify-between bg-slate-800/70 hover:bg-slate-700/70 transition-colors"
+              >
+                <span className="font-semibold text-white flex items-center gap-2">
+                  📄 Termo de Responsabilidade por Veracidade dos Documentos
+                </span>
+                <ChevronDown className={cn(
+                  "w-5 h-5 text-slate-400 transition-transform duration-200",
+                  showFullTerms && "rotate-180"
+                )} />
+              </button>
+              
+              {showFullTerms && (
+                <div className="p-4 bg-slate-800/30 text-sm text-slate-300 space-y-3 border-t border-slate-700">
+                  <p>
+                    Eu, <strong className="text-white">{profile?.full_name}</strong>, portador(a) do CPF nº
+                    <strong className="text-white"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
+                  </p>
+                  
+                  <ol className="list-decimal list-inside space-y-2 ml-2">
+                    <li>
+                      Os documentos enviados (RG/CNH, comprovante de matrícula e 
+                      fotografias) são <strong className="text-white">VERDADEIROS, AUTÊNTICOS</strong> e 
+                      de minha <strong className="text-white">TITULARIDADE</strong>.
+                    </li>
+                    <li>
+                      Sou o <strong className="text-white">ÚNICO RESPONSÁVEL</strong> pela veracidade das 
+                      informações fornecidas, <strong className="text-white">ISENTANDO a URE BRASIL</strong> de 
+                      qualquer responsabilidade civil ou criminal decorrente de 
+                      falsificação ou adulteração.
+                    </li>
+                    <li>
+                      Estou <strong className="text-white">CIENTE</strong> de que a falsificação de documentos 
+                      constitui <strong className="text-white">CRIME</strong> previsto nos Artigos 297, 298 e 
+                      299 do Código Penal Brasileiro (reclusão de 1 a 5 anos e multa).
+                    </li>
+                    <li>
+                      Em caso de <strong className="text-white">FALSIDADE</strong> comprovada, meu cadastro será
+                      <strong className="text-white"> CANCELADO</strong> imediatamente, sem direito a reembolso, 
+                      e o caso será comunicado às autoridades competentes.
+                    </li>
+                  </ol>
+                  
+                  <div className="mt-4 pt-4 border-t border-slate-700 text-xs text-slate-500">
+                    <p>Data: {new Date().toLocaleString('pt-BR')}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Checkbox de aceitação */}
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-0.5 border-yellow-500/50 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                />
+                <span className="text-sm text-slate-300">
+                  Declaro que li e concordo com o <strong className="text-yellow-400">Termo de Responsabilidade</strong> acima. 
+                  Estou ciente de que a falsificação de documentos é crime 
+                  (Arts. 297-299 do Código Penal).
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+        
         {/* Botão continuar */}
         <Button
-          disabled={!allDocsUploaded}
+          disabled={!allDocsUploaded || !termsAccepted}
           onClick={() => navigate('/status-validacao')}
           className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
         >
-          {allDocsUploaded 
-            ? 'Enviar para Validação' 
-            : `Envie todos os ${4 - uploadedCount} documentos restantes`
+          {!allDocsUploaded 
+            ? `Envie todos os ${4 - uploadedCount} documentos restantes`
+            : !termsAccepted
+              ? 'Aceite o termo de responsabilidade'
+              : 'Enviar para Validação'
           }
         </Button>
       </div>
