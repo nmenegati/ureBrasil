@@ -5,19 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useViaCep } from '@/hooks/useViaCep';
 import { formatCEP } from '@/lib/validators';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Sun, Moon } from 'lucide-react';
+import { Loader2, Sun, Moon, Info, AlertTriangle } from 'lucide-react';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
-
-const brazilianStates = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-];
 
 const periods = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º'];
 
@@ -25,7 +20,7 @@ export default function CompleteProfile() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { fetchAddress, loading: cepLoading } = useViaCep();
+  const { fetchAddress, loading: cepLoading, error: cepError } = useViaCep();
 
   const [cep, setCep] = useState('');
   const [street, setStreet] = useState('');
@@ -71,8 +66,6 @@ export default function CompleteProfile() {
         setCity(address.city);
         setState(address.state);
         toast.success('Endereço encontrado!');
-      } else {
-        toast.error('CEP não encontrado. Preencha manualmente.');
       }
     }
   };
@@ -191,9 +184,9 @@ export default function CompleteProfile() {
                     Endereço Residencial
                   </h2>
 
-                  {/* CEP + Número (grid-cols-3: 2/3 + 1/3) */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2 space-y-2">
+                  {/* CEP com mensagem informativa ao lado */}
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4">
+                    <div className="w-full sm:w-36">
                       <Label htmlFor="cep" className="text-foreground">CEP</Label>
                       <div className="relative">
                         <Input
@@ -211,7 +204,41 @@ export default function CompleteProfile() {
                         )}
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 pb-0 sm:pb-2">
+                      <Info className="h-4 w-4 text-primary shrink-0" />
+                      <span className="text-sm text-muted-foreground">
+                        Insira seu CEP para preencher o endereço automaticamente.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Exibir erro do CEP se houver */}
+                  {cepError && (
+                    <Alert className="border-amber-500/50 bg-amber-500/10 py-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-sm text-amber-700 dark:text-amber-400">
+                        {cepError}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Rua (3 cols) + Número (1 col) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="sm:col-span-3 space-y-2">
+                      <Label htmlFor="street" className="text-foreground">Rua</Label>
+                      <Input
+                        id="street"
+                        type="text"
+                        placeholder="Nome da rua"
+                        value={street}
+                        onChange={(e) => setStreet(e.target.value)}
+                        maxLength={150}
+                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                        required
+                      />
+                      <span className="text-xs text-muted-foreground block text-right">{street.length}/150</span>
+                    </div>
+                    <div className="sm:col-span-1 space-y-2">
                       <Label htmlFor="number" className="text-foreground">Número</Label>
                       <Input
                         id="number"
@@ -225,22 +252,6 @@ export default function CompleteProfile() {
                       />
                       <span className="text-xs text-muted-foreground block text-right">{number.length}/10</span>
                     </div>
-                  </div>
-
-                  {/* Rua */}
-                  <div className="space-y-2">
-                    <Label htmlFor="street" className="text-foreground">Rua</Label>
-                    <Input
-                      id="street"
-                      type="text"
-                      placeholder="Nome da rua"
-                      value={street}
-                      onChange={(e) => setStreet(e.target.value)}
-                      maxLength={150}
-                      className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                      required
-                    />
-                    <span className="text-xs text-muted-foreground block text-right">{street.length}/150</span>
                   </div>
 
                   {/* Bairro + Complemento */}
@@ -274,35 +285,29 @@ export default function CompleteProfile() {
                     </div>
                   </div>
 
-                  {/* Cidade e Estado */}
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Cidade e Estado - somente leitura (determinados pelo CEP) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city" className="text-foreground">Cidade</Label>
                       <Input
                         id="city"
                         type="text"
-                        placeholder="Nome da cidade"
+                        placeholder="Preenchido pelo CEP"
                         value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        maxLength={100}
-                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                        required
+                        disabled
+                        className="bg-muted text-muted-foreground border-input h-11 text-base"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state" className="text-foreground">Estado</Label>
-                      <Select value={state} onValueChange={setState} required>
-                        <SelectTrigger className="bg-background text-foreground border-input focus:border-primary focus:ring-primary/20 h-11">
-                          <SelectValue placeholder="UF" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {brazilianStates.map((uf) => (
-                            <SelectItem key={uf} value={uf}>
-                              {uf}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        id="state"
+                        type="text"
+                        placeholder="UF"
+                        value={state}
+                        disabled
+                        className="bg-muted text-muted-foreground border-input h-11 text-base"
+                      />
                     </div>
                   </div>
                 </div>
