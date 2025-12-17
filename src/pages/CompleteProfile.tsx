@@ -153,23 +153,39 @@ export default function CompleteProfile() {
               Endereço Residencial
             </h2>
 
-            {/* CEP */}
-            <div className="space-y-2">
-              <Label htmlFor="cep" className="text-white">CEP</Label>
-              <div className="relative">
+            {/* CEP + Número (grid-cols-3: 2/3 + 1/3) */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="cep" className="text-white">CEP</Label>
+                <div className="relative">
+                  <Input
+                    id="cep"
+                    type="text"
+                    placeholder="00000-000"
+                    value={cep}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    maxLength={9}
+                    className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
+                    required
+                  />
+                  {cepLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-500 animate-spin" />
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="number" className="text-white">Número</Label>
                 <Input
-                  id="cep"
+                  id="number"
                   type="text"
-                  placeholder="00000-000"
-                  value={cep}
-                  onChange={(e) => handleCepChange(e.target.value)}
-                  maxLength={9}
+                  placeholder="123"
+                  value={number}
+                  onChange={(e) => setNumber(e.target.value)}
+                  maxLength={10}
                   className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                   required
                 />
-                {cepLoading && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-500 animate-spin" />
-                )}
+                <span className="text-xs text-slate-400 block text-right">{number.length}/10</span>
               </div>
             </div>
 
@@ -182,50 +198,42 @@ export default function CompleteProfile() {
                 placeholder="Nome da rua"
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
+                maxLength={150}
                 className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                 required
               />
+              <span className="text-xs text-slate-400 block text-right">{street.length}/150</span>
             </div>
 
-            {/* Número e Complemento */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Bairro + Complemento */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="number" className="text-white">Número</Label>
+                <Label htmlFor="neighborhood" className="text-white">Bairro</Label>
                 <Input
-                  id="number"
+                  id="neighborhood"
                   type="text"
-                  placeholder="123"
-                  value={number}
-                  onChange={(e) => setNumber(e.target.value)}
+                  placeholder="Nome do bairro"
+                  value={neighborhood}
+                  onChange={(e) => setNeighborhood(e.target.value)}
+                  maxLength={100}
                   className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                   required
                 />
+                <span className="text-xs text-slate-400 block text-right">{neighborhood.length}/100</span>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="complement" className="text-white">Complemento</Label>
                 <Input
                   id="complement"
                   type="text"
-                  placeholder="Apto, bloco..."
+                  placeholder="Apto, bloco... (opcional)"
                   value={complement}
                   onChange={(e) => setComplement(e.target.value)}
+                  maxLength={100}
                   className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                 />
+                <span className="text-xs text-slate-400 block text-right">{complement.length}/100</span>
               </div>
-            </div>
-
-            {/* Bairro */}
-            <div className="space-y-2">
-              <Label htmlFor="neighborhood" className="text-white">Bairro</Label>
-              <Input
-                id="neighborhood"
-                type="text"
-                placeholder="Nome do bairro"
-                value={neighborhood}
-                onChange={(e) => setNeighborhood(e.target.value)}
-                className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
-                required
-              />
             </div>
 
             {/* Cidade e Estado */}
@@ -238,6 +246,7 @@ export default function CompleteProfile() {
                   placeholder="Nome da cidade"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
+                  maxLength={100}
                   className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                   required
                 />
@@ -275,9 +284,11 @@ export default function CompleteProfile() {
                 placeholder="Ex: Universidade Federal..."
                 value={institution}
                 onChange={(e) => setInstitution(e.target.value)}
+                maxLength={150}
                 className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                 required
               />
+              <span className="text-xs text-slate-400 block text-right">{institution.length}/150</span>
             </div>
 
             {/* Curso */}
@@ -289,13 +300,15 @@ export default function CompleteProfile() {
                 placeholder="Ex: Direito"
                 value={course}
                 onChange={(e) => setCourse(e.target.value)}
+                maxLength={150}
                 className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                 required
               />
+              <span className="text-xs text-slate-400 block text-right">{course.length}/150</span>
             </div>
 
             {/* Período e Matrícula */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="period" className="text-white">Período/Semestre</Label>
                 <Select value={period} onValueChange={setPeriod} required>
@@ -319,9 +332,11 @@ export default function CompleteProfile() {
                   placeholder="12345678"
                   value={enrollmentNumber}
                   onChange={(e) => setEnrollmentNumber(e.target.value)}
+                  maxLength={20}
                   className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                   required
                 />
+                <span className="text-xs text-slate-400 block text-right">{enrollmentNumber.length}/20</span>
               </div>
             </div>
           </div>

@@ -149,6 +149,11 @@ export default function SignUp() {
       return;
     }
 
+    if (password.length > 20) {
+      toast.error('Senha deve ter no máximo 20 caracteres');
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error('As senhas não coincidem');
       return;
@@ -227,171 +232,197 @@ export default function SignUp() {
               placeholder="João Silva Santos"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              maxLength={100}
               className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
               required
             />
+            <span className="text-xs text-slate-400 block text-right">{fullName.length}/100</span>
           </div>
 
-          {/* CPF */}
-          <div className="space-y-2">
-            <Label htmlFor="cpf" className="text-white">CPF</Label>
-            <Input
-              id="cpf"
-              type="text"
-              placeholder="000.000.000-00"
-              value={cpf}
-              onChange={(e) => handleCpfChange(e.target.value)}
-              maxLength={14}
-              className={cn(
-                "bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20",
-                cpfError && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
-                isCpfValid && "border-green-500 focus:border-green-500 focus:ring-green-500/20"
+          {/* CPF + Data de nascimento (2 colunas) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* CPF */}
+            <div className="space-y-2">
+              <Label htmlFor="cpf" className="text-white">CPF</Label>
+              <Input
+                id="cpf"
+                type="text"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => handleCpfChange(e.target.value)}
+                maxLength={14}
+                className={cn(
+                  "bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20",
+                  cpfError && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+                  isCpfValid && "border-green-500 focus:border-green-500 focus:ring-green-500/20"
+                )}
+                required
+              />
+              {cpfError && (
+                <p className="text-red-400 text-sm">{cpfError}</p>
               )}
-              required
-            />
-            {cpfError && (
-              <p className="text-red-400 text-sm mt-1">{cpfError}</p>
-            )}
-            {isCpfValid && !cpfError && (
-              <p className="text-green-400 text-sm mt-1">✓ CPF válido</p>
-            )}
-          </div>
-
-          {/* Data de nascimento */}
-          <div className="space-y-2">
-            <Label className="text-white">Data de nascimento</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {/* Dia */}
-              <Select value={birthDay} onValueChange={setBirthDay}>
-                <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
-                  <SelectValue placeholder="Dia" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
-                  {days.map((day) => (
-                    <SelectItem 
-                      key={day} 
-                      value={day.toString().padStart(2, '0')}
-                      className="text-white hover:bg-slate-700 focus:bg-slate-700"
-                    >
-                      {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Mês */}
-              <Select value={birthMonth} onValueChange={setBirthMonth}>
-                <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
-                  {months.map((month) => (
-                    <SelectItem 
-                      key={month.value} 
-                      value={month.value}
-                      className="text-white hover:bg-slate-700 focus:bg-slate-700"
-                    >
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Ano */}
-              <Select value={birthYear} onValueChange={setBirthYear}>
-                <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
-                  {years.map((year) => (
-                    <SelectItem 
-                      key={year} 
-                      value={year.toString()}
-                      className="text-white hover:bg-slate-700 focus:bg-slate-700"
-                    >
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isCpfValid && !cpfError && (
+                <p className="text-green-400 text-sm">✓ CPF válido</p>
+              )}
             </div>
-            {dateError && (
-              <p className="text-red-400 text-sm mt-1">{dateError}</p>
-            )}
-          </div>
 
-          {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
-              required
-            />
-          </div>
+            {/* Data de nascimento */}
+            <div className="space-y-2">
+              <Label className="text-white">Data de nascimento</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {/* Dia */}
+                <Select value={birthDay} onValueChange={setBirthDay}>
+                  <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
+                    <SelectValue placeholder="Dia" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
+                    {days.map((day) => (
+                      <SelectItem 
+                        key={day} 
+                        value={day.toString().padStart(2, '0')}
+                        className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                      >
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-          {/* Telefone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="text-white">Telefone</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="(00) 00000-0000"
-              value={phone}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              maxLength={15}
-              className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
-              required
-            />
-          </div>
+                {/* Mês */}
+                <Select value={birthMonth} onValueChange={setBirthMonth}>
+                  <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
+                    <SelectValue placeholder="Mês" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
+                    {months.map((month) => (
+                      <SelectItem 
+                        key={month.value} 
+                        value={month.value}
+                        className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                      >
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-          {/* Senha */}
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-white">Senha</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Mínimo 6 caracteres"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20 pr-10"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+                {/* Ano */}
+                <Select value={birthYear} onValueChange={setBirthYear}>
+                  <SelectTrigger className="bg-slate-700/50 text-white border-slate-600 focus:border-cyan-500">
+                    <SelectValue placeholder="Ano" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700 max-h-60">
+                    {years.map((year) => (
+                      <SelectItem 
+                        key={year} 
+                        value={year.toString()}
+                        className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                      >
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {dateError && (
+                <p className="text-red-400 text-sm">{dateError}</p>
+              )}
             </div>
           </div>
 
-          {/* Confirmar senha */}
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-white">Confirmar senha</Label>
-            <div className="relative">
+          {/* Email + Telefone (2 colunas) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Digite a senha novamente"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20 pr-10"
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                maxLength={100}
+                className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-              >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              <span className="text-xs text-slate-400 block text-right">{email.length}/100</span>
+            </div>
+
+            {/* Telefone */}
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-white">Telefone</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={phone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                maxLength={15}
+                className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20"
+                required
+              />
+              <span className="text-xs text-slate-400 block text-right">{phone.length}/15</span>
+            </div>
+          </div>
+
+          {/* Senha + Confirmar (2 colunas) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Senha */}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-white">Senha</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={6}
+                  maxLength={20}
+                  className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>Mínimo 6 caracteres</span>
+                <span>{password.length}/20</span>
+              </div>
+            </div>
+
+            {/* Confirmar senha */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-white">Confirmar senha</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Digite a senha novamente"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  maxLength={20}
+                  className="bg-slate-700/50 text-white placeholder-slate-400 border-slate-600 focus:border-cyan-500 focus:ring-cyan-500/20 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>Deve coincidir</span>
+                <span>{confirmPassword.length}/20</span>
+              </div>
             </div>
           </div>
 
