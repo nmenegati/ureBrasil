@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCPF, formatPhone, formatCEP } from '@/lib/validators';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,18 +69,7 @@ interface Plan {
   name: string;
 }
 
-const formatCPF = (cpf: string) => {
-  const numbers = cpf.replace(/\D/g, '');
-  return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-};
-
-const formatPhone = (phone: string) => {
-  const numbers = phone.replace(/\D/g, '');
-  if (numbers.length === 11) {
-    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  }
-  return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-};
+// formatCPF and formatPhone imported from @/lib/validators
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('pt-BR');
@@ -329,12 +319,10 @@ export default function Perfil() {
   };
 
   const handleCepChange = async (cep: string) => {
-    const cleanCep = cep.replace(/\D/g, '');
-    let formattedCep = cleanCep;
-    if (cleanCep.length > 5) {
-      formattedCep = cleanCep.slice(0, 5) + '-' + cleanCep.slice(5, 8);
-    }
+    const formattedCep = formatCEP(cep);
     setAddressForm(prev => ({ ...prev, cep: formattedCep }));
+    
+    const cleanCep = cep.replace(/\D/g, '');
 
     if (cleanCep.length === 8) {
       const address = await fetchAddress(cleanCep);

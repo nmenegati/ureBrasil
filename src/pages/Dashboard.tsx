@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCPF, formatPhone } from '@/lib/validators';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
@@ -146,19 +147,7 @@ export default function Dashboard() {
     }
   };
 
-  // Formatação de CPF: 123.456.789-00
-  const formatCPF = (cpf: string) => {
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  };
-
-  // Formatação de telefone: (11) 99999-9999
-  const formatPhone = (phone: string) => {
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.length === 11) {
-      return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    }
-    return phone;
-  };
+  // formatCPF and formatPhone imported from @/lib/validators
 
   // Formatação de data: 31/03/2025
   const formatDate = (date: string) => {
