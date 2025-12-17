@@ -492,6 +492,11 @@ export default function Perfil() {
       return;
     }
 
+    if (newPassword.length > 20) {
+      toast.error('Senha deve ter no máximo 20 caracteres');
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       toast.error('Senhas não coincidem');
       return;
@@ -637,13 +642,19 @@ export default function Perfil() {
                     value={personalForm.full_name}
                     onChange={(e) => setPersonalForm(prev => ({ ...prev, full_name: e.target.value }))}
                     disabled={isCardActive}
+                    maxLength={100}
                   />
-                  {isCardActive && (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" />
-                      Carteirinha já emitida. Contate suporte para alterar.
-                    </p>
-                  )}
+                  <div className="flex justify-between items-center mt-1">
+                    {isCardActive ? (
+                      <p className="text-xs text-amber-600 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Carteirinha já emitida. Contate suporte para alterar.
+                      </p>
+                    ) : (
+                      <span />
+                    )}
+                    <span className="text-xs text-muted-foreground">{personalForm.full_name.length}/100</span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -673,6 +684,7 @@ export default function Perfil() {
                     placeholder="(99) 99999-9999"
                     maxLength={15}
                   />
+                  <span className="text-xs text-muted-foreground block text-right mt-1">{personalForm.phone.length}/15</span>
                 </div>
 
                 <Button onClick={savePersonalInfo} disabled={savingPersonal} className="w-full sm:w-auto">
@@ -685,17 +697,30 @@ export default function Perfil() {
             {/* Address Tab */}
             <TabsContent value="address" className="p-6">
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="cep">CEP</Label>
-                  <div className="relative">
+                {/* CEP + Número (grid-cols-3: 2/3 + 1/3) */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
+                    <Label htmlFor="cep">CEP</Label>
+                    <div className="relative">
+                      <Input
+                        id="cep"
+                        value={addressForm.cep}
+                        onChange={(e) => handleCepChange(e.target.value)}
+                        placeholder="00000-000"
+                        maxLength={9}
+                      />
+                      {cepLoading && <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />}
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="number">Número</Label>
                     <Input
-                      id="cep"
-                      value={addressForm.cep}
-                      onChange={(e) => handleCepChange(e.target.value)}
-                      placeholder="00000-000"
-                      maxLength={9}
+                      id="number"
+                      value={addressForm.number}
+                      onChange={(e) => setAddressForm(prev => ({ ...prev, number: e.target.value }))}
+                      maxLength={10}
                     />
-                    {cepLoading && <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />}
+                    <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.number.length}/10</span>
                   </div>
                 </div>
 
@@ -705,17 +730,21 @@ export default function Perfil() {
                     id="street"
                     value={addressForm.street}
                     onChange={(e) => setAddressForm(prev => ({ ...prev, street: e.target.value }))}
+                    maxLength={150}
                   />
+                  <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.street.length}/150</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="number">Número</Label>
+                    <Label htmlFor="neighborhood">Bairro</Label>
                     <Input
-                      id="number"
-                      value={addressForm.number}
-                      onChange={(e) => setAddressForm(prev => ({ ...prev, number: e.target.value }))}
+                      id="neighborhood"
+                      value={addressForm.neighborhood}
+                      onChange={(e) => setAddressForm(prev => ({ ...prev, neighborhood: e.target.value }))}
+                      maxLength={100}
                     />
+                    <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.neighborhood.length}/100</span>
                   </div>
                   <div>
                     <Label htmlFor="complement">Complemento</Label>
@@ -724,17 +753,10 @@ export default function Perfil() {
                       value={addressForm.complement}
                       onChange={(e) => setAddressForm(prev => ({ ...prev, complement: e.target.value }))}
                       placeholder="Opcional"
+                      maxLength={100}
                     />
+                    <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.complement.length}/100</span>
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="neighborhood">Bairro</Label>
-                  <Input
-                    id="neighborhood"
-                    value={addressForm.neighborhood}
-                    onChange={(e) => setAddressForm(prev => ({ ...prev, neighborhood: e.target.value }))}
-                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -764,7 +786,9 @@ export default function Perfil() {
                     id="institution"
                     value={academicForm.institution}
                     onChange={(e) => setAcademicForm(prev => ({ ...prev, institution: e.target.value }))}
+                    maxLength={150}
                   />
+                  <span className="text-xs text-muted-foreground block text-right mt-1">{academicForm.institution.length}/150</span>
                 </div>
 
                 <div>
@@ -773,7 +797,9 @@ export default function Perfil() {
                     id="course"
                     value={academicForm.course}
                     onChange={(e) => setAcademicForm(prev => ({ ...prev, course: e.target.value }))}
+                    maxLength={150}
                   />
+                  <span className="text-xs text-muted-foreground block text-right mt-1">{academicForm.course.length}/150</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -796,7 +822,9 @@ export default function Perfil() {
                       id="enrollment_number"
                       value={academicForm.enrollment_number}
                       onChange={(e) => setAcademicForm(prev => ({ ...prev, enrollment_number: e.target.value }))}
+                      maxLength={20}
                     />
+                    <span className="text-xs text-muted-foreground block text-right mt-1">{academicForm.enrollment_number.length}/20</span>
                   </div>
                 </div>
 
@@ -827,7 +855,9 @@ export default function Perfil() {
                     value={securityForm.newEmail}
                     onChange={(e) => setSecurityForm(prev => ({ ...prev, newEmail: e.target.value }))}
                     placeholder="novo@email.com"
+                    maxLength={100}
                   />
+                  <span className="text-xs text-muted-foreground block text-right mt-1">{securityForm.newEmail.length}/100</span>
                 </div>
                 <p className="text-sm text-amber-600 flex items-start gap-2">
                   <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -893,7 +923,13 @@ export default function Perfil() {
                     value={securityForm.newPassword}
                     onChange={(e) => setSecurityForm(prev => ({ ...prev, newPassword: e.target.value }))}
                     placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                    maxLength={20}
                   />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Mínimo 6 caracteres</span>
+                    <span>{securityForm.newPassword.length}/20</span>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="confirmPassword">Confirmar Nova Senha *</Label>
@@ -903,7 +939,13 @@ export default function Perfil() {
                     value={securityForm.confirmPassword}
                     onChange={(e) => setSecurityForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     placeholder="Repita a nova senha"
+                    minLength={6}
+                    maxLength={20}
                   />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Deve coincidir</span>
+                    <span>{securityForm.confirmPassword.length}/20</span>
+                  </div>
                 </div>
                 <Button 
                   onClick={changePassword} 
