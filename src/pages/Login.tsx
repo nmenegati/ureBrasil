@@ -56,7 +56,7 @@ export default function Login() {
       
       // 1. Verificar se email está confirmado
       if (!data.user.email_confirmed_at) {
-        window.location.href = '/verificar-email';
+        window.location.href = `/verificar-email?email=${encodeURIComponent(data.user.email || '')}`;
         return;
       }
       

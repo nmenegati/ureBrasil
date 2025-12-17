@@ -334,9 +334,9 @@ export default function SignUp() {
           return;
         }
 
-        // Signup criou novo usuário com sucesso
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        window.location.href = '/verificar-email';
+        // Signup criou novo usuário com sucesso - passar email na URL
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = `/verificar-email?email=${encodeURIComponent(data.user?.email || email)}`;
       } else {
         toast.error('Erro inesperado ao criar conta');
         setLoading(false);
