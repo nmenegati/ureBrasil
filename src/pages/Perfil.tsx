@@ -694,28 +694,26 @@ export default function Perfil() {
             {/* Address Tab */}
             <TabsContent value="address" className="p-6">
               <div className="space-y-4">
-                {/* CEP + Aviso de ajuda */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-                  <div>
-                    <Label htmlFor="cep">CEP</Label>
-                    <div className="relative">
-                      <Input
-                        id="cep"
-                        value={addressForm.cep}
-                        onChange={(e) => handleCepChange(e.target.value)}
-                        placeholder="00000-000"
-                        maxLength={9}
-                      />
-                      {cepLoading && <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />}
-                    </div>
-                    {cepError && <p className="text-xs text-destructive mt-1">{cepError}</p>}
-                  </div>
-                  <div className="flex items-center h-10">
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Info className="h-3 w-3" />
+                {/* CEP (1/4 da largura) com info ao lado do label */}
+                <div className="sm:w-1/4">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <Label htmlFor="cep" className="mb-0">CEP</Label>
+                    <span className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Info className="h-3.5 w-3.5" />
                       Altere o CEP para atualizar o endereço automaticamente.
-                    </p>
+                    </span>
                   </div>
+                  <div className="relative">
+                    <Input
+                      id="cep"
+                      value={addressForm.cep}
+                      onChange={(e) => handleCepChange(e.target.value)}
+                      placeholder="00000-000"
+                      maxLength={9}
+                    />
+                    {cepLoading && <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />}
+                  </div>
+                  {cepError && <p className="text-sm text-red-600 font-medium mt-1">{cepError}</p>}
                 </div>
 
                 {/* Rua (3 cols) + Número (1 col) */}
