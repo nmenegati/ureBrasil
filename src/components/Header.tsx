@@ -21,7 +21,7 @@ interface HeaderProps {
 
 export function Header({ variant = 'app' }: HeaderProps) {
   const { user, signOut } = useAuth();
-  const { avatarUrl } = useProfile();
+  const { avatarUrl, fullName: profileFullName } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
@@ -47,7 +47,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
     navigate('/');
   };
   
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || 
+  const firstName = profileFullName?.split(' ')[0] || 
+                    user?.user_metadata?.full_name?.split(' ')[0] || 
                     user?.email?.split('@')[0] || 
                     'Usuário';
   
