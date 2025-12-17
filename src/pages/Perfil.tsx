@@ -353,15 +353,17 @@ export default function Perfil() {
     try {
       const cleanPhone = personalForm.phone.replace(/\D/g, '');
       
-      // Verificar se telefone já existe em outro usuário
-      const { data: existingPhone } = await supabase
-        .from('student_profiles')
-        .select('id')
-        .eq('phone', cleanPhone)
-        .neq('id', profile.id)
-        .maybeSingle();
+      // Verificar se telefone já existe em outro usuário (usando RPC que ignora RLS)
+      const { data: phoneExists, error: phoneError } = await supabase.rpc('check_phone_exists', { 
+        p_phone: cleanPhone 
+      });
       
-      if (existingPhone) {
+      if (phoneError) {
+        console.error('Erro ao verificar telefone:', phoneError);
+      }
+      
+      // Se existe E não é o telefone atual do usuário
+      if (phoneExists && profile.phone !== cleanPhone) {
         toast.error('Este telefone já está em uso por outro usuário!');
         setSavingPersonal(false);
         return;

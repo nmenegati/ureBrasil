@@ -824,6 +824,8 @@ export type Database = {
     }
     Functions: {
       calculate_card_validity: { Args: { issue_date: string }; Returns: string }
+      check_cpf_exists: { Args: { p_cpf: string }; Returns: boolean }
+      check_phone_exists: { Args: { p_phone: string }; Returns: boolean }
       generate_card_number: { Args: never; Returns: string }
       has_any_role: {
         Args: {

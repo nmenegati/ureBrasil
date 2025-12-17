@@ -63,16 +63,15 @@ export default function SignUp() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i);
 
-  // Verificar se CPF já existe no banco
+  // Verificar se CPF já existe no banco (usando RPC que ignora RLS)
   const checkCpfExists = async (cpfValue: string): Promise<boolean> => {
     const cleanCpf = cpfValue.replace(/\D/g, '');
-    const { data } = await supabase
-      .from('student_profiles')
-      .select('id')
-      .eq('cpf', cleanCpf)
-      .maybeSingle();
-    
-    return !!data;
+    const { data, error } = await supabase.rpc('check_cpf_exists', { p_cpf: cleanCpf });
+    if (error) {
+      console.error('Erro ao verificar CPF:', error);
+      return false;
+    }
+    return data === true;
   };
 
   const handleCpfChange = async (value: string) => {
@@ -151,18 +150,17 @@ export default function SignUp() {
     }
   };
 
-  // Verificar se telefone já existe no banco
+  // Verificar se telefone já existe no banco (usando RPC que ignora RLS)
   const checkPhoneExists = async (phoneValue: string): Promise<boolean> => {
     const cleanPhone = phoneValue.replace(/\D/g, '');
     if (cleanPhone.length !== 11) return false;
     
-    const { data } = await supabase
-      .from('student_profiles')
-      .select('id')
-      .eq('phone', cleanPhone)
-      .maybeSingle();
-    
-    return !!data;
+    const { data, error } = await supabase.rpc('check_phone_exists', { p_phone: cleanPhone });
+    if (error) {
+      console.error('Erro ao verificar telefone:', error);
+      return false;
+    }
+    return data === true;
   };
 
   const handlePhoneChange = async (value: string) => {
@@ -249,6 +247,12 @@ export default function SignUp() {
     setEmailError('');
 
     try {
+      // Se usuário já está logado, fazer logout antes de signup
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
+      if (existingSession) {
+        await supabase.auth.signOut();
+      }
+
       // Verificação final de CPF duplicado antes de criar conta
       const cpfExists = await checkCpfExists(cpf);
       if (cpfExists) {
@@ -291,6 +295,17 @@ export default function SignUp() {
       }
 
       if (data.user) {
+        // Detectar email duplicado via identities vazio (Supabase retorna user mas sem identities)
+        if (!data.user.identities || data.user.identities.length === 0) {
+          setEmailError('Este email já está cadastrado');
+          toast.error('Este email já está cadastrado!', {
+            description: 'Tente fazer login ou recuperar sua senha.'
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Signup criou novo usuário com sucesso
         await new Promise(resolve => setTimeout(resolve, 1000));
         window.location.href = '/verificar-email';
       } else {
