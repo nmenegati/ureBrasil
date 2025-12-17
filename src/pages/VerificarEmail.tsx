@@ -1,15 +1,22 @@
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Mail, Loader2 } from 'lucide-react'
+import { Mail, Loader2, Sun, Moon } from 'lucide-react'
 import { useState } from 'react'
+import { useTheme } from 'next-themes'
+import ureBrasilLogo from '@/assets/ure-brasil-logo.png'
 
 export default function VerificarEmail() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email') || ''
   const [resending, setResending] = useState(false)
+  const { theme, setTheme } = useTheme()
+
+  const toggleDarkMode = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
 
   const handleResend = async () => {
     if (!email) {
@@ -34,67 +41,91 @@ export default function VerificarEmail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        
-        <div className="text-center mb-6">
-          <Mail className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">
-            Confirme seu Email
-          </h1>
-        </div>
-
-        <div className="bg-blue-50 rounded-lg p-4 mb-6 space-y-3">
-          {email && (
-            <div>
-              <p className="font-medium text-gray-900">Email enviado para:</p>
-              <p className="text-sm text-gray-700 break-all">{email}</p>
-            </div>
-          )}
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-card shadow-sm sticky top-0 z-10 border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Link to="/">
+            <img src={ureBrasilLogo} alt="URE Brasil" className="h-10" />
+          </Link>
           
-          <p className="text-sm text-gray-700">
-            ✓ Verifique sua caixa de entrada
-          </p>
-          
-          <p className="text-sm text-gray-700">
-            ✓ Clique no link de confirmação
-          </p>
-          
-          <p className="text-sm text-gray-700">
-            ⚠️ Não recebeu? Verifique o spam
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {email && (
-            <Button
-              onClick={handleResend}
-              disabled={resending}
-              variant="outline"
-              className="w-full"
-            >
-              {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reenviar Email
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-          )}
-
-          <Button
-            onClick={() => navigate('/login')}
-            className="w-full"
-          >
-            Ir para Login
-          </Button>
+            
+            <Link to="/login" className="flex items-center">
+              <span className="text-muted-foreground text-sm">Já confirmou?</span>
+              <span className="text-primary font-medium ml-1">Entrar</span>
+            </Link>
+          </div>
         </div>
+      </div>
 
-        <p className="text-xs text-center text-gray-500 mt-6">
-          Email errado?{' '}
-          <button
-            onClick={() => navigate('/signup')}
-            className="text-blue-600 hover:underline"
-          >
-            Criar nova conta
-          </button>
-        </p>
+      {/* Content */}
+      <div className="flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
+            <div className="text-center mb-6">
+              <Mail className="w-16 h-16 text-primary mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-foreground mb-2">
+                Confirme seu Email
+              </h1>
+            </div>
+
+            <div className="bg-primary/10 rounded-lg p-4 mb-6 space-y-3">
+              {email && (
+                <div>
+                  <p className="font-medium text-foreground">Email enviado para:</p>
+                  <p className="text-sm text-muted-foreground break-all">{email}</p>
+                </div>
+              )}
+              
+              <p className="text-sm text-muted-foreground">
+                ✓ Verifique sua caixa de entrada
+              </p>
+              
+              <p className="text-sm text-muted-foreground">
+                ✓ Clique no link de confirmação
+              </p>
+              
+              <p className="text-sm text-muted-foreground">
+                ⚠️ Não recebeu? Verifique o spam
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {email && (
+                <Button
+                  onClick={handleResend}
+                  disabled={resending}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Reenviar Email
+                </Button>
+              )}
+
+              <Button
+                onClick={() => navigate('/login')}
+                className="w-full"
+              >
+                Ir para Login
+              </Button>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground mt-6">
+              Email errado?{' '}
+              <button
+                onClick={() => navigate('/signup')}
+                className="text-primary hover:underline"
+              >
+                Criar nova conta
+              </button>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
