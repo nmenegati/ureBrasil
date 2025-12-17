@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Camera, User, MapPin, GraduationCap, Shield, History, Save, Mail, Lock, Trash2, FileText, CreditCard, CheckCircle2, Clock, XCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, Camera, User, MapPin, GraduationCap, Shield, History, Save, Mail, Lock, Trash2, FileText, CreditCard, CheckCircle2, Clock, XCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
@@ -125,6 +125,12 @@ export default function Perfil() {
   
   // Avatar preview
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  
+  // Password visibility toggles
+  const [showCurrentPasswordEmail, setShowCurrentPasswordEmail] = useState(false);
+  const [showCurrentPasswordChange, setShowCurrentPasswordChange] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -855,13 +861,23 @@ export default function Perfil() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                   <div>
                     <Label htmlFor="currentPasswordForEmail">Senha Atual *</Label>
-                    <Input
-                      id="currentPasswordForEmail"
-                      type="password"
-                      value={securityForm.currentPasswordForEmail}
-                      onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: e.target.value }))}
-                      placeholder="Digite sua senha atual"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="currentPasswordForEmail"
+                        type={showCurrentPasswordEmail ? 'text' : 'password'}
+                        value={securityForm.currentPasswordForEmail}
+                        onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: e.target.value }))}
+                        placeholder="Digite sua senha atual"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPasswordEmail(!showCurrentPasswordEmail)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showCurrentPasswordEmail ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Para sua segurança, confirme sua senha
                     </p>
@@ -893,13 +909,23 @@ export default function Perfil() {
                 </h3>
                 <div>
                   <Label htmlFor="currentPasswordForPassword">Senha Atual *</Label>
-                  <Input
-                    id="currentPasswordForPassword"
-                    type="password"
-                    value={securityForm.currentPasswordForPassword}
-                    onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForPassword: e.target.value }))}
-                    placeholder="Digite sua senha atual"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="currentPasswordForPassword"
+                      type={showCurrentPasswordChange ? 'text' : 'password'}
+                      value={securityForm.currentPasswordForPassword}
+                      onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForPassword: e.target.value }))}
+                      placeholder="Digite sua senha atual"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPasswordChange(!showCurrentPasswordChange)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showCurrentPasswordChange ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Para sua segurança, confirme sua senha antes de alterá-la
                   </p>
@@ -907,15 +933,25 @@ export default function Perfil() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="newPassword">Nova Senha *</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={securityForm.newPassword}
-                      onChange={(e) => setSecurityForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                      placeholder="Mínimo 6 caracteres"
-                      minLength={6}
-                      maxLength={20}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={securityForm.newPassword}
+                        onChange={(e) => setSecurityForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                        placeholder="Mínimo 6 caracteres"
+                        minLength={6}
+                        maxLength={20}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
                       <span>Mínimo 6 caracteres</span>
                       <span>{securityForm.newPassword.length}/20</span>
@@ -924,15 +960,25 @@ export default function Perfil() {
                   </div>
                   <div>
                     <Label htmlFor="confirmPassword">Confirmar Nova Senha *</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={securityForm.confirmPassword}
-                      onChange={(e) => setSecurityForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      placeholder="Repita a nova senha"
-                      minLength={6}
-                      maxLength={20}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={securityForm.confirmPassword}
+                        onChange={(e) => setSecurityForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                        placeholder="Repita a nova senha"
+                        minLength={6}
+                        maxLength={20}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
                       <span>Deve coincidir</span>
                       <span>{securityForm.confirmPassword.length}/20</span>
