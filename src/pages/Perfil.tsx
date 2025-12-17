@@ -6,6 +6,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCPF, formatPhone, formatCEP } from '@/lib/validators';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -918,6 +919,7 @@ export default function Perfil() {
                     <span>Mínimo 6 caracteres</span>
                     <span>{securityForm.newPassword.length}/20</span>
                   </div>
+                  <PasswordStrengthIndicator password={securityForm.newPassword} />
                 </div>
                 <div>
                   <Label htmlFor="confirmPassword">Confirmar Nova Senha *</Label>
