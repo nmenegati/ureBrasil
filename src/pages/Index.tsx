@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.jpg";
 import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
 
@@ -122,6 +123,7 @@ const Index = () => {
                   variant="hero-primary"
                   size="lg"
                   className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto"
+                  onClick={() => navigate('/signup')}
                 >
                   <Rocket className="mr-2 h-5 w-5" />
                   Solicitar Minha Carteirinha
@@ -557,6 +559,7 @@ const Index = () => {
               <Button
                 size="lg"
                 className="bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 text-lg px-8 py-6 h-auto font-bold w-full sm:w-auto"
+                onClick={() => navigate('/signup')}
               >
                 Quero a JurisEstudante
               </Button>
@@ -617,7 +620,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90 font-bold">
+                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90 font-bold" onClick={() => navigate('/signup')}>
                   Solicitar Agora
                 </Button>
               </CardContent>
@@ -661,7 +664,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90 font-bold">
+                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90 font-bold" onClick={() => navigate('/signup')}>
                   Solicitar Agora
                 </Button>
               </CardContent>
@@ -712,7 +715,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold">
+                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold" onClick={() => navigate('/signup')}>
                   Solicitar JurisEstudante
                 </Button>
               </CardContent>
@@ -771,7 +774,7 @@ const Index = () => {
                   </div>
                 </div>
 
-                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold">
+                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold" onClick={() => navigate('/signup')}>
                   Solicitar JurisEstudante
                 </Button>
               </CardContent>
@@ -924,6 +927,7 @@ const Index = () => {
               <Button
                 size="lg"
                 className="bg-white text-ure-orange hover:bg-white/90 font-bold text-lg px-8 py-6 h-auto shadow-2xl hover:shadow-white/20 hover:scale-105 transition-all duration-300"
+                onClick={() => navigate('/signup')}
               >
                 🚀 Solicitar Agora
               </Button>
