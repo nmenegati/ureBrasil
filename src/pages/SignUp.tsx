@@ -29,6 +29,7 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>('');
   const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState<string>('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -137,8 +138,36 @@ export default function SignUp() {
     return date;
   };
 
-  const handlePhoneChange = (value: string) => {
-    setPhone(formatPhone(value));
+  // Verificar se telefone já existe no banco
+  const checkPhoneExists = async (phoneValue: string): Promise<boolean> => {
+    const cleanPhone = phoneValue.replace(/\D/g, '');
+    if (cleanPhone.length !== 11) return false;
+    
+    const { data } = await supabase
+      .from('student_profiles')
+      .select('id')
+      .eq('phone', cleanPhone)
+      .maybeSingle();
+    
+    return !!data;
+  };
+
+  const handlePhoneChange = async (value: string) => {
+    const formatted = formatPhone(value);
+    setPhone(formatted);
+    setPhoneError('');
+    
+    const cleanPhone = formatted.replace(/\D/g, '');
+    if (cleanPhone.length === 11) {
+      try {
+        const exists = await checkPhoneExists(formatted);
+        if (exists) {
+          setPhoneError('Telefone já cadastrado');
+        }
+      } catch (err) {
+        console.error('Erro ao verificar telefone:', err);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -213,6 +242,15 @@ export default function SignUp() {
         setCpfError('CPF já cadastrado');
         setIsCpfValid(false);
         toast.error('Este CPF já está cadastrado no sistema');
+        setLoading(false);
+        return;
+      }
+
+      // Verificação final de telefone duplicado antes de criar conta
+      const phoneExists = await checkPhoneExists(phone);
+      if (phoneExists) {
+        setPhoneError('Telefone já cadastrado');
+        toast.error('Este telefone já está cadastrado no sistema');
         setLoading(false);
         return;
       }
@@ -456,10 +494,22 @@ export default function SignUp() {
                     value={phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     maxLength={15}
-                    className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
+                    className={cn(
+                      "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11",
+                      phoneError && "border-destructive focus:border-destructive focus:ring-destructive/20"
+                    )}
                     required
                   />
-                  <span className="text-xs text-muted-foreground block text-right">{phone.length}/15</span>
+                  {phoneError ? (
+                    <p className="text-destructive text-sm">
+                      {phoneError}
+                      <Link to="/login" className="ml-2 text-primary underline hover:text-primary/80">
+                        Fazer login
+                      </Link>
+                    </p>
+                  ) : (
+                    <span className="text-xs text-muted-foreground block text-right">{phone.length}/15</span>
+                  )}
                 </div>
               </div>
 

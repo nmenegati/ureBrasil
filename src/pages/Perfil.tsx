@@ -349,17 +349,34 @@ export default function Perfil() {
   const savePersonalInfo = async () => {
     if (!profile) return;
     setSavingPersonal(true);
+    
     try {
+      const cleanPhone = personalForm.phone.replace(/\D/g, '');
+      
+      // Verificar se telefone já existe em outro usuário
+      const { data: existingPhone } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('phone', cleanPhone)
+        .neq('id', profile.id)
+        .maybeSingle();
+      
+      if (existingPhone) {
+        toast.error('Este telefone já está em uso por outro usuário!');
+        setSavingPersonal(false);
+        return;
+      }
+      
       const { error } = await supabase
         .from('student_profiles')
         .update({
           full_name: personalForm.full_name,
-          phone: personalForm.phone.replace(/\D/g, '')
+          phone: cleanPhone
         })
         .eq('id', profile.id);
 
       if (error) throw error;
-      setProfile({ ...profile, ...personalForm, phone: personalForm.phone.replace(/\D/g, '') });
+      setProfile({ ...profile, ...personalForm, phone: cleanPhone });
       await refreshProfile();
       toast.success('Informações salvas!');
     } catch (error) {
