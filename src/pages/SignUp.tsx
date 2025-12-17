@@ -14,17 +14,20 @@ import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicato
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function SignUp() {
   const [fullName, setFullName] = useState('');
   const [cpf, setCpf] = useState('');
   const [cpfError, setCpfError] = useState<string>('');
   const [isCpfValid, setIsCpfValid] = useState(false);
+  const [checkingCpf, setCheckingCpf] = useState(false);
   const [birthDay, setBirthDay] = useState<string>('');
   const [birthMonth, setBirthMonth] = useState<string>('');
   const [birthYear, setBirthYear] = useState<string>('');
   const [dateError, setDateError] = useState<string>('');
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string>('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -59,18 +62,52 @@ export default function SignUp() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i);
 
-  const handleCpfChange = (value: string) => {
+  // Verificar se CPF já existe no banco
+  const checkCpfExists = async (cpfValue: string): Promise<boolean> => {
+    const cleanCpf = cpfValue.replace(/\D/g, '');
+    const { data } = await supabase
+      .from('student_profiles')
+      .select('id')
+      .eq('cpf', cleanCpf)
+      .maybeSingle();
+    
+    return !!data;
+  };
+
+  const handleCpfChange = async (value: string) => {
     const formatted = formatCPF(value);
     setCpf(formatted);
+    setEmailError(''); // Limpa erro de email ao mudar CPF
     
     if (formatted.length === 14) {
       const isValid = validateCPF(formatted);
-      setIsCpfValid(isValid);
       
       if (!isValid) {
+        setIsCpfValid(false);
         setCpfError('CPF inválido');
-      } else {
+        return;
+      }
+      
+      // CPF válido - verificar duplicado no banco
+      setCheckingCpf(true);
+      setCpfError('');
+      
+      try {
+        const exists = await checkCpfExists(formatted);
+        if (exists) {
+          setIsCpfValid(false);
+          setCpfError('CPF já cadastrado');
+        } else {
+          setIsCpfValid(true);
+          setCpfError('');
+        }
+      } catch (err) {
+        console.error('Erro ao verificar CPF:', err);
+        // Em caso de erro na verificação, permitir continuar
+        setIsCpfValid(true);
         setCpfError('');
+      } finally {
+        setCheckingCpf(false);
       }
     } else {
       setIsCpfValid(false);
@@ -167,8 +204,19 @@ export default function SignUp() {
     }
 
     setLoading(true);
+    setEmailError('');
 
     try {
+      // Verificação final de CPF duplicado antes de criar conta
+      const cpfExists = await checkCpfExists(cpf);
+      if (cpfExists) {
+        setCpfError('CPF já cadastrado');
+        setIsCpfValid(false);
+        toast.error('Este CPF já está cadastrado no sistema');
+        setLoading(false);
+        return;
+      }
+
       const metadata = {
         full_name: fullName.trim(),
         cpf: cpf.replace(/\D/g, ''),
@@ -182,7 +230,8 @@ export default function SignUp() {
       if (error) {
         if (error.message.includes('already registered') || 
             error.message.includes('User already registered')) {
-          toast.error('Este email já está cadastrado');
+          setEmailError('Este email já está cadastrado');
+          toast.error('Este email já está cadastrado. Deseja fazer login?');
         } else {
           toast.error('Erro ao criar conta: ' + error.message);
         }
@@ -285,10 +334,20 @@ export default function SignUp() {
                     )}
                     required
                   />
-                  {cpfError && (
-                    <p className="text-destructive text-sm">{cpfError}</p>
+                  {checkingCpf && (
+                    <p className="text-muted-foreground text-sm">Verificando CPF...</p>
                   )}
-                  {isCpfValid && !cpfError && (
+                  {cpfError && !checkingCpf && (
+                    <p className="text-destructive text-sm">
+                      {cpfError}
+                      {cpfError.includes('já cadastrado') && (
+                        <Link to="/login" className="ml-2 text-primary underline hover:text-primary/80">
+                          Fazer login
+                        </Link>
+                      )}
+                    </p>
+                  )}
+                  {isCpfValid && !cpfError && !checkingCpf && (
                     <p className="text-green-600 text-sm">✓ CPF válido</p>
                   )}
                 </div>
@@ -367,12 +426,24 @@ export default function SignUp() {
                     type="email"
                     placeholder="seu@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
                     maxLength={100}
-                    className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
+                    className={cn(
+                      "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11",
+                      emailError && "border-destructive focus:border-destructive focus:ring-destructive/20"
+                    )}
                     required
                   />
-                  <span className="text-xs text-muted-foreground block text-right">{email.length}/100</span>
+                  {emailError ? (
+                    <p className="text-destructive text-sm">
+                      {emailError}
+                      <Link to="/login" className="ml-2 text-primary underline hover:text-primary/80">
+                        Fazer login
+                      </Link>
+                    </p>
+                  ) : (
+                    <span className="text-xs text-muted-foreground block text-right">{email.length}/100</span>
+                  )}
                 </div>
 
                 {/* Telefone */}
@@ -478,7 +549,7 @@ export default function SignUp() {
               {/* Botão Criar conta */}
               <Button
                 type="submit"
-                disabled={loading || !isCpfValid || cpf.length < 14}
+                disabled={loading || !isCpfValid || cpf.length < 14 || checkingCpf}
                 className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
