@@ -702,7 +702,7 @@ export default function Perfil() {
                     <div className="relative">
                       <Input
                         id="cep"
-                        value={addressForm.cep}
+                        value={formatCEP(addressForm.cep)}
                         onChange={(e) => handleCepChange(e.target.value)}
                         placeholder="00000-000"
                         maxLength={9}
