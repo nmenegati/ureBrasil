@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { 
-  CheckCircle, Clock, User, FileText, CreditCard, 
+  CheckCircle, Clock, FileText, CreditCard, 
   HelpCircle, ChevronRight, 
   AlertCircle, Download, QrCode
 } from 'lucide-react';
@@ -218,14 +218,8 @@ export default function Dashboard() {
     };
   };
 
-  // Cards de navegação
+  // Cards de navegação (apenas Documentos e Pagamentos)
   const navigationCards = [
-    { 
-      title: 'Meu Perfil', 
-      subtitle: 'Ver e editar informações', 
-      icon: User, 
-      route: '/perfil' 
-    },
     { 
       title: 'Documentos', 
       subtitle: 'Status de validação', 
@@ -237,12 +231,6 @@ export default function Dashboard() {
       subtitle: 'Histórico e comprovantes', 
       icon: CreditCard, 
       route: '/escolher-plano' 
-    },
-    { 
-      title: 'Suporte', 
-      subtitle: 'Precisa de ajuda?', 
-      icon: HelpCircle, 
-      route: '/suporte' 
     },
   ];
 
@@ -377,12 +365,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Conteúdo Principal */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Card da Carteirinha ou Próximo Passo */}
+        {/* LINHA 1: Próximo Passo + Suas Informações (lado a lado) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Próximo Passo ou Carteirinha - ocupa 2/3 */}
+          <div className="lg:col-span-2">
             {progress.card && card ? (
-              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10">
+              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10 h-full">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div>
                     <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
@@ -416,7 +404,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10">
+              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10 h-full">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-primary/10 rounded-full">
                     {nextStep.hasButton ? (
@@ -442,38 +430,13 @@ export default function Dashboard() {
                 )}
               </div>
             )}
-
-            {/* Cards de Navegação */}
-            <div className="grid grid-cols-2 gap-4">
-              {navigationCards.map((card, index) => (
-                <div 
-                  key={index}
-                  className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:scale-[1.02] cursor-pointer transition-all group shadow-lg shadow-black/5"
-                  onClick={() => {
-                    if (card.route === '/perfil' || card.route === '/suporte') {
-                      toast.info('Em breve!');
-                    } else {
-                      navigate(card.route);
-                    }
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <card.icon className="w-6 h-6 text-primary" />
-                    <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
-                  </div>
-                  <h3 className="text-slate-900 dark:text-white font-bold mt-4">{card.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-300 text-sm">{card.subtitle}</p>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Suas Informações */}
-            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
-              <h3 className="text-slate-900 dark:text-white font-bold mb-4">Suas Informações</h3>
-              <div className="space-y-3 text-sm">
+          {/* Suas Informações - ocupa 1/3 */}
+          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5 h-full">
+            <h3 className="text-slate-900 dark:text-white font-bold mb-4">Suas Informações</h3>
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-slate-500 dark:text-slate-400">CPF</p>
                   <p className="text-slate-900 dark:text-white">{formatCPF(profile.cpf)}</p>
@@ -482,24 +445,46 @@ export default function Dashboard() {
                   <p className="text-slate-500 dark:text-slate-400">Telefone</p>
                   <p className="text-slate-900 dark:text-white">{formatPhone(profile.phone)}</p>
                 </div>
-                <div>
-                  <p className="text-slate-500 dark:text-slate-400">Email</p>
-                  <p className="text-slate-900 dark:text-white break-all">{user.email}</p>
-                </div>
+              </div>
+              <div>
+                <p className="text-slate-500 dark:text-slate-400">Email</p>
+                <p className="text-slate-900 dark:text-white break-all">{user.email}</p>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Card de Ajuda */}
-            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
-              <h3 className="text-slate-900 dark:text-white font-bold">Precisa de Ajuda?</h3>
-              <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">Nossa equipe está pronta para te ajudar!</p>
-              <Button 
-                className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => toast.info('Em breve!')}
-              >
-                Abrir Ticket
-              </Button>
+        {/* LINHA 2: Documentos + Pagamentos + Precisa de Ajuda? (3 cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {navigationCards.map((card, index) => (
+            <div 
+              key={index}
+              className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:scale-[1.02] cursor-pointer transition-all group shadow-lg shadow-black/5"
+              onClick={() => navigate(card.route)}
+            >
+              <div className="flex justify-between items-start">
+                <card.icon className="w-6 h-6 text-primary" />
+                <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-slate-900 dark:text-white font-bold mt-4">{card.title}</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm">{card.subtitle}</p>
             </div>
+          ))}
+
+          {/* Card Precisa de Ajuda? */}
+          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
+            <div className="flex justify-between items-start">
+              <HelpCircle className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-slate-900 dark:text-white font-bold mt-4">Precisa de Ajuda?</h3>
+            <p className="text-slate-600 dark:text-slate-300 text-sm">Nossa equipe está pronta!</p>
+            <Button 
+              className="w-full mt-3 bg-primary hover:bg-primary/90 text-primary-foreground"
+              size="sm"
+              onClick={() => toast.info('Em breve!')}
+            >
+              Abrir Ticket
+            </Button>
           </div>
         </div>
       </main>
