@@ -23,29 +23,16 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('=== INÍCIO DO LOGIN ===');
-    console.log('📧 Email:', email);
-    console.log('🕐 Timestamp:', new Date().toISOString());
-    
     if (!email || !password) {
-      console.log('❌ Campos vazios - abortando');
       toast.error('Preencha todos os campos');
       return;
     }
 
     setLoading(true);
     
-    console.log('🔄 Chamando signIn()...');
     const { data, error } = await signIn(email, password);
 
-    console.log('📦 Resposta do signIn:');
-    console.log('  - data:', data);
-    console.log('  - error:', error);
-    console.log('  - data.session:', data?.session);
-    console.log('  - data.user:', data?.user);
-
     if (error) {
-      console.error('❌ ERRO no signIn:', error.message);
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Email ou senha incorretos');
       } else if (error.message.includes('Email not confirmed')) {
@@ -58,26 +45,14 @@ export default function Login() {
     }
 
     if (data.user) {
-      console.log('✅ Login bem-sucedido!');
-      console.log('👤 Usuário:', data.user.email);
-      console.log('🔑 Session exists:', !!data.session);
-      
       toast.success('Login realizado com sucesso!');
       
-      // Verificar se sessão foi salva no localStorage
-      console.log('⏳ Aguardando 500ms antes de verificar localStorage...');
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      console.log('🔍 Verificando getSession()...');
-      const { data: sessionCheck } = await supabase.auth.getSession();
-      console.log('  - Sessão no localStorage:', sessionCheck.session ? 'ENCONTRADA ✅' : 'NÃO ENCONTRADA ❌');
-      
-      console.log('🚀 Redirecionando para /dashboard via window.location.href');
       window.location.href = '/dashboard';
       return;
     }
     
-    console.log('⚠️ Login retornou sem usuário');
     setLoading(false);
   };
 

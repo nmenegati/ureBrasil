@@ -174,7 +174,6 @@ export default function UploadDocumentos() {
       .eq('student_id', profile.id);
       
     if (error) {
-      console.error('Erro ao buscar documentos:', error);
       return;
     }
     
@@ -202,24 +201,13 @@ export default function UploadDocumentos() {
   };
 
   const handleUpload = async (file: File, type: DocumentType) => {
-    console.log('═══════════════════════════════════');
-    console.log('🚀 INICIANDO UPLOAD');
-    console.log('═══════════════════════════════════');
-    console.log('📁 Arquivo:', file.name, '| Tamanho:', file.size);
-    console.log('📋 Tipo:', type);
-    console.log('👤 User ID (auth.uid):', user?.id);
-    console.log('📝 Profile ID (student_profiles.id):', profile?.id);
-    console.log('═══════════════════════════════════');
-    
     if (!profile?.id || !user?.id) {
-      console.error('❌ ERRO: profile.id ou user.id não existe!');
       toast.error('Perfil não carregado. Recarregue a página.');
       return;
     }
     
     const config = documentConfigs.find(d => d.type === type);
     if (!config) {
-      console.log('❌ Config não encontrada para tipo:', type);
       toast.error('Tipo de documento inválido');
       return;
     }
@@ -233,14 +221,12 @@ export default function UploadDocumentos() {
       setUploadProgress(prev => ({ ...prev, [type]: 0 }));
       
       // Validações
-      console.log('📝 Validando arquivo...');
       if (file.size > config.maxSizeMB * 1024 * 1024) {
         throw new Error(`Arquivo maior que ${config.maxSizeMB}MB`);
       }
       if (!config.acceptedTypes.includes(file.type)) {
         throw new Error('Tipo de arquivo não aceito');
       }
-      console.log('✅ Validação OK');
       
       // Simular progresso
       const progressInterval = setInterval(() => {
@@ -254,8 +240,6 @@ export default function UploadDocumentos() {
       // A policy verifica: (storage.foldername(name))[1] = (auth.uid())::text
       const ext = file.name.split('.').pop();
       const filePath = `${user.id}/${type}/${Date.now()}.${ext}`;
-      console.log('📤 Storage path:', filePath);
-      console.log('   └─ Primeiro folder (user.id):', user.id);
       
       // Upload para Storage
       const { error: storageError } = await supabase.storage
@@ -263,13 +247,10 @@ export default function UploadDocumentos() {
         .upload(filePath, file, { upsert: true });
         
       if (storageError) {
-        console.error('❌ Erro storage:', storageError);
         throw storageError;
       }
-      console.log('✅ Storage OK');
       
       // Verificar se já existe documento deste tipo para este estudante
-      console.log('💾 Verificando documento existente...');
       const { data: existingDoc } = await supabase
         .from('documents')
         .select('id')
@@ -278,7 +259,6 @@ export default function UploadDocumentos() {
         .maybeSingle();
       
       if (existingDoc) {
-        console.log('📝 Atualizando documento existente:', existingDoc.id);
         const { error: dbError } = await supabase
           .from('documents')
           .update({
@@ -297,11 +277,9 @@ export default function UploadDocumentos() {
           .eq('id', existingDoc.id);
           
         if (dbError) {
-          console.error('❌ Erro banco (update):', dbError);
           throw dbError;
         }
       } else {
-        console.log('📝 Inserindo novo documento');
         const { error: dbError } = await supabase
           .from('documents')
           .insert({
@@ -315,24 +293,19 @@ export default function UploadDocumentos() {
           });
           
         if (dbError) {
-          console.error('❌ Erro banco (insert):', dbError);
           throw dbError;
         }
       }
-      console.log('✅ Banco OK');
       
       clearInterval(progressInterval);
       setUploadProgress(prev => ({ ...prev, [type]: 100 }));
       
       toast.success(`${config.label} enviado com sucesso!`, { id: toastId });
-      console.log('🎉 Upload completo!');
       await fetchDocuments();
       
     } catch (error: any) {
-      console.error('❌ ERRO GERAL:', error);
       toast.error(error.message || 'Erro ao enviar documento', { id: toastId });
     } finally {
-      console.log('🏁 Finalizando upload');
       setUploading(prev => ({ ...prev, [type]: false }));
       setTimeout(() => {
         setUploadProgress(prev => ({ ...prev, [type]: 0 }));
@@ -358,19 +331,15 @@ export default function UploadDocumentos() {
     const handleDrop = (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('📁 Drop detectado');
       const file = e.dataTransfer.files[0];
       if (file) {
-        console.log('📁 Arquivo via drop:', file.name);
         handleUpload(file, config.type);
       }
     };
     
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log('📁 Arquivo selecionado via input:', e.target.files);
       const file = e.target.files?.[0];
       if (file) {
-        console.log('📁 Chamando handleUpload para:', file.name);
         handleUpload(file, config.type);
       }
       // Reset input para permitir reenvio do mesmo arquivo
@@ -565,7 +534,7 @@ export default function UploadDocumentos() {
         const ipData = await ipResponse.json();
         ip = ipData.ip;
       } catch (e) {
-        console.log('Não foi possível obter IP:', e);
+        // Silently ignore IP fetch error
       }
 
       // Salvar aceitação dos termos no banco
@@ -580,22 +549,14 @@ export default function UploadDocumentos() {
         .eq('id', profile!.id);
 
       if (error) {
-        console.error('Erro ao salvar termos:', error);
         toast.error('Erro ao salvar aceitação do termo');
         return;
       }
-
-      console.log('✅ Termo aceito e salvo:', {
-        timestamp: new Date().toISOString(),
-        ip: ip,
-        version: '1.0'
-      });
 
       toast.success('Termo aceito com sucesso!');
       navigate('/status-validacao');
       
     } catch (error) {
-      console.error('Erro ao processar aceite:', error);
       toast.error('Erro ao processar. Tente novamente.');
     }
   };

@@ -171,18 +171,10 @@ export default function SignUp() {
         terms_accepted: true
       };
 
-      // LOG 1: Ver o que está sendo enviado
-      console.log('📤 Metadata sendo enviado:', metadata);
-
       // Fazer signUp
       const { data, error } = await signUp(email, password, metadata);
 
-      // LOG 2: Ver resposta do Supabase
-      console.log('📥 SignUp response:', { data, error });
-
       if (error) {
-        console.error('❌ Erro no signUp:', error);
-
         if (error.message.includes('already registered') || 
             error.message.includes('User already registered')) {
           toast.error('Este email já está cadastrado');
@@ -194,16 +186,11 @@ export default function SignUp() {
       }
 
       if (data.user) {
-        console.log('✅ Usuário criado:', data.user.id);
-        console.log('📋 Metadata salvo:', data.user.user_metadata);
-
         toast.success('Conta criada com sucesso!');
 
         // Aguardar 1 segundo para garantir que o trigger executou
-        console.log('⏳ Aguardando trigger...');
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        console.log('🚀 Redirecionando para /complete-profile');
         navigate('/complete-profile');
       } else {
         toast.error('Erro inesperado ao criar conta');
@@ -211,7 +198,6 @@ export default function SignUp() {
       }
 
     } catch (err: any) {
-      console.error('💥 Exception no cadastro:', err);
       toast.error('Erro ao criar conta: ' + err.message);
       setLoading(false);
     }
