@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { validateCPF, formatCPF, formatPhone } from '@/lib/validators';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -394,6 +395,7 @@ export default function SignUp() {
                 <span>Mínimo 6 caracteres</span>
                 <span>{password.length}/20</span>
               </div>
+              <PasswordStrengthIndicator password={password} />
             </div>
 
             {/* Confirmar senha */}
