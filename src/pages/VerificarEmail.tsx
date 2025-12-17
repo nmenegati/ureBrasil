@@ -81,17 +81,49 @@ export default function VerificarEmail() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle>Não autenticado</CardTitle>
-            <CardDescription>Faça login para continuar.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/login')} className="w-full">
-              Ir para Login
+        <div className="max-w-md w-full bg-card rounded-xl shadow-lg p-8 border border-border">
+          
+          {/* Emoji grande + Mensagem amigável */}
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-4">👋</div>
+            
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              Quase lá!
+            </h1>
+            
+            <p className="text-muted-foreground text-base">
+              Para acessar esta página, você precisa estar logado na sua conta.
+              É rapidinho, prometo! 😊
+            </p>
+          </div>
+
+          {/* Ações */}
+          <div className="space-y-3">
+            <Button 
+              onClick={() => navigate('/login')}
+              className="w-full h-11"
+            >
+              Fazer Login
             </Button>
-          </CardContent>
-        </Card>
+            
+            <p className="text-center text-sm text-muted-foreground">
+              Ainda não tem conta?{' '}
+              <button
+                onClick={() => navigate('/signup')}
+                className="text-primary font-medium hover:underline"
+              >
+                Criar grátis
+              </button>
+            </p>
+          </div>
+
+          {/* Mensagem motivacional */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-muted-foreground">
+              💡 Leva menos de 2 minutos para criar sua conta
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
