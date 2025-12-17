@@ -633,7 +633,7 @@ const Index = () => {
                   <h3 className="text-2xl font-bold text-foreground mb-2">Digital + Física</h3>
                   <p className="text-sm text-muted-foreground mb-4">Completo</p>
                   <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-black text-ure-green">R$ 39</span>
+                    <span className="text-5xl font-black text-ure-green">R$ 44</span>
                   </div>
                 </div>
 
@@ -680,7 +680,7 @@ const Index = () => {
                   <h3 className="text-2xl font-bold text-foreground mb-2">Digital Direito</h3>
                   <p className="text-sm text-muted-foreground mb-4">Para futuros advogados</p>
                   <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-black text-purple-600">R$ 49</span>
+                    <span className="text-5xl font-black text-purple-600">R$ 44</span>
                   </div>
                 </div>
 
