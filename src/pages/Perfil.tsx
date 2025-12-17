@@ -847,15 +847,20 @@ export default function Perfil() {
                       Para sua segurança, confirme sua senha
                     </p>
                   </div>
-                  <Button 
-                    onClick={changeEmail} 
-                    disabled={changingEmail || !securityForm.currentPasswordForEmail || !securityForm.newEmail} 
-                    variant="outline"
-                    className="h-10"
-                  >
-                    {changingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
-                    Solicitar Troca de Email
-                  </Button>
+                  <div>
+                    <Button 
+                      onClick={changeEmail} 
+                      disabled={changingEmail || !securityForm.currentPasswordForEmail || !securityForm.newEmail} 
+                      variant="outline"
+                      className="w-full h-10"
+                    >
+                      {changingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+                      Solicitar Troca de Email
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique para solicitar a troca
+                    </p>
+                  </div>
                 </div>
               </div>
 
