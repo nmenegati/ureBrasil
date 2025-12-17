@@ -9,7 +9,7 @@ import { Mail, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export default function VerificarEmail() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -77,6 +77,18 @@ export default function VerificarEmail() {
       });
     }
   };
+
+  // Mostrar loading enquanto auth está carregando
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
