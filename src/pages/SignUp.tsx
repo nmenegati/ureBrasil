@@ -75,26 +75,36 @@ export default function SignUp() {
     return data === true;
   };
 
-  const handleCpfChange = async (value: string) => {
+  const handleCpfChange = (value: string) => {
     const formatted = formatCPF(value);
     setCpf(formatted);
     setEmailError(''); // Limpa erro de email ao mudar CPF
+    setCpfError(''); // Limpa erro ao digitar
     
+    // Validação local de formato (dígitos verificadores)
     if (formatted.length === 14) {
       const isValid = validateCPF(formatted);
-      
       if (!isValid) {
         setIsCpfValid(false);
         setCpfError('CPF inválido');
-        return;
       }
-      
-      // CPF válido - verificar duplicado no banco
-      setCheckingCpf(true);
-      setCpfError('');
-      
+    } else {
+      setIsCpfValid(false);
+    }
+  };
+
+  // Debounce para verificar CPF duplicado no banco
+  useEffect(() => {
+    // Só verifica quando CPF está completo e válido localmente
+    if (cpf.length !== 14 || !validateCPF(cpf)) {
+      return;
+    }
+    
+    setCheckingCpf(true);
+    
+    const timer = setTimeout(async () => {
       try {
-        const exists = await checkCpfExists(formatted);
+        const exists = await checkCpfExists(cpf);
         if (exists) {
           setIsCpfValid(false);
           setCpfError('CPF já cadastrado');
@@ -110,11 +120,10 @@ export default function SignUp() {
       } finally {
         setCheckingCpf(false);
       }
-    } else {
-      setIsCpfValid(false);
-      setCpfError('');
-    }
-  };
+    }, 500); // 500ms de debounce
+    
+    return () => clearTimeout(timer);
+  }, [cpf]);
 
   const getBirthDate = (): Date | null => {
     if (!birthDay || !birthMonth || !birthYear) return null;
