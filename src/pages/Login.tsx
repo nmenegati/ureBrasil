@@ -49,7 +49,24 @@ export default function Login() {
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      window.location.href = '/dashboard';
+      // 1. Verificar se email está confirmado
+      if (!data.user.email_confirmed_at) {
+        window.location.href = '/verificar-email';
+        return;
+      }
+      
+      // 2. Verificar estado do perfil
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('profile_completed')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+      
+      if (!profile || !profile.profile_completed) {
+        window.location.href = '/complete-profile';
+      } else {
+        window.location.href = '/dashboard';
+      }
       return;
     }
     

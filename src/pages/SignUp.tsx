@@ -197,7 +197,7 @@ export default function SignUp() {
         // Aguardar 1 segundo para garantir que o trigger executou
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        navigate('/complete-profile');
+        window.location.href = '/verificar-email';
       } else {
         toast.error('Erro inesperado ao criar conta');
         setLoading(false);
