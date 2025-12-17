@@ -120,7 +120,7 @@ export default function Perfil() {
   const [personalForm, setPersonalForm] = useState({ full_name: '', phone: '' });
   const [addressForm, setAddressForm] = useState({ cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' });
   const [academicForm, setAcademicForm] = useState({ institution: '', course: '', period: '', enrollment_number: '' });
-  const [securityForm, setSecurityForm] = useState({ currentPasswordForEmail: '', newEmail: '', newPassword: '', confirmPassword: '' });
+  const [securityForm, setSecurityForm] = useState({ currentPasswordForEmail: '', newEmail: '', currentPasswordForPassword: '', newPassword: '', confirmPassword: '' });
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   
   // Loading states
@@ -480,20 +480,43 @@ export default function Perfil() {
   };
 
   const changePassword = async () => {
-    if (securityForm.newPassword.length < 6) {
+    const { currentPasswordForPassword, newPassword, confirmPassword } = securityForm;
+
+    if (!currentPasswordForPassword) {
+      toast.error('Digite sua senha atual');
+      return;
+    }
+
+    if (newPassword.length < 6) {
       toast.error('Senha deve ter no mínimo 6 caracteres');
       return;
     }
-    if (securityForm.newPassword !== securityForm.confirmPassword) {
+
+    if (newPassword !== confirmPassword) {
       toast.error('Senhas não coincidem');
       return;
     }
+
     setChangingPassword(true);
+
     try {
-      const { error } = await supabase.auth.updateUser({ password: securityForm.newPassword });
+      // Validar senha atual
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user!.email!,
+        password: currentPasswordForPassword
+      });
+
+      if (signInError) {
+        toast.error('Senha atual incorreta');
+        return;
+      }
+
+      // Senha correta - alterar senha
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast.success('Senha alterada!');
-      setSecurityForm(prev => ({ ...prev, newPassword: '', confirmPassword: '' }));
+
+      toast.success('Senha alterada com sucesso!');
+      setSecurityForm(prev => ({ ...prev, currentPasswordForPassword: '', newPassword: '', confirmPassword: '' }));
     } catch (error: any) {
       toast.error(error.message || 'Erro ao alterar senha');
     } finally {
@@ -842,7 +865,20 @@ export default function Perfil() {
                   Trocar Senha
                 </h3>
                 <div>
-                  <Label htmlFor="newPassword">Nova Senha</Label>
+                  <Label htmlFor="currentPasswordForPassword">Senha Atual *</Label>
+                  <Input
+                    id="currentPasswordForPassword"
+                    type="password"
+                    value={securityForm.currentPasswordForPassword}
+                    onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForPassword: e.target.value }))}
+                    placeholder="Digite sua senha atual"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Para sua segurança, confirme sua senha antes de alterá-la
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="newPassword">Nova Senha *</Label>
                   <Input
                     id="newPassword"
                     type="password"
@@ -852,15 +888,20 @@ export default function Perfil() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+                  <Label htmlFor="confirmPassword">Confirmar Nova Senha *</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={securityForm.confirmPassword}
                     onChange={(e) => setSecurityForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    placeholder="Repita a nova senha"
                   />
                 </div>
-                <Button onClick={changePassword} disabled={changingPassword} variant="outline">
+                <Button 
+                  onClick={changePassword} 
+                  disabled={changingPassword || !securityForm.currentPasswordForPassword || !securityForm.newPassword || !securityForm.confirmPassword} 
+                  variant="outline"
+                >
                   {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Lock className="h-4 w-4 mr-2" />}
                   Alterar Senha
                 </Button>
