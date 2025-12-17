@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { validateCPF, formatCPF, formatPhone } from '@/lib/validators';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Sun, Moon } from 'lucide-react';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,11 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+
+  const toggleDarkMode = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   // Constantes para os dropdowns de data
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -203,16 +209,26 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-background">
       {/* Header com logo */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
+      <div className="bg-card shadow-sm sticky top-0 z-10 border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link to="/">
             <img src={ureBrasilLogo} alt="URE Brasil" className="h-10" />
           </Link>
-          <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900">
-            Já tem conta? <span className="font-semibold text-cyan-600">Entrar</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleDarkMode}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
+            >
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
+              Já tem conta? <span className="font-semibold text-primary">Entrar</span>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -222,21 +238,21 @@ export default function SignUp() {
           
           {/* Título centralizado */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Crie sua conta de estudante
             </h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Comece sua jornada com a URE Brasil
             </p>
           </div>
 
           {/* Formulário em card grande */}
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+          <div className="bg-card rounded-2xl shadow-xl p-6 md:p-8 border border-border">
             <form onSubmit={handleSubmit} className="space-y-6">
               
               {/* Nome completo */}
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-gray-700 font-medium">Nome completo *</Label>
+                <Label htmlFor="fullName" className="text-foreground font-medium">Nome completo *</Label>
                 <Input
                   id="fullName"
                   type="text"
@@ -244,17 +260,17 @@ export default function SignUp() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   maxLength={100}
-                  className="bg-white text-gray-900 placeholder-gray-400 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500/20 text-base h-11"
+                  className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
                   required
                 />
-                <span className="text-xs text-gray-400 block text-right">{fullName.length}/100</span>
+                <span className="text-xs text-muted-foreground block text-right">{fullName.length}/100</span>
               </div>
 
               {/* CPF + Data de nascimento (2 colunas) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* CPF */}
                 <div className="space-y-2">
-                  <Label htmlFor="cpf" className="text-gray-700 font-medium">CPF *</Label>
+                  <Label htmlFor="cpf" className="text-foreground font-medium">CPF *</Label>
                   <Input
                     id="cpf"
                     type="text"
@@ -263,14 +279,14 @@ export default function SignUp() {
                     onChange={(e) => handleCpfChange(e.target.value)}
                     maxLength={14}
                     className={cn(
-                      "bg-white text-gray-900 placeholder-gray-400 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500/20 text-base h-11",
-                      cpfError && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
+                      "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11",
+                      cpfError && "border-destructive focus:border-destructive focus:ring-destructive/20",
                       isCpfValid && "border-green-500 focus:border-green-500 focus:ring-green-500/20"
                     )}
                     required
                   />
                   {cpfError && (
-                    <p className="text-red-500 text-sm">{cpfError}</p>
+                    <p className="text-destructive text-sm">{cpfError}</p>
                   )}
                   {isCpfValid && !cpfError && (
                     <p className="text-green-600 text-sm">✓ CPF válido</p>
@@ -279,19 +295,19 @@ export default function SignUp() {
 
                 {/* Data de nascimento */}
                 <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Data de nascimento *</Label>
+                  <Label className="text-foreground font-medium">Data de nascimento *</Label>
                   <div className="flex gap-2">
                     {/* Dia */}
                     <Select value={birthDay} onValueChange={setBirthDay}>
-                      <SelectTrigger className="flex-1 bg-white text-gray-900 border-gray-300 focus:border-cyan-500 h-11">
+                      <SelectTrigger className="flex-1 bg-background text-foreground border-input focus:border-primary h-11">
                         <SelectValue placeholder="Dia" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200 max-h-60">
+                      <SelectContent className="bg-popover border-border max-h-60">
                         {days.map((day) => (
                           <SelectItem 
                             key={day} 
                             value={day.toString().padStart(2, '0')}
-                            className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100"
+                            className="text-popover-foreground hover:bg-accent focus:bg-accent"
                           >
                             {day.toString().padStart(2, '0')}
                           </SelectItem>
@@ -301,15 +317,15 @@ export default function SignUp() {
 
                     {/* Mês */}
                     <Select value={birthMonth} onValueChange={setBirthMonth}>
-                      <SelectTrigger className="flex-1 bg-white text-gray-900 border-gray-300 focus:border-cyan-500 h-11">
+                      <SelectTrigger className="flex-1 bg-background text-foreground border-input focus:border-primary h-11">
                         <SelectValue placeholder="Mês" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200 max-h-60">
+                      <SelectContent className="bg-popover border-border max-h-60">
                         {months.map((month) => (
                           <SelectItem 
                             key={month.value} 
                             value={month.value}
-                            className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100"
+                            className="text-popover-foreground hover:bg-accent focus:bg-accent"
                           >
                             {month.label}
                           </SelectItem>
@@ -319,15 +335,15 @@ export default function SignUp() {
 
                     {/* Ano */}
                     <Select value={birthYear} onValueChange={setBirthYear}>
-                      <SelectTrigger className="flex-1 bg-white text-gray-900 border-gray-300 focus:border-cyan-500 h-11">
+                      <SelectTrigger className="flex-1 bg-background text-foreground border-input focus:border-primary h-11">
                         <SelectValue placeholder="Ano" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200 max-h-60">
+                      <SelectContent className="bg-popover border-border max-h-60">
                         {years.map((year) => (
                           <SelectItem 
                             key={year} 
                             value={year.toString()}
-                            className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100"
+                            className="text-popover-foreground hover:bg-accent focus:bg-accent"
                           >
                             {year}
                           </SelectItem>
@@ -336,7 +352,7 @@ export default function SignUp() {
                     </Select>
                   </div>
                   {dateError && (
-                    <p className="text-red-500 text-sm">{dateError}</p>
+                    <p className="text-destructive text-sm">{dateError}</p>
                   )}
                 </div>
               </div>
@@ -345,7 +361,7 @@ export default function SignUp() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700 font-medium">Email *</Label>
+                  <Label htmlFor="email" className="text-foreground font-medium">Email *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -353,15 +369,15 @@ export default function SignUp() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     maxLength={100}
-                    className="bg-white text-gray-900 placeholder-gray-400 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500/20 text-base h-11"
+                    className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
                     required
                   />
-                  <span className="text-xs text-gray-400 block text-right">{email.length}/100</span>
+                  <span className="text-xs text-muted-foreground block text-right">{email.length}/100</span>
                 </div>
 
                 {/* Telefone */}
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-gray-700 font-medium">Telefone *</Label>
+                  <Label htmlFor="phone" className="text-foreground font-medium">Telefone *</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -369,10 +385,10 @@ export default function SignUp() {
                     value={phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     maxLength={15}
-                    className="bg-white text-gray-900 placeholder-gray-400 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500/20 text-base h-11"
+                    className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
                     required
                   />
-                  <span className="text-xs text-gray-400 block text-right">{phone.length}/15</span>
+                  <span className="text-xs text-muted-foreground block text-right">{phone.length}/15</span>
                 </div>
               </div>
 
@@ -380,7 +396,7 @@ export default function SignUp() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Senha */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-gray-700 font-medium">Senha *</Label>
+                  <Label htmlFor="password" className="text-foreground font-medium">Senha *</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -390,18 +406,18 @@ export default function SignUp() {
                       onChange={(e) => setPassword(e.target.value)}
                       minLength={6}
                       maxLength={20}
-                      className="bg-white text-gray-900 placeholder-gray-400 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500/20 text-base h-11 pr-10"
+                      className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11 pr-10"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-400">
+                  <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Mínimo 6 caracteres</span>
                     <span>{password.length}/20</span>
                   </div>
@@ -410,7 +426,7 @@ export default function SignUp() {
 
                 {/* Confirmar senha */}
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">Confirmar senha *</Label>
+                  <Label htmlFor="confirmPassword" className="text-foreground font-medium">Confirmar senha *</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
@@ -420,18 +436,18 @@ export default function SignUp() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       minLength={6}
                       maxLength={20}
-                      className="bg-white text-gray-900 placeholder-gray-400 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500/20 text-base h-11 pr-10"
+                      className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11 pr-10"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-400">
+                  <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Deve coincidir</span>
                     <span>{confirmPassword.length}/20</span>
                   </div>
@@ -444,15 +460,15 @@ export default function SignUp() {
                   id="terms"
                   checked={termsAccepted}
                   onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                  className="mt-1 border-gray-300 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+                  className="mt-1 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
-                <Label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed cursor-pointer">
+                <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
                   Li e aceito os{' '}
-                  <a href="/termos" className="text-cyan-600 hover:underline" target="_blank">
+                  <a href="/termos" className="text-primary hover:underline" target="_blank">
                     Termos de Uso
                   </a>
                   {' '}e{' '}
-                  <a href="/privacidade" className="text-cyan-600 hover:underline" target="_blank">
+                  <a href="/privacidade" className="text-primary hover:underline" target="_blank">
                     Política de Privacidade
                   </a>
                   , e declaro estar ciente de que sou o único responsável pela veracidade das informações fornecidas.
@@ -463,7 +479,7 @@ export default function SignUp() {
               <Button
                 type="submit"
                 disabled={loading || !isCpfValid || cpf.length < 14}
-                className="w-full h-12 text-base bg-cyan-500 hover:bg-cyan-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {loading ? 'Criando conta...' : 'Criar Conta'}
@@ -472,10 +488,10 @@ export default function SignUp() {
               {/* Separador */}
               <div className="relative my-2">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-3 bg-white text-gray-400">ou</span>
+                  <span className="px-3 bg-card text-muted-foreground">ou</span>
                 </div>
               </div>
 
@@ -484,7 +500,7 @@ export default function SignUp() {
                 type="button"
                 onClick={handleGoogleSignup}
                 variant="outline"
-                className="w-full h-12 text-base bg-white hover:bg-gray-50 text-gray-700 font-medium border-gray-300"
+                className="w-full h-12 text-base bg-background hover:bg-accent text-foreground font-medium border-input"
               >
                 <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                   <path
@@ -508,9 +524,9 @@ export default function SignUp() {
               </Button>
 
               {/* Link para login */}
-              <p className="text-center text-sm text-gray-600">
+              <p className="text-center text-sm text-muted-foreground">
                 Já tem uma conta?{' '}
-                <Link to="/login" className="font-semibold text-cyan-600 hover:text-cyan-700 hover:underline">
+                <Link to="/login" className="font-semibold text-primary hover:text-primary/80 hover:underline">
                   Fazer login
                 </Link>
               </p>
