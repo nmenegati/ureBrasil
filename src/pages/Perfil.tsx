@@ -816,19 +816,6 @@ export default function Perfil() {
                   Trocar Email
                 </h3>
                 <div>
-                  <Label htmlFor="currentPasswordForEmail">Senha Atual *</Label>
-                  <Input
-                    id="currentPasswordForEmail"
-                    type="password"
-                    value={securityForm.currentPasswordForEmail}
-                    onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: e.target.value }))}
-                    placeholder="Digite sua senha atual"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Para sua segurança, confirme sua senha antes de trocar o email
-                  </p>
-                </div>
-                <div>
                   <Label>Email Atual</Label>
                   <Input value={user?.email || ''} disabled className="bg-muted" />
                 </div>
@@ -846,14 +833,30 @@ export default function Perfil() {
                   <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   Você receberá um email de confirmação no novo endereço. O email só será alterado após clicar no link de confirmação.
                 </p>
-                <Button 
-                  onClick={changeEmail} 
-                  disabled={changingEmail || !securityForm.currentPasswordForEmail || !securityForm.newEmail} 
-                  variant="outline"
-                >
-                  {changingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
-                  Solicitar Troca de Email
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                  <div>
+                    <Label htmlFor="currentPasswordForEmail">Senha Atual *</Label>
+                    <Input
+                      id="currentPasswordForEmail"
+                      type="password"
+                      value={securityForm.currentPasswordForEmail}
+                      onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: e.target.value }))}
+                      placeholder="Digite sua senha atual"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Para sua segurança, confirme sua senha
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={changeEmail} 
+                    disabled={changingEmail || !securityForm.currentPasswordForEmail || !securityForm.newEmail} 
+                    variant="outline"
+                    className="h-10"
+                  >
+                    {changingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+                    Solicitar Troca de Email
+                  </Button>
+                </div>
               </div>
 
               <hr className="border-border" />
