@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -163,23 +164,42 @@ export default function SignUp() {
     return data === true;
   };
 
-  const handlePhoneChange = async (value: string) => {
+  const handlePhoneChange = (value: string) => {
     const formatted = formatPhone(value);
     setPhone(formatted);
-    setPhoneError('');
+    setPhoneError(''); // Limpa erro ao digitar
+  };
+
+  // Debounce para verificar telefone duplicado
+  useEffect(() => {
+    const cleanPhone = phone.replace(/\D/g, '');
     
-    const cleanPhone = formatted.replace(/\D/g, '');
-    if (cleanPhone.length === 11) {
+    // Só verifica quando telefone está completo (11 dígitos)
+    if (cleanPhone.length !== 11) {
+      setPhoneError('');
+      setCheckingPhone(false);
+      return;
+    }
+    
+    setCheckingPhone(true);
+    
+    const timer = setTimeout(async () => {
       try {
-        const exists = await checkPhoneExists(formatted);
+        const exists = await checkPhoneExists(phone);
         if (exists) {
           setPhoneError('Telefone já cadastrado');
+        } else {
+          setPhoneError('');
         }
       } catch (err) {
         console.error('Erro ao verificar telefone:', err);
+      } finally {
+        setCheckingPhone(false);
       }
-    }
-  };
+    }, 500); // 500ms de debounce
+    
+    return () => clearTimeout(timer);
+  }, [phone]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -530,14 +550,18 @@ export default function SignUp() {
                     )}
                     required
                   />
-                  {phoneError ? (
+                  {checkingPhone && (
+                    <p className="text-muted-foreground text-sm">Verificando telefone...</p>
+                  )}
+                  {phoneError && !checkingPhone && (
                     <p className="text-destructive text-sm">
                       {phoneError}
                       <Link to="/login" className="ml-2 text-primary underline hover:text-primary/80">
                         Fazer login
                       </Link>
                     </p>
-                  ) : (
+                  )}
+                  {!phoneError && !checkingPhone && (
                     <span className="text-xs text-muted-foreground block text-right">{phone.length}/15</span>
                   )}
                 </div>
@@ -629,7 +653,7 @@ export default function SignUp() {
               {/* Botão Criar conta */}
               <Button
                 type="submit"
-                disabled={loading || !isCpfValid || cpf.length < 14 || checkingCpf}
+                disabled={loading || !isCpfValid || cpf.length < 14 || checkingCpf || checkingPhone || !!phoneError}
                 className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
