@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/contexts/ProfileContext';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ interface HeaderProps {
 
 export function Header({ variant = 'app' }: HeaderProps) {
   const { user, signOut } = useAuth();
+  const { avatarUrl } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
@@ -135,6 +137,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 hover:opacity-90 transition-opacity">
                       <Avatar className="h-9 w-9 border-2 border-primary">
+                        {avatarUrl && <AvatarImage src={avatarUrl} alt={firstName} />}
                         <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                           {initials}
                         </AvatarFallback>
