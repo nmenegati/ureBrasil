@@ -16,6 +16,7 @@ import UploadDocumentos from "./pages/UploadDocumentos";
 import EscolherPlano from "./pages/EscolherPlano";
 import StatusValidacao from "./pages/StatusValidacao";
 import Pagamento from "./pages/Pagamento";
+import Perfil from "./pages/Perfil";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,11 @@ const App = () => (
             <Route path="/pagamento" element={
               <ProtectedRoute>
                 <Pagamento />
+              </ProtectedRoute>
+            } />
+            <Route path="/perfil" element={
+              <ProtectedRoute>
+                <Perfil />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

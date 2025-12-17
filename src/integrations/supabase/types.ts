@@ -423,6 +423,7 @@ export type Database = {
       }
       student_profiles: {
         Row: {
+          avatar_url: string | null
           birth_date: string
           cep: string | null
           city: string | null
@@ -451,6 +452,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           birth_date: string
           cep?: string | null
           city?: string | null
@@ -479,6 +481,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           birth_date?: string
           cep?: string | null
           city?: string | null
