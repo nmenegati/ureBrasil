@@ -120,7 +120,7 @@ export default function Perfil() {
   const [personalForm, setPersonalForm] = useState({ full_name: '', phone: '' });
   const [addressForm, setAddressForm] = useState({ cep: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '' });
   const [academicForm, setAcademicForm] = useState({ institution: '', course: '', period: '', enrollment_number: '' });
-  const [securityForm, setSecurityForm] = useState({ newEmail: '', newPassword: '', confirmPassword: '' });
+  const [securityForm, setSecurityForm] = useState({ currentPasswordForEmail: '', newEmail: '', newPassword: '', confirmPassword: '' });
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   
   // Loading states
@@ -423,18 +423,57 @@ export default function Perfil() {
   };
 
   const changeEmail = async () => {
-    if (!securityForm.newEmail) {
-      toast.error('Digite o novo email');
+    const { currentPasswordForEmail, newEmail } = securityForm;
+    
+    if (!currentPasswordForEmail || !newEmail) {
+      toast.error('Preencha todos os campos');
       return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      toast.error('Email inválido');
+      return;
+    }
+
+    if (newEmail === user?.email) {
+      toast.error('O novo email deve ser diferente do atual');
+      return;
+    }
+
     setChangingEmail(true);
+
     try {
-      const { error } = await supabase.auth.updateUser({ email: securityForm.newEmail });
-      if (error) throw error;
-      toast.success('Email de confirmação enviado!');
-      setSecurityForm(prev => ({ ...prev, newEmail: '' }));
+      // Validar senha atual
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user!.email!,
+        password: currentPasswordForEmail
+      });
+
+      if (signInError) {
+        toast.error('Senha atual incorreta');
+        return;
+      }
+
+      // Senha correta - trocar email
+      const { error: updateError } = await supabase.auth.updateUser({
+        email: newEmail
+      });
+
+      if (updateError) {
+        if (updateError.message.includes('already registered')) {
+          toast.error('Este email já está em uso');
+        } else {
+          toast.error(updateError.message);
+        }
+        return;
+      }
+
+      toast.success('Email de confirmação enviado! Verifique sua caixa de entrada.', { duration: 6000 });
+      setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: '', newEmail: '' }));
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao trocar email');
+      toast.error('Erro ao trocar email');
+      console.error(error);
     } finally {
       setChangingEmail(false);
     }
@@ -754,11 +793,24 @@ export default function Perfil() {
                   Trocar Email
                 </h3>
                 <div>
+                  <Label htmlFor="currentPasswordForEmail">Senha Atual *</Label>
+                  <Input
+                    id="currentPasswordForEmail"
+                    type="password"
+                    value={securityForm.currentPasswordForEmail}
+                    onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: e.target.value }))}
+                    placeholder="Digite sua senha atual"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Para sua segurança, confirme sua senha antes de trocar o email
+                  </p>
+                </div>
+                <div>
                   <Label>Email Atual</Label>
                   <Input value={user?.email || ''} disabled className="bg-muted" />
                 </div>
                 <div>
-                  <Label htmlFor="newEmail">Novo Email</Label>
+                  <Label htmlFor="newEmail">Novo Email *</Label>
                   <Input
                     id="newEmail"
                     type="email"
@@ -767,10 +819,17 @@ export default function Perfil() {
                     placeholder="novo@email.com"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Você receberá um email de confirmação no novo endereço.</p>
-                <Button onClick={changeEmail} disabled={changingEmail} variant="outline">
+                <p className="text-sm text-amber-600 flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  Você receberá um email de confirmação no novo endereço. O email só será alterado após clicar no link de confirmação.
+                </p>
+                <Button 
+                  onClick={changeEmail} 
+                  disabled={changingEmail || !securityForm.currentPasswordForEmail || !securityForm.newEmail} 
+                  variant="outline"
+                >
                   {changingEmail ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
-                  Solicitar Troca
+                  Solicitar Troca de Email
                 </Button>
               </div>
 
