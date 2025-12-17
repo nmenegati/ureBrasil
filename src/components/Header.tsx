@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, Sun, Moon, User, LogOut, Home } from 'lucide-react';
+import { Menu, X, Sun, Moon, User, LogOut, Home, CreditCard } from 'lucide-react';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 
 interface HeaderProps {
@@ -125,8 +125,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
                     onClick={() => navigate('/dashboard')}
                     className="bg-ure-orange hover:bg-ure-orange/90 text-white gap-2"
                   >
-                    <Home className="w-4 h-4" />
-                    Início
+                    <CreditCard className="w-4 h-4" />
+                    Minha Carteirinha
                   </Button>
                 )}
                 
@@ -145,7 +145,29 @@ export function Header({ variant = 'app' }: HeaderProps) {
                     </button>
                   </DropdownMenuTrigger>
                   
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" className="w-48 bg-popover border border-border">
+                    {/* Página Inicial - só aparece se NÃO estiver na landing */}
+                    {location.pathname !== '/' && (
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/')}
+                        className="cursor-pointer"
+                      >
+                        <Home className="w-4 h-4 mr-2" />
+                        Página Inicial
+                      </DropdownMenuItem>
+                    )}
+                    
+                    {/* Minha Carteirinha - só aparece se NÃO estiver no dashboard */}
+                    {location.pathname !== '/dashboard' && (
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/dashboard')}
+                        className="cursor-pointer"
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Minha Carteirinha
+                      </DropdownMenuItem>
+                    )}
+                    
                     <DropdownMenuItem 
                       onClick={() => navigate('/perfil')}
                       className="cursor-pointer"
@@ -156,7 +178,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       onClick={handleSignOut}
-                      className="cursor-pointer text-red-600"
+                      className="cursor-pointer text-destructive"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Sair
@@ -219,7 +241,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  Dashboard
+                  Minha Carteirinha
                 </Button>
               ) : (
                 <>
