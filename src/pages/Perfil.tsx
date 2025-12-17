@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Camera, User, MapPin, GraduationCap, Shield, History, Save, Mail, Lock, Trash2, FileText, CreditCard, CheckCircle2, Clock, XCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Camera, User, MapPin, GraduationCap, Shield, History, Save, Mail, Lock, Trash2, FileText, CreditCard, CheckCircle2, Clock, XCircle, AlertTriangle, Eye, EyeOff, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
@@ -97,7 +97,7 @@ export default function Perfil() {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { updateAvatar, refreshProfile } = useProfile();
-  const { fetchAddress, loading: cepLoading } = useViaCep();
+  const { fetchAddress, loading: cepLoading, error: cepError } = useViaCep();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -694,9 +694,9 @@ export default function Perfil() {
             {/* Address Tab */}
             <TabsContent value="address" className="p-6">
               <div className="space-y-4">
-                {/* CEP + Número (grid-cols-3: 2/3 + 1/3) */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2">
+                {/* CEP + Aviso de ajuda */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                  <div>
                     <Label htmlFor="cep">CEP</Label>
                     <div className="relative">
                       <Input
@@ -708,8 +708,29 @@ export default function Perfil() {
                       />
                       {cepLoading && <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />}
                     </div>
+                    {cepError && <p className="text-xs text-destructive mt-1">{cepError}</p>}
                   </div>
-                  <div>
+                  <div className="flex items-center h-10">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      Altere o CEP para atualizar o endereço automaticamente.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Rua (3 cols) + Número (1 col) */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-3">
+                    <Label htmlFor="street">Rua</Label>
+                    <Input
+                      id="street"
+                      value={addressForm.street}
+                      onChange={(e) => setAddressForm(prev => ({ ...prev, street: e.target.value }))}
+                      maxLength={150}
+                    />
+                    <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.street.length}/150</span>
+                  </div>
+                  <div className="sm:col-span-1">
                     <Label htmlFor="number">Número</Label>
                     <Input
                       id="number"
@@ -719,17 +740,6 @@ export default function Perfil() {
                     />
                     <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.number.length}/10</span>
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="street">Rua</Label>
-                  <Input
-                    id="street"
-                    value={addressForm.street}
-                    onChange={(e) => setAddressForm(prev => ({ ...prev, street: e.target.value }))}
-                    maxLength={150}
-                  />
-                  <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.street.length}/150</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
