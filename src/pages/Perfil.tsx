@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Camera, User, MapPin, GraduationCap, Shield, History, Save, Mail, Lock, Trash2, FileText, CreditCard, CheckCircle2, Clock, XCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
@@ -104,6 +105,7 @@ const periodOptions = [
 export default function Perfil() {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
+  const { updateAvatar } = useProfile();
   const { fetchAddress, loading: cepLoading } = useViaCep();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -309,6 +311,7 @@ export default function Perfil() {
       if (updateError) throw updateError;
 
       setProfile({ ...profile, avatar_url: publicUrl });
+      updateAvatar(publicUrl);
       setAvatarPreview(null);
       setSelectedFile(null);
       toast.success('Foto atualizada!');

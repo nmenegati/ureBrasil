@@ -18,6 +18,7 @@ import StatusValidacao from "./pages/StatusValidacao";
 import Pagamento from "./pages/Pagamento";
 import Perfil from "./pages/Perfil";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { ProfileProvider } from "./contexts/ProfileContext";
 
 const queryClient = new QueryClient();
 
@@ -25,9 +26,10 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="ure-theme">
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+        <ProfileProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -73,6 +75,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </ProfileProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
