@@ -101,15 +101,10 @@ export default function CompleteProfile() {
 
     setLoading(true);
 
-    try {
-      // Verificar se o perfil existe
-      const { data: existingProfile } = await supabase
-        .from('student_profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      const profileData = {
+    // APENAS UPDATE - perfil SEMPRE existe graças à trigger do banco
+    const { error } = await supabase
+      .from('student_profiles')
+      .update({
         cep: cleanCep,
         street,
         number,
@@ -123,54 +118,19 @@ export default function CompleteProfile() {
         enrollment_number: enrollmentNumber,
         profile_completed: true,
         updated_at: new Date().toISOString(),
-      };
+      })
+      .eq('user_id', user.id);
 
-      let error;
-
-      if (!existingProfile) {
-        // Perfil não existe - criar com dados do auth.users metadata
-        const metadata = user.user_metadata || {};
-        console.log('📝 Perfil não encontrado, criando novo com metadata:', metadata);
-        
-        const { error: insertError } = await supabase
-          .from('student_profiles')
-          .insert({
-            user_id: user.id,
-            full_name: metadata.full_name || 'Nome não informado',
-            cpf: metadata.cpf || '',
-            phone: metadata.phone || '',
-            birth_date: metadata.birth_date || '2000-01-01',
-            terms_accepted: true,
-            terms_accepted_at: new Date().toISOString(),
-            ...profileData,
-          });
-        
-        error = insertError;
-      } else {
-        // Perfil existe - atualizar normalmente
-        console.log('✅ Perfil encontrado, atualizando...');
-        const { error: updateError } = await supabase
-          .from('student_profiles')
-          .update(profileData)
-          .eq('user_id', user.id);
-        
-        error = updateError;
-      }
-
-      if (error) {
-        console.error('❌ Erro ao salvar perfil:', error);
-        toast.error('Erro ao salvar perfil. Tente novamente.');
-        setLoading(false);
-        return;
-      }
-
-      toast.success('Perfil completado com sucesso!');
-      navigate('/upload-documentos');
-    } catch (err) {
-      console.error('❌ Erro inesperado:', err);
-      toast.error('Erro inesperado. Tente novamente.');
+    if (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      toast.error('Erro ao salvar perfil. Tente novamente.');
       setLoading(false);
+      return;
     }
+
+    toast.success('Perfil completado com sucesso!');
+    setLoading(false);
+    window.location.href = '/upload-documentos';
   };
 
   return (
