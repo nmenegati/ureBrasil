@@ -56,7 +56,19 @@ export default function VerificarEmail() {
         title: 'Email confirmado!',
         description: 'Você já pode continuar.',
       });
-      navigate('/dashboard');
+      
+      // Verificar se perfil está completo antes de redirecionar
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('profile_completed')
+        .eq('user_id', refreshedUser.id)
+        .maybeSingle();
+      
+      if (!profile || !profile.profile_completed) {
+        navigate('/complete-profile');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       toast({
         variant: 'destructive',
