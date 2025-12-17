@@ -848,10 +848,10 @@ export default function Perfil() {
                   />
                   <span className="text-xs text-muted-foreground block text-right mt-1">{securityForm.newEmail.length}/100</span>
                 </div>
-                <p className="text-sm text-amber-600 flex items-start gap-2">
+                <div className="bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 p-3 rounded-lg flex items-start gap-2 text-sm">
                   <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  Você receberá um email de confirmação no novo endereço. O email só será alterado após clicar no link de confirmação.
-                </p>
+                  <span>Você receberá um email de confirmação. O email só será alterado após clicar no link de confirmação.</span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                   <div>
                     <Label htmlFor="currentPasswordForEmail">Senha Atual *</Label>
@@ -904,37 +904,39 @@ export default function Perfil() {
                     Para sua segurança, confirme sua senha antes de alterá-la
                   </p>
                 </div>
-                <div>
-                  <Label htmlFor="newPassword">Nova Senha *</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={securityForm.newPassword}
-                    onChange={(e) => setSecurityForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                    placeholder="Mínimo 6 caracteres"
-                    minLength={6}
-                    maxLength={20}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Mínimo 6 caracteres</span>
-                    <span>{securityForm.newPassword.length}/20</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="newPassword">Nova Senha *</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={securityForm.newPassword}
+                      onChange={(e) => setSecurityForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                      placeholder="Mínimo 6 caracteres"
+                      minLength={6}
+                      maxLength={20}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>Mínimo 6 caracteres</span>
+                      <span>{securityForm.newPassword.length}/20</span>
+                    </div>
+                    <PasswordStrengthIndicator password={securityForm.newPassword} />
                   </div>
-                  <PasswordStrengthIndicator password={securityForm.newPassword} />
-                </div>
-                <div>
-                  <Label htmlFor="confirmPassword">Confirmar Nova Senha *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={securityForm.confirmPassword}
-                    onChange={(e) => setSecurityForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    placeholder="Repita a nova senha"
-                    minLength={6}
-                    maxLength={20}
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Deve coincidir</span>
-                    <span>{securityForm.confirmPassword.length}/20</span>
+                  <div>
+                    <Label htmlFor="confirmPassword">Confirmar Nova Senha *</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={securityForm.confirmPassword}
+                      onChange={(e) => setSecurityForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      placeholder="Repita a nova senha"
+                      minLength={6}
+                      maxLength={20}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>Deve coincidir</span>
+                      <span>{securityForm.confirmPassword.length}/20</span>
+                    </div>
                   </div>
                 </div>
                 <Button 
