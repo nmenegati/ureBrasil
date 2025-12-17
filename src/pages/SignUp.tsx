@@ -138,6 +138,19 @@ export default function SignUp() {
     return date;
   };
 
+  // Validação de email em tempo real (formato apenas)
+  // Nota: Supabase não permite verificar se email existe sem efeitos colaterais (enviar OTP)
+  // A verificação de duplicado é feita no submit via erro do signUp
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setEmailError('');
+    
+    // Validar formato do email
+    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setEmailError('Formato de email inválido');
+    }
+  };
+
   // Verificar se telefone já existe no banco
   const checkPhoneExists = async (phoneValue: string): Promise<boolean> => {
     const cleanPhone = phoneValue.replace(/\D/g, '');
@@ -464,7 +477,7 @@ export default function SignUp() {
                     type="email"
                     placeholder="seu@email.com"
                     value={email}
-                    onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     maxLength={100}
                     className={cn(
                       "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11",
@@ -475,9 +488,11 @@ export default function SignUp() {
                   {emailError ? (
                     <p className="text-destructive text-sm">
                       {emailError}
-                      <Link to="/login" className="ml-2 text-primary underline hover:text-primary/80">
-                        Fazer login
-                      </Link>
+                      {emailError.includes('já cadastrado') && (
+                        <Link to="/login" className="ml-2 text-primary underline hover:text-primary/80">
+                          Fazer login
+                        </Link>
+                      )}
                     </p>
                   ) : (
                     <span className="text-xs text-muted-foreground block text-right">{email.length}/100</span>
