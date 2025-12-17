@@ -630,25 +630,39 @@ export default function Perfil() {
             {/* Personal Info Tab */}
             <TabsContent value="personal" className="p-6">
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="full_name">Nome Completo</Label>
-                  <Input
-                    id="full_name"
-                    value={personalForm.full_name}
-                    onChange={(e) => setPersonalForm(prev => ({ ...prev, full_name: e.target.value }))}
-                    disabled={isCardActive}
-                    maxLength={100}
-                  />
-                  <div className="flex justify-between items-center mt-1">
-                    {isCardActive ? (
-                      <p className="text-xs text-amber-600 flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        Carteirinha já emitida. Contate suporte para alterar.
-                      </p>
-                    ) : (
-                      <span />
-                    )}
-                    <span className="text-xs text-muted-foreground">{personalForm.full_name.length}/100</span>
+                {/* Nome + Telefone (grid-cols-4: 3/4 + 1/4) */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div className="sm:col-span-3">
+                    <Label htmlFor="full_name">Nome Completo</Label>
+                    <Input
+                      id="full_name"
+                      value={personalForm.full_name}
+                      onChange={(e) => setPersonalForm(prev => ({ ...prev, full_name: e.target.value }))}
+                      disabled={isCardActive}
+                      maxLength={60}
+                    />
+                    <div className="flex justify-between items-center mt-1">
+                      {isCardActive ? (
+                        <p className="text-xs text-amber-600 flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Contate suporte para alterar.
+                        </p>
+                      ) : (
+                        <span />
+                      )}
+                      <span className="text-xs text-muted-foreground">{personalForm.full_name.length}/60</span>
+                    </div>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input
+                      id="phone"
+                      value={formatPhone(personalForm.phone)}
+                      onChange={(e) => setPersonalForm(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
+                      placeholder="(99) 99999-9999"
+                      maxLength={15}
+                    />
+                    <span className="text-xs text-muted-foreground block text-right mt-1">{personalForm.phone.length}/15</span>
                   </div>
                 </div>
 
@@ -668,18 +682,6 @@ export default function Perfil() {
                   <Label>Email</Label>
                   <Input value={user?.email || ''} disabled className="bg-muted" />
                   <p className="text-xs text-muted-foreground mt-1">Para trocar email, acesse a aba "Segurança"</p>
-                </div>
-
-                <div>
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input
-                    id="phone"
-                    value={formatPhone(personalForm.phone)}
-                    onChange={(e) => setPersonalForm(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
-                    placeholder="(99) 99999-9999"
-                    maxLength={15}
-                  />
-                  <span className="text-xs text-muted-foreground block text-right mt-1">{personalForm.phone.length}/15</span>
                 </div>
 
                 <Button onClick={savePersonalInfo} disabled={savingPersonal} className="w-full sm:w-auto">
