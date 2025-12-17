@@ -105,7 +105,7 @@ const periodOptions = [
 export default function Perfil() {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { updateAvatar } = useProfile();
+  const { updateAvatar, refreshProfile } = useProfile();
   const { fetchAddress, loading: cepLoading } = useViaCep();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -364,6 +364,7 @@ export default function Perfil() {
 
       if (error) throw error;
       setProfile({ ...profile, ...personalForm, phone: personalForm.phone.replace(/\D/g, '') });
+      await refreshProfile();
       toast.success('Informações salvas!');
     } catch (error) {
       toast.error('Erro ao salvar');
