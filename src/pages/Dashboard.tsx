@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { 
   CheckCircle, Clock, FileText, CreditCard, 
-  HelpCircle, ChevronRight, 
+  HelpCircle, ChevronRight, User,
   AlertCircle, Download, QrCode
 } from 'lucide-react';
 
@@ -147,8 +147,6 @@ export default function Dashboard() {
     }
   };
 
-  // formatCPF and formatPhone imported from @/lib/validators
-
   // Formatação de data: 31/03/2025
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('pt-BR');
@@ -169,82 +167,85 @@ export default function Dashboard() {
     return "Parabéns! Sua carteirinha está pronta!";
   };
 
-  // Determina o próximo passo
+  // Determina o próximo passo - retorna null quando tudo completo
   const getNextStep = () => {
     if (!progress.profile) {
       return {
-        message: "Complete seu perfil para continuar.",
-        buttonText: "Completar Perfil",
-        route: "/complete-profile",
-        hasButton: true
+        title: 'Complete seu Perfil',
+        description: 'Preencha seus dados para continuar',
+        buttonText: 'Completar Perfil',
+        route: '/complete-profile'
       };
     }
     
     if (!progress.documents) {
       return {
-        message: "Envie seus documentos para validação.",
-        buttonText: "Enviar Documentos",
-        route: "/upload-documentos",
-        hasButton: true
+        title: 'Envie seus Documentos',
+        description: 'Precisamos validar sua documentação',
+        buttonText: 'Enviar Documentos',
+        route: '/upload-documentos'
       };
     }
     
     if (!progress.payment) {
       return {
-        message: "Realize o pagamento para ativar sua carteirinha.",
-        buttonText: "Realizar Pagamento",
-        route: "/escolher-plano",
-        hasButton: true
+        title: 'Escolha seu Plano',
+        description: 'Realize o pagamento para ativar sua carteirinha',
+        buttonText: 'Escolher Plano',
+        route: '/escolher-plano'
       };
     }
     
-    // Pagamento OK, mas carteirinha ainda não emitida
-    return {
-      message: "Sua carteirinha está sendo processada. Isso pode levar até 24h.",
-      buttonText: null,
-      route: null,
-      hasButton: false
-    };
+    if (!progress.card) {
+      return {
+        title: 'Processando...',
+        description: 'Sua carteirinha está sendo emitida (até 24h)',
+        buttonText: null,
+        route: null
+      };
+    }
+    
+    return null; // Tudo completo, não mostra
   };
 
-  // Cards de navegação (apenas Documentos e Pagamentos)
-  const navigationCards = [
-    { 
-      title: 'Documentos', 
-      subtitle: 'Status de validação', 
-      icon: FileText, 
-      route: '/upload-documentos' 
+  // Cards de progresso clicáveis com estados
+  const progressSteps = [
+    {
+      id: 'perfil',
+      label: 'Perfil',
+      status: progress.profile ? 'Concluído' : 'Pendente',
+      icon: User,
+      enabled: true, // Sempre habilitado
+      route: '/perfil',
+      completed: progress.profile
     },
-    { 
-      title: 'Pagamentos', 
-      subtitle: 'Histórico e comprovantes', 
-      icon: CreditCard, 
-      route: '/escolher-plano' 
+    {
+      id: 'documentos',
+      label: 'Documentos',
+      status: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4`,
+      icon: FileText,
+      enabled: progress.profile, // Só habilita se perfil completo
+      route: '/upload-documentos',
+      completed: progress.documents
     },
-  ];
-
-  // Etapas do progresso
-  const steps = [
-    { 
-      label: 'Perfil', 
-      completed: progress.profile, 
-      subtitle: progress.profile ? 'Concluído' : 'Preencher dados' 
+    {
+      id: 'pagamento',
+      label: 'Pagamento',
+      status: progress.payment ? 'Aprovado' : 'Pendente',
+      icon: CreditCard,
+      enabled: progress.documents, // Só habilita se docs aprovados
+      route: '/escolher-plano',
+      completed: progress.payment
     },
-    { 
-      label: 'Documentos', 
-      completed: progress.documents, 
-      subtitle: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4 aprovados` 
-    },
-    { 
-      label: 'Pagamento', 
-      completed: progress.payment, 
-      subtitle: progress.payment ? 'Aprovado' : 'Pendente' 
-    },
-    { 
-      label: 'Carteirinha', 
-      completed: progress.card, 
-      subtitle: progress.card ? 'Ativa' : 'Aguardando' 
-    },
+    {
+      id: 'carteirinha',
+      label: 'Carteirinha',
+      status: progress.card ? 'Ativa' : 'Aguardando',
+      icon: CreditCard,
+      enabled: progress.payment, // Só habilita se pagou
+      route: '/carteirinha',
+      completed: progress.card
+    }
   ];
 
   if (loading || loadingData) {
@@ -262,13 +263,13 @@ export default function Dashboard() {
 
   // Se não tem perfil, mostrar tela para completar
   if (!profile) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
-      </div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+        </div>
         <Header variant="app" />
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-lg mx-auto shadow-xl shadow-black/10">
@@ -301,174 +302,165 @@ export default function Dashboard() {
       </div>
       <Header variant="app" />
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Saudação */}
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+      <main className="relative z-10 max-w-3xl mx-auto px-4 py-6 space-y-4">
+        {/* Saudação compacta */}
+        <div className="text-white">
+          <h1 className="text-xl sm:text-2xl font-bold">
             Olá, {profile.full_name.split(' ')[0]}! 👋
           </h1>
-          <p className="text-white/80 mt-1">{getWelcomeMessage()}</p>
+          <p className="text-white/80 text-sm">{getWelcomeMessage()}</p>
         </div>
 
-        {/* Barra de Progresso */}
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 mb-8 shadow-xl shadow-black/10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Seu Progresso</h2>
+        {/* Progresso (barra + cards clicáveis) */}
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-xl shadow-black/10">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="font-semibold text-slate-900 dark:text-white">Seu Progresso</h2>
             <span className="text-primary font-bold">{percentage}%</span>
           </div>
           
           {/* Barra */}
-          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-6">
+          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-4">
             <div 
               className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
               style={{ width: `${percentage}%` }}
             />
           </div>
 
-          {/* Cards de Etapas */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {steps.map((step, index) => (
-              <div 
-                key={index}
-                className={`p-4 rounded-xl border transition-all ${
-                  step.completed 
-                    ? 'bg-primary/10 border-primary/30' 
-                    : 'bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600'
-                }`}
+          {/* Cards clicáveis 2x2 */}
+          <div className="grid grid-cols-2 gap-3">
+            {progressSteps.map((step) => (
+              <button
+                key={step.id}
+                onClick={() => step.enabled && navigate(step.route)}
+                disabled={!step.enabled}
+                className={`
+                  p-4 rounded-xl border-2 text-left transition-all
+                  ${step.enabled 
+                    ? step.completed
+                      ? 'bg-primary/10 border-primary/30 hover:bg-primary/20 cursor-pointer' 
+                      : 'bg-white dark:bg-slate-700/50 border-primary/20 hover:border-primary/50 cursor-pointer'
+                    : 'bg-slate-100 dark:bg-slate-700/30 border-slate-200 dark:border-slate-600 cursor-not-allowed opacity-50'
+                  }
+                `}
               >
                 <div className="flex items-center gap-2 mb-2">
                   {step.completed ? (
                     <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : step.enabled ? (
+                    <step.icon className="h-5 w-5 text-primary" />
                   ) : (
-                    <Clock className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                    <Clock className="h-5 w-5 text-slate-400" />
                   )}
-                  <span className={`font-medium ${step.completed ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                    {step.label}
-                  </span>
                 </div>
-                <p className={`text-sm ${step.completed ? 'text-primary' : 'text-slate-500 dark:text-slate-400'}`}>
-                  {step.subtitle}
-                </p>
-              </div>
+                <span className={`font-semibold text-sm block ${
+                  step.enabled ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                }`}>
+                  {step.label}
+                </span>
+                <span className={`text-xs ${
+                  step.completed ? 'text-green-600' : step.enabled ? 'text-muted-foreground' : 'text-slate-400'
+                }`}>
+                  {step.status}
+                </span>
+              </button>
             ))}
           </div>
         </div>
 
-        {/* LINHA 1: Próximo Passo + Suas Informações (lado a lado) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Próximo Passo ou Carteirinha - ocupa 2/3 */}
-          <div className="lg:col-span-2">
-            {progress.card && card ? (
-              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10 h-full">
-                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                  <div>
-                    <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
-                    <h2 className="text-slate-900 dark:text-white text-2xl font-bold mt-1">{profile.full_name}</h2>
-                    {profile.institution && (
-                      <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.institution}</p>
-                    )}
-                    {profile.course && (
-                      <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.course}</p>
-                    )}
-                    <div className="mt-4 space-y-1">
-                      <p className="text-slate-700 dark:text-slate-200">Nº: {card.card_number}</p>
-                      <p className="text-slate-700 dark:text-slate-200">Válida até: {formatDate(card.valid_until)}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-3 mt-6">
+        {/* Próximo Passo (só se houver) */}
+        {nextStep && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              {nextStep.buttonText ? (
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              ) : (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mt-0.5 flex-shrink-0" />
+              )}
+              <div className="flex-1">
+                <h3 className="font-semibold text-slate-900 dark:text-white">{nextStep.title}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{nextStep.description}</p>
+                {nextStep.buttonText && nextStep.route && (
                   <Button 
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={() => toast.info('Em breve!')}
+                    onClick={() => navigate(nextStep.route!)} 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
-                    <Download className="w-4 h-4 mr-2" /> Baixar PDF
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-primary text-primary hover:bg-primary/10"
-                    onClick={() => toast.info('Em breve!')}
-                  >
-                    <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl shadow-black/10 h-full">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/10 rounded-full">
-                    {nextStep.hasButton ? (
-                      <AlertCircle className="w-6 h-6 text-primary" />
-                    ) : (
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-slate-900 dark:text-white font-bold text-lg">
-                      {nextStep.hasButton ? 'Próximo Passo' : 'Processando...'}
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-300">{nextStep.message}</p>
-                  </div>
-                </div>
-                {nextStep.hasButton && nextStep.route && (
-                  <Button 
-                    className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground"
-                    onClick={() => navigate(nextStep.route!)}
-                  >
-                    {nextStep.buttonText} <ChevronRight className="w-4 h-4 ml-2" />
+                    {nextStep.buttonText}
                   </Button>
                 )}
               </div>
-            )}
+            </div>
           </div>
+        )}
 
-          {/* Suas Informações - ocupa 1/3 */}
-          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5 h-full">
-            <h3 className="text-slate-900 dark:text-white font-bold mb-4">Suas Informações</h3>
-            <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-4">
+        {/* Carteirinha Digital (só se ativa) */}
+        {progress.card && card && (
+          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-xl shadow-black/10">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+              <div>
+                <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
+                <h2 className="text-slate-900 dark:text-white text-xl font-bold mt-1">{profile.full_name}</h2>
+                {profile.institution && (
+                  <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.institution}</p>
+                )}
+                {profile.course && (
+                  <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.course}</p>
+                )}
+                <div className="mt-3 space-y-1 text-sm">
+                  <p className="text-slate-700 dark:text-slate-200">Nº: {card.card_number}</p>
+                  <p className="text-slate-700 dark:text-slate-200">Válida até: {formatDate(card.valid_until)}</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3 mt-4">
+              <Button 
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="sm"
+                onClick={() => toast.info('Em breve!')}
+              >
+                <Download className="w-4 h-4 mr-2" /> Baixar PDF
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex-1 border-primary text-primary hover:bg-primary/10"
+                onClick={() => toast.info('Em breve!')}
+              >
+                <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Grid 2 colunas: Informações + Ajuda */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Suas Informações */}
+          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
+            <h3 className="text-slate-900 dark:text-white font-bold mb-3">Suas Informações</h3>
+            <div className="space-y-2 text-sm">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400">CPF</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">CPF</p>
                   <p className="text-slate-900 dark:text-white">{formatCPF(profile.cpf)}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400">Telefone</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs">Telefone</p>
                   <p className="text-slate-900 dark:text-white">{formatPhone(profile.phone)}</p>
                 </div>
               </div>
               <div>
-                <p className="text-slate-500 dark:text-slate-400">Email</p>
-                <p className="text-slate-900 dark:text-white break-all">{user.email}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">Email</p>
+                <p className="text-slate-900 dark:text-white break-all text-xs">{user.email}</p>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* LINHA 2: Documentos + Pagamentos + Precisa de Ajuda? (3 cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {navigationCards.map((card, index) => (
-            <div 
-              key={index}
-              className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 hover:scale-[1.02] cursor-pointer transition-all group shadow-lg shadow-black/5"
-              onClick={() => navigate(card.route)}
-            >
-              <div className="flex justify-between items-start">
-                <card.icon className="w-6 h-6 text-primary" />
-                <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="text-slate-900 dark:text-white font-bold mt-4">{card.title}</h3>
-              <p className="text-slate-600 dark:text-slate-300 text-sm">{card.subtitle}</p>
-            </div>
-          ))}
-
-          {/* Card Precisa de Ajuda? */}
+          
+          {/* Precisa de Ajuda */}
           <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
-            <div className="flex justify-between items-start">
-              <HelpCircle className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="text-slate-900 dark:text-white font-bold mt-4">Precisa de Ajuda?</h3>
-            <p className="text-slate-600 dark:text-slate-300 text-sm">Nossa equipe está pronta!</p>
+            <HelpCircle className="w-6 h-6 text-primary mb-2" />
+            <h3 className="text-slate-900 dark:text-white font-bold">Precisa de Ajuda?</h3>
+            <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">Nossa equipe está pronta!</p>
             <Button 
-              className="w-full mt-3 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               size="sm"
               onClick={() => toast.info('Em breve!')}
             >
