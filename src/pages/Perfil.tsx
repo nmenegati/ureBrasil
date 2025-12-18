@@ -54,7 +54,7 @@ interface Payment {
   id: string;
   amount: number;
   status: string;
-  method: string;
+  payment_method: string;
   created_at: string;
 }
 
@@ -1172,7 +1172,7 @@ export default function Perfil() {
                           <div>
                             <p className="text-sm font-medium">{formatCurrency(payment.amount)}</p>
                             <p className="text-xs text-muted-foreground">
-                              {formatDate(payment.created_at)} • {payment.method === 'pix' ? 'PIX' : payment.method === 'credit_card' ? 'Cartão de Crédito' : 'Débito'}
+                              {formatDate(payment.created_at)} • {payment.payment_method === 'pix' ? 'PIX' : payment.payment_method === 'credit_card' ? 'Cartão de Crédito' : 'Débito'}
                             </p>
                           </div>
                           <Badge variant={payment.status === 'approved' ? 'default' : payment.status === 'rejected' ? 'destructive' : 'secondary'}>

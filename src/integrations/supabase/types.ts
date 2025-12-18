@@ -161,20 +161,21 @@ export type Database = {
       payments: {
         Row: {
           amount: number
-          cakto_payment_url: string | null
-          cakto_transaction_id: string | null
           card_brand: string | null
           card_last_digits: string | null
           confirmed_at: string | null
-          confirmed_by: string | null
           created_at: string
+          gateway_charge_id: string | null
+          gateway_name: string | null
+          gateway_reference_id: string | null
           id: string
           installments: number | null
           metadata: Json | null
-          method: Database["public"]["Enums"]["payment_method"]
+          payment_method: Database["public"]["Enums"]["payment_method"]
           pix_code: string | null
-          pix_expiration: string | null
+          pix_expires_at: string | null
           pix_qr_code: string | null
+          pix_qr_code_base64: string | null
           pix_receipt_url: string | null
           plan_id: string
           status: Database["public"]["Enums"]["payment_status"]
@@ -183,20 +184,21 @@ export type Database = {
         }
         Insert: {
           amount: number
-          cakto_payment_url?: string | null
-          cakto_transaction_id?: string | null
           card_brand?: string | null
           card_last_digits?: string | null
           confirmed_at?: string | null
-          confirmed_by?: string | null
           created_at?: string
+          gateway_charge_id?: string | null
+          gateway_name?: string | null
+          gateway_reference_id?: string | null
           id?: string
           installments?: number | null
           metadata?: Json | null
-          method: Database["public"]["Enums"]["payment_method"]
+          payment_method: Database["public"]["Enums"]["payment_method"]
           pix_code?: string | null
-          pix_expiration?: string | null
+          pix_expires_at?: string | null
           pix_qr_code?: string | null
+          pix_qr_code_base64?: string | null
           pix_receipt_url?: string | null
           plan_id: string
           status?: Database["public"]["Enums"]["payment_status"]
@@ -205,20 +207,21 @@ export type Database = {
         }
         Update: {
           amount?: number
-          cakto_payment_url?: string | null
-          cakto_transaction_id?: string | null
           card_brand?: string | null
           card_last_digits?: string | null
           confirmed_at?: string | null
-          confirmed_by?: string | null
           created_at?: string
+          gateway_charge_id?: string | null
+          gateway_name?: string | null
+          gateway_reference_id?: string | null
           id?: string
           installments?: number | null
           metadata?: Json | null
-          method?: Database["public"]["Enums"]["payment_method"]
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           pix_code?: string | null
-          pix_expiration?: string | null
+          pix_expires_at?: string | null
           pix_qr_code?: string | null
+          pix_qr_code_base64?: string | null
           pix_receipt_url?: string | null
           plan_id?: string
           status?: Database["public"]["Enums"]["payment_status"]
