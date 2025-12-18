@@ -93,6 +93,13 @@ export default function Pagamento() {
   const [cardName, setCardName] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCVV, setCardCVV] = useState('');
+  
+  // Estado para PIX gerado
+  const [pixData, setPixData] = useState<{
+    qr_code: string;
+    qr_code_base64: string;
+    expires_at: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -156,12 +163,61 @@ export default function Pagamento() {
     }
 
     setProcessing(true);
+    setPixData(null);
     
-    // Simular processamento (será substituído pela integração real)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast.info('Integração com gateway de pagamento em desenvolvimento!');
-    setProcessing(false);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        navigate('/login');
+        return;
+      }
+
+      // Mapear boleto para debit_card (conforme enum do banco)
+      const methodToSend = paymentMethod === 'boleto' ? 'debit_card' : paymentMethod;
+
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          plan_id: plan?.id,
+          payment_method: methodToSend,
+          card_data: paymentMethod === 'credit_card' ? {
+            number: cardNumber.replace(/\s/g, ''),
+            holder: cardName,
+            exp_month: cardExpiry.split('/')[0],
+            exp_year: cardExpiry.split('/')[1],
+            cvv: cardCVV
+          } : null
+        }
+      });
+
+      if (error) throw error;
+
+      // Sucesso conforme método
+      if (paymentMethod === 'pix') {
+        setPixData({
+          qr_code: data.pix_qr_code,
+          qr_code_base64: data.pix_qr_code_base64,
+          expires_at: data.pix_expires_at
+        });
+        toast.success('QR Code PIX gerado! (MOCK)');
+      } else if (paymentMethod === 'credit_card') {
+        toast.success('Pagamento aprovado! (MOCK)');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } else if (paymentMethod === 'boleto') {
+        if (data.boleto_url) {
+          window.open(data.boleto_url, '_blank');
+        }
+        toast.success('Boleto gerado! (MOCK)');
+      }
+    } catch (error: any) {
+      console.error('Erro ao processar pagamento:', error);
+      toast.error(error.message || 'Erro ao processar pagamento');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const getButtonText = (): string => {
@@ -391,7 +447,7 @@ export default function Pagamento() {
 
             {/* Área do Formulário Dinâmico */}
             <Card className="p-6">
-              {paymentMethod === 'pix' && (
+              {paymentMethod === 'pix' && !pixData && (
                 <div className="text-center py-6">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                     <QrCode className="w-10 h-10 text-green-600" />
@@ -402,6 +458,49 @@ export default function Pagamento() {
                   </p>
                   <p className="text-sm text-green-600 font-medium">
                     ⚡ O pagamento é processado instantaneamente
+                  </p>
+                </div>
+              )}
+
+              {paymentMethod === 'pix' && pixData && (
+                <div className="text-center py-4">
+                  <div className="mb-4">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                      ⚠️ MOCK - Pagamento simulado para testes
+                    </span>
+                  </div>
+                  
+                  <h3 className="font-semibold text-lg mb-4">Escaneie o QR Code PIX</h3>
+                  
+                  <div className="w-48 h-48 mx-auto mb-4 bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <QrCode className="w-16 h-16 text-gray-400 mx-auto mb-2" />
+                      <p className="text-xs text-gray-500">QR Code Mock</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Ou copie o código PIX:
+                  </p>
+                  
+                  <div className="bg-muted p-3 rounded-lg text-xs font-mono break-all max-h-20 overflow-y-auto mb-4">
+                    {pixData.qr_code}
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(pixData.qr_code);
+                      toast.success('Código PIX copiado!');
+                    }}
+                    className="mb-4"
+                  >
+                    Copiar Código PIX
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Expira em: {new Date(pixData.expires_at).toLocaleTimeString('pt-BR')}
                   </p>
                 </div>
               )}
