@@ -369,12 +369,12 @@ export default function Dashboard() {
 
         {/* Próximo Passo (só se houver) */}
         {nextStep && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+          <div className="bg-ure-orange/10 dark:bg-ure-orange/20 border border-ure-orange/30 dark:border-ure-orange/40 rounded-xl p-4">
             <div className="flex items-start gap-3">
               {nextStep.buttonText ? (
-                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="h-5 w-5 text-ure-orange mt-0.5 flex-shrink-0" />
               ) : (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-ure-orange mt-0.5 flex-shrink-0" />
               )}
               <div className="flex-1">
                 <h3 className="font-semibold text-slate-900 dark:text-white">{nextStep.title}</h3>
