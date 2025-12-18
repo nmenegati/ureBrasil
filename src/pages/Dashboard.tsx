@@ -369,23 +369,20 @@ export default function Dashboard() {
 
         {/* Próximo Passo (só se houver) */}
         {nextStep && (
-          <div 
-            className="bg-white dark:bg-slate-800 border-2 rounded-xl p-4 shadow-lg"
-            style={{ borderColor: '#ff6b35', boxShadow: '0 10px 15px -3px rgba(255, 107, 53, 0.2)' }}
-          >
+          <div className="bg-[#ff6b35] rounded-xl p-4 shadow-lg">
             <div className="flex items-start gap-3">
               {nextStep.buttonText ? (
-                <AlertCircle className="h-5 w-5 text-[#ff6b35] mt-0.5 flex-shrink-0" />
+                <AlertCircle className="h-5 w-5 text-white mt-0.5 flex-shrink-0" />
               ) : (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#ff6b35] mt-0.5 flex-shrink-0" />
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mt-0.5 flex-shrink-0" />
               )}
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white">{nextStep.title}</h3>
-                <p className="text-sm text-muted-foreground mb-3">{nextStep.description}</p>
+                <h3 className="font-semibold text-white">{nextStep.title}</h3>
+                <p className="text-sm text-white/80 mb-3">{nextStep.description}</p>
                 {nextStep.buttonText && nextStep.route && (
                   <Button 
                     onClick={() => navigate(nextStep.route!)} 
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="w-full bg-white hover:bg-white/90 text-[#ff6b35] font-semibold"
                   >
                     {nextStep.buttonText}
                   </Button>
