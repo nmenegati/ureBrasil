@@ -26,27 +26,32 @@ export default function RedefinirSenha() {
   };
 
   useEffect(() => {
-    // Verificar se há sessão válida (usuário veio do link de recuperação)
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setSessionReady(true);
+      } else if (event === 'SIGNED_IN' && session) {
+        setSessionReady(true);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
-      } else {
-        // Aguardar um pouco pois o Supabase pode estar processando o token do URL
-        setTimeout(async () => {
-          const { data: { session: retrySession } } = await supabase.auth.getSession();
-          if (retrySession) {
-            setSessionReady(true);
-          } else {
-            toast.error('Link de recuperação inválido ou expirado');
-            navigate('/recuperar-senha');
-          }
-        }, 1000);
       }
-    };
+    });
 
-    checkSession();
-  }, [navigate]);
+    const timeout = setTimeout(() => {
+      if (!sessionReady) {
+        toast.error('Link inválido ou expirado');
+        navigate('/recuperar-senha');
+      }
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, [navigate, sessionReady]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
