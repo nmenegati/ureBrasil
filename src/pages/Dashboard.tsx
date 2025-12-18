@@ -334,31 +334,31 @@ export default function Dashboard() {
                 onClick={() => step.enabled && navigate(step.route)}
                 disabled={!step.enabled}
                 className={`
-                  p-4 rounded-xl border-2 text-left transition-all
+                  group p-4 rounded-xl border-2 text-left transition-all duration-300 ease-out
                   ${step.enabled 
                     ? step.completed
-                      ? 'bg-primary/10 border-primary/30 hover:bg-primary/20 cursor-pointer' 
-                      : 'bg-white dark:bg-slate-700/50 border-primary/20 hover:border-primary/50 cursor-pointer'
+                      ? 'bg-primary/10 border-primary/30 hover:bg-primary/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/20 cursor-pointer' 
+                      : 'bg-white dark:bg-slate-700/50 border-primary/20 hover:border-primary hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/15 hover:-translate-y-0.5 cursor-pointer'
                     : 'bg-slate-100 dark:bg-slate-700/30 border-slate-200 dark:border-slate-600 cursor-not-allowed opacity-50'
                   }
                 `}
               >
                 <div className="flex items-center gap-2 mb-2">
                   {step.completed ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <CheckCircle className="h-5 w-5 text-green-500 group-hover:scale-110 transition-transform duration-300" />
                   ) : step.enabled ? (
-                    <step.icon className="h-5 w-5 text-primary" />
+                    <step.icon className="h-5 w-5 text-primary group-hover:scale-110 group-hover:text-primary transition-all duration-300" />
                   ) : (
                     <Clock className="h-5 w-5 text-slate-400" />
                   )}
                 </div>
-                <span className={`font-semibold text-sm block ${
-                  step.enabled ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                <span className={`font-semibold text-sm block transition-colors duration-300 ${
+                  step.enabled ? 'text-slate-900 dark:text-white group-hover:text-primary' : 'text-slate-400'
                 }`}>
                   {step.label}
                 </span>
-                <span className={`text-xs ${
-                  step.completed ? 'text-green-600' : step.enabled ? 'text-muted-foreground' : 'text-slate-400'
+                <span className={`text-xs transition-colors duration-300 ${
+                  step.completed ? 'text-green-600' : step.enabled ? 'text-muted-foreground group-hover:text-primary/70' : 'text-slate-400'
                 }`}>
                   {step.status}
                 </span>
