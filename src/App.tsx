@@ -11,6 +11,8 @@ import SignUp from "./pages/SignUp";
 import CompleteProfile from "./pages/CompleteProfile";
 import Dashboard from "./pages/Dashboard";
 import VerificarEmail from "./pages/VerificarEmail";
+import RecuperarSenha from "./pages/RecuperarSenha";
+import RedefinirSenha from "./pages/RedefinirSenha";
 import AdminEditEmail from "./pages/AdminEditEmail";
 import UploadDocumentos from "./pages/UploadDocumentos";
 import EscolherPlano from "./pages/EscolherPlano";
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/signup" element={<SignUp />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/verificar-email" element={<VerificarEmail />} />
+            <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+            <Route path="/redefinir-senha" element={<RedefinirSenha />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />

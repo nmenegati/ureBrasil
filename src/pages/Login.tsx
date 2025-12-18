@@ -177,13 +177,12 @@ export default function Login() {
                     Lembrar de mim
                   </Label>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => toast.info('Recuperação de senha em breve')}
+                <Link
+                  to="/recuperar-senha"
                   className="text-sm text-primary hover:text-primary/80"
                 >
                   Esqueci minha senha
-                </button>
+                </Link>
               </div>
 
               {/* Botão Entrar */}
