@@ -369,7 +369,7 @@ export default function Dashboard() {
 
         {/* Próximo Passo (só se houver) */}
         {nextStep && (
-          <div className="bg-ure-orange/10 dark:bg-ure-orange/20 border border-ure-orange/30 dark:border-ure-orange/40 rounded-xl p-4">
+          <div className="bg-white dark:bg-slate-800 border-2 border-ure-orange rounded-xl p-4 shadow-lg shadow-ure-orange/20">
             <div className="flex items-start gap-3">
               {nextStep.buttonText ? (
                 <AlertCircle className="h-5 w-5 text-ure-orange mt-0.5 flex-shrink-0" />
