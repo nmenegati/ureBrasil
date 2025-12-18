@@ -26,38 +26,22 @@ export default function RedefinirSenha() {
   };
 
   useEffect(() => {
-    console.log('🔍 RedefinirSenha montou');
-    console.log('🔍 URL atual:', window.location.href);
-    console.log('🔍 Hash:', window.location.hash);
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔔 Auth event:', event);
-      console.log('🔔 Session:', session);
-      
       if (event === 'PASSWORD_RECOVERY') {
-        console.log('✅ PASSWORD_RECOVERY detectado!');
         setSessionReady(true);
       } else if (event === 'SIGNED_IN' && session) {
-        console.log('✅ SIGNED_IN detectado!');
         setSessionReady(true);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('📊 getSession retornou:', session);
       if (session) {
-        console.log('✅ Sessão existe!');
         setSessionReady(true);
-      } else {
-        console.log('❌ Nenhuma sessão encontrada');
       }
     });
 
     const timeout = setTimeout(() => {
-      console.log('⏰ Timeout de 5s atingido');
-      console.log('sessionReady:', sessionReady);
       if (!sessionReady) {
-        console.log('❌ Redirecionando para /recuperar-senha');
         toast.error('Link inválido ou expirado');
         navigate('/recuperar-senha');
       }
