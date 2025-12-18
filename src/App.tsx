@@ -19,6 +19,7 @@ import EscolherPlano from "./pages/EscolherPlano";
 import StatusValidacao from "./pages/StatusValidacao";
 import Pagamento from "./pages/Pagamento";
 import Perfil from "./pages/Perfil";
+import Checkout from "./pages/Checkout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
 
@@ -68,6 +69,11 @@ const App = () => (
             <Route path="/pagamento" element={
               <ProtectedRoute>
                 <Pagamento />
+              </ProtectedRoute>
+            } />
+            <Route path="/checkout" element={
+              <ProtectedRoute>
+                <Checkout />
               </ProtectedRoute>
             } />
             <Route path="/perfil" element={
