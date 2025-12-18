@@ -53,7 +53,7 @@ const Index = () => {
       <Header variant="landing" />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-16 bg-gradient-to-br from-[#0D7DBF] to-[#00A859] overflow-hidden">
+      <section className="relative pt-20 pb-16 md:pt-24 md:pb-20 bg-gradient-to-br from-[#0D7DBF] to-[#00A859] overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
