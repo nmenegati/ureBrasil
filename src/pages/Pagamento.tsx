@@ -207,9 +207,14 @@ export default function Pagamento() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
       <Header variant="app" />
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <div className="relative z-10 max-w-lg mx-auto px-4 py-6 space-y-6">
         {/* Mensagem Motivacional */}
         <div className="bg-primary/10 text-primary p-4 rounded-lg text-center">
           <p className="font-medium">🎫 Finalize agora e use sua carteirinha ainda hoje.</p>
