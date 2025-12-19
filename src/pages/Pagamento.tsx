@@ -462,17 +462,17 @@ export default function Pagamento() {
         {/* Bloco PagSeguro + Badges - SEMPRE VISÍVEL */}
         <div className="space-y-3 mt-4">
           {/* Linha PagSeguro */}
-          <div className="flex items-center justify-center gap-2 text-gray-800 text-sm">
+          <div className="flex items-center justify-center gap-2 text-gray-800 text-base">
             <span>Pagamento processado com</span>
             <img 
               src={pagseguroLogo} 
               alt="PagSeguro" 
-              className="h-5 w-auto"
+              className="h-6 w-auto"
             />
           </div>
 
           {/* Trust Badges (fonte menor) */}
-          <div className="flex flex-wrap items-center justify-center gap-2 text-gray-800 text-[10px]">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-gray-800 text-xs">
             <span>🔒 Pagamento seguro</span>
             <span className="text-gray-600">|</span>
             <span>🛡️ Dados protegidos</span>
