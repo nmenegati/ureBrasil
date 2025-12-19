@@ -462,7 +462,7 @@ export default function Pagamento() {
         {/* Bloco PagSeguro + Badges - SEMPRE VISÍVEL */}
         <div className="space-y-3 mt-4">
           {/* Linha PagSeguro */}
-          <div className="flex items-center justify-center gap-2 text-white/90 text-sm">
+          <div className="flex items-center justify-center gap-2 text-gray-800 text-sm">
             <span>Pagamento processado com</span>
             <img 
               src={pagseguroLogo} 
@@ -472,18 +472,18 @@ export default function Pagamento() {
           </div>
 
           {/* Trust Badges (fonte menor) */}
-          <div className="flex flex-wrap items-center justify-center gap-2 text-white/80 text-[10px]">
+          <div className="flex flex-wrap items-center justify-center gap-2 text-gray-800 text-[10px]">
             <span>🔒 Pagamento seguro</span>
-            <span className="text-white/50">|</span>
+            <span className="text-gray-600">|</span>
             <span>🛡️ Dados protegidos</span>
-            <span className="text-white/50">|</span>
+            <span className="text-gray-600">|</span>
             <span>✅ Sem taxas extras</span>
           </div>
 
           {/* Termos de uso */}
-          <p className="text-xs text-center text-white/80">
+          <p className="text-xs text-center text-gray-800">
             Ao continuar você concorda com nossos{" "}
-            <a href="/termos" className="underline hover:text-white">
+            <a href="/termos" className="underline hover:text-gray-900">
               Termos de Uso
             </a>
           </p>
