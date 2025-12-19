@@ -51,7 +51,7 @@ const maskCvv = (value: string) => {
 
 export default function Pagamento() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -64,6 +64,8 @@ export default function Pagamento() {
   const [cardCvv, setCardCvv] = useState("");
 
   useEffect(() => {
+    if (authLoading) return;
+    
     const loadPlan = async () => {
       if (!user) {
         navigate("/login");
@@ -106,7 +108,7 @@ export default function Pagamento() {
     };
 
     loadPlan();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -186,7 +188,7 @@ export default function Pagamento() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
