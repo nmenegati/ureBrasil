@@ -18,6 +18,7 @@ import UploadDocumentos from "./pages/UploadDocumentos";
 import EscolherPlano from "./pages/EscolherPlano";
 import StatusValidacao from "./pages/StatusValidacao";
 import Pagamento from "./pages/Pagamento";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import Perfil from "./pages/Perfil";
 import Checkout from "./pages/Checkout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -69,6 +70,11 @@ const App = () => (
             <Route path="/pagamento" element={
               <ProtectedRoute>
                 <Pagamento />
+              </ProtectedRoute>
+            } />
+            <Route path="/pagamento/sucesso" element={
+              <ProtectedRoute>
+                <PaymentSuccessPage />
               </ProtectedRoute>
             } />
             <Route path="/checkout" element={
