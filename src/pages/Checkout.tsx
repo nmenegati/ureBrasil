@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -23,7 +23,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, CreditCard, Loader2, Check, IdCard } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { QrCode, CreditCard, Loader2, Check, IdCard, Shield, Lock, CheckCircle } from "lucide-react";
+import pagseguroLogo from "@/assets/pagseguro-logo.png";
 
 interface Plan {
   id: string;
@@ -473,14 +475,45 @@ export default function Checkout() {
           </CardContent>
         </Card>
 
-        {/* 6. Trust Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-2 text-muted-foreground text-xs mb-4">
-          <span>🔒 Pagamento seguro</span>
-          <span className="text-muted">|</span>
-          <span>🛡️ Dados protegidos</span>
-          <span className="text-muted">|</span>
-          <span>✅ Sem taxas extras</span>
-        </div>
+        {/* 6. Trust Section - Card Unificado */}
+        <Card className="bg-muted/30 border-none p-4 space-y-3 mb-4">
+          {/* Logo PagSeguro */}
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground mb-2">
+              Pagamento processado pelo
+            </p>
+            <img 
+              src={pagseguroLogo} 
+              alt="PagSeguro"
+              className="h-6 mx-auto"
+            />
+          </div>
+
+          {/* Divider sutil */}
+          <Separator className="opacity-50" />
+
+          {/* Trust badges com ícones - Responsivo */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Shield className="w-4 h-4 text-green-500" />
+              <span>Pagamento seguro</span>
+            </div>
+            
+            <div className="hidden sm:block w-px h-4 bg-border"></div>
+            
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-4 h-4 text-green-500" />
+              <span>Dados protegidos</span>
+            </div>
+            
+            <div className="hidden sm:block w-px h-4 bg-border"></div>
+            
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span>Sem taxas extras</span>
+            </div>
+          </div>
+        </Card>
 
         {/* 7. Botão Integrado */}
         <Button
@@ -500,11 +533,12 @@ export default function Checkout() {
           )}
         </Button>
 
-        <p className="text-center text-muted-foreground text-xs mt-4 mb-8">
+        {/* Termos fora do card */}
+        <p className="text-center text-xs text-muted-foreground mt-3 mb-8">
           Ao continuar você concorda com nossos{" "}
-          <a href="#" className="underline">
+          <Link to="/termos" className="underline hover:text-foreground transition-colors">
             Termos de Uso
-          </a>
+          </Link>
         </p>
       </div>
     </div>
