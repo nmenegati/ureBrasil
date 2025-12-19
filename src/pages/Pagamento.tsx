@@ -23,6 +23,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { QrCode, CreditCard, Loader2, Check } from "lucide-react";
+import pagseguroLogo from "@/assets/pagseguro-logo.png";
 
 interface Plan {
   id: string;
@@ -436,17 +437,6 @@ export default function Pagamento() {
           </Card>
         )}
 
-        {/* Trust Badges */}
-        {paymentMethod && (
-          <div className="flex flex-wrap items-center justify-center gap-3 text-white/90 text-xs animate-fade-in drop-shadow-sm">
-            <span>🔒 Pagamento seguro</span>
-            <span className="text-white/50">|</span>
-            <span>🛡️ Dados protegidos</span>
-            <span className="text-white/50">|</span>
-            <span>✅ Sem taxas extras</span>
-          </div>
-        )}
-
         {/* Botão de Ação */}
         {paymentMethod && (
           <div className="space-y-3 animate-fade-in">
@@ -467,6 +457,26 @@ export default function Pagamento() {
               )}
             </Button>
 
+            {/* Linha PagSeguro */}
+            <div className="flex items-center justify-center gap-2 text-white/90 text-sm">
+              <span>Pagamento processado com</span>
+              <img 
+                src={pagseguroLogo} 
+                alt="PagSeguro" 
+                className="h-5 w-auto"
+              />
+            </div>
+
+            {/* Trust Badges (fonte menor) */}
+            <div className="flex flex-wrap items-center justify-center gap-2 text-white/80 text-[10px]">
+              <span>🔒 Pagamento seguro</span>
+              <span className="text-white/50">|</span>
+              <span>🛡️ Dados protegidos</span>
+              <span className="text-white/50">|</span>
+              <span>✅ Sem taxas extras</span>
+            </div>
+
+            {/* Termos de uso */}
             <p className="text-xs text-center text-white/80">
               Ao continuar você concorda com nossos{" "}
               <a href="/termos" className="underline hover:text-white">
