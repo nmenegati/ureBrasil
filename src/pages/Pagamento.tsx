@@ -23,6 +23,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { QrCode, CreditCard, Loader2, Check } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import pagseguroLogo from "@/assets/pagseguro-logo.png";
 
 interface Plan {
@@ -470,6 +471,9 @@ export default function Pagamento() {
               className="h-6 w-auto"
             />
           </div>
+
+          {/* Divider sutil */}
+          <Separator className="opacity-50" />
 
           {/* Trust Badges (fonte menor) */}
           <div className="flex flex-wrap items-center justify-center gap-2 text-gray-800 text-xs">
