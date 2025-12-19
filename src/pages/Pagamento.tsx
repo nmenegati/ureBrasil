@@ -216,36 +216,38 @@ export default function Pagamento() {
       <Header variant="app" />
       <div className="relative z-10 max-w-lg mx-auto px-4 py-6 space-y-6">
         {/* Mensagem Motivacional */}
-        <div className="bg-primary/10 text-primary p-4 rounded-lg text-center">
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm text-primary p-4 rounded-lg text-center shadow-lg">
           <p className="font-medium">🎫 Finalize agora e use sua carteirinha ainda hoje.</p>
         </div>
 
         {/* Barra de Progresso */}
-        <div className="flex items-center justify-center gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <Check className="w-4 h-4 text-primary-foreground" />
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg p-4 shadow-md">
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Check className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="text-sm font-medium text-primary">Plano</span>
             </div>
-            <span className="text-sm font-medium text-primary">Plano</span>
-          </div>
-          <div className="w-8 h-0.5 bg-primary" />
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">2</span>
+            <div className="w-8 h-0.5 bg-primary" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-sm font-bold text-primary-foreground">2</span>
+              </div>
+              <span className="text-sm font-medium text-primary">Pagamento</span>
             </div>
-            <span className="text-sm font-medium text-primary">Pagamento</span>
-          </div>
-          <div className="w-8 h-0.5 bg-muted" />
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-sm font-bold text-muted-foreground">3</span>
+            <div className="w-8 h-0.5 bg-muted" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-sm font-bold text-muted-foreground">3</span>
+              </div>
+              <span className="text-sm text-muted-foreground">Pronto</span>
             </div>
-            <span className="text-sm text-muted-foreground">Pronto</span>
           </div>
         </div>
 
         {/* Card do Plano com Accordion */}
-        <Card className="p-4">
+        <Card className="p-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg border-0">
           <div className="flex items-start justify-between mb-3">
             <div>
               <h2 className="font-semibold text-lg">{plan.name}</h2>
@@ -298,11 +300,15 @@ export default function Pagamento() {
 
         {/* Métodos de Pagamento */}
         <div className="space-y-3">
-          <h3 className="font-medium">Escolha a forma de pagamento</h3>
+          <h3 className="font-medium text-white drop-shadow-md">Escolha a forma de pagamento</h3>
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant={paymentMethod === "pix" ? "default" : "outline"}
-              className="h-auto flex flex-col items-center gap-2 p-4"
+              className={`h-auto flex flex-col items-center gap-2 p-4 ${
+                paymentMethod === "pix" 
+                  ? "shadow-lg" 
+                  : "bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-2 hover:bg-white dark:hover:bg-slate-700 text-foreground"
+              }`}
               onClick={() => setPaymentMethod("pix")}
             >
               <QrCode className="w-8 h-8" />
@@ -313,7 +319,11 @@ export default function Pagamento() {
 
             <Button
               variant={paymentMethod === "card" ? "default" : "outline"}
-              className="h-auto flex flex-col items-center gap-2 p-4"
+              className={`h-auto flex flex-col items-center gap-2 p-4 ${
+                paymentMethod === "card" 
+                  ? "shadow-lg" 
+                  : "bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-2 hover:bg-white dark:hover:bg-slate-700 text-foreground"
+              }`}
               onClick={() => setPaymentMethod("card")}
             >
               <CreditCard className="w-8 h-8" />
@@ -326,7 +336,7 @@ export default function Pagamento() {
 
         {/* Formulário Dinâmico */}
         {paymentMethod === "pix" && (
-          <Card className="p-6 animate-fade-in">
+          <Card className="p-6 animate-fade-in bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg border-0">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <QrCode className="w-8 h-8 text-primary" />
@@ -342,7 +352,7 @@ export default function Pagamento() {
         )}
 
         {paymentMethod === "card" && (
-          <Card className="p-4 space-y-4 animate-fade-in">
+          <Card className="p-4 space-y-4 animate-fade-in bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg border-0">
             <div>
               <Label className="text-sm font-medium mb-2 block">Tipo de cartão</Label>
               <RadioGroup
@@ -428,11 +438,11 @@ export default function Pagamento() {
 
         {/* Trust Badges */}
         {paymentMethod && (
-          <div className="flex flex-wrap items-center justify-center gap-3 text-muted-foreground text-xs animate-fade-in">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-white/90 text-xs animate-fade-in drop-shadow-sm">
             <span>🔒 Pagamento seguro</span>
-            <span className="text-muted-foreground/50">|</span>
+            <span className="text-white/50">|</span>
             <span>🛡️ Dados protegidos</span>
-            <span className="text-muted-foreground/50">|</span>
+            <span className="text-white/50">|</span>
             <span>✅ Sem taxas extras</span>
           </div>
         )}
@@ -457,9 +467,9 @@ export default function Pagamento() {
               )}
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground">
+            <p className="text-xs text-center text-white/80">
               Ao continuar você concorda com nossos{" "}
-              <a href="/termos" className="underline hover:text-foreground">
+              <a href="/termos" className="underline hover:text-white">
                 Termos de Uso
               </a>
             </p>
