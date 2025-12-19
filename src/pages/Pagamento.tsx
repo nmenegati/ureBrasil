@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Header } from "@/components/Header";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -207,6 +208,7 @@ export default function Pagamento() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header variant="app" />
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
         {/* Mensagem Motivacional */}
         <div className="bg-primary/10 text-primary p-4 rounded-lg text-center">
