@@ -5,3 +5,9 @@ verify_jwt = true
 
 [functions.create-payment]
 verify_jwt = true
+
+[functions.pagbank-session]
+verify_jwt = true
+
+[functions.pagbank-payment-card]
+verify_jwt = true
