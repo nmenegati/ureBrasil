@@ -1,3 +1,4 @@
+// Página de visualização da carteirinha estudantil
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
