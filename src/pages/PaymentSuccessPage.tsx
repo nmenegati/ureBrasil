@@ -1,58 +1,199 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, CreditCard, Truck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+interface PaymentData {
+  planName: string;
+  amount: number;
+  paymentId: string;
+  cardType?: string;
+  paymentMethod?: string;
+}
+
 const PaymentSuccessPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [showUpsell, setShowUpsell] = useState(true);
   const [loadingUpsell, setLoadingUpsell] = useState(false);
+  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar dados do pagamento
+  useEffect(() => {
+    const loadPaymentData = async () => {
+      // Tentar obter dados do location.state primeiro
+      const stateData = location.state as PaymentData | undefined;
+      
+      if (stateData?.planName && stateData?.amount) {
+        setPaymentData(stateData);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback: buscar último pagamento aprovado do usuário
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        // Buscar perfil do estudante
+        const { data: profile } = await supabase
+          .from("student_profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (!profile) {
+          navigate("/dashboard");
+          return;
+        }
+
+        // Buscar último pagamento aprovado
+        const { data: payment } = await supabase
+          .from("payments")
+          .select(`
+            id,
+            amount,
+            payment_method,
+            plan_id,
+            plans (
+              name,
+              type
+            )
+          `)
+          .eq("student_id", profile.id)
+          .eq("status", "approved")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (payment && payment.plans) {
+          const planData = payment.plans as { name: string; type: string };
+          setPaymentData({
+            planName: planData.name,
+            amount: Number(payment.amount),
+            paymentId: payment.id,
+            cardType: planData.type,
+            paymentMethod: payment.payment_method,
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados do pagamento:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPaymentData();
+  }, [user, location.state, navigate]);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(price);
+  };
 
   const handleAcceptUpsell = async () => {
+    if (!user || !paymentData) return;
+    
     setLoadingUpsell(true);
-    // Simular processamento de 1.5s
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    // TODO: Integrar com API de pagamento para R$ 15
-    toast.success("Carteirinha física adicionada! Será enviada em breve.");
-    setLoadingUpsell(false);
-    setShowUpsell(false);
+
+    try {
+      // Buscar perfil do estudante
+      const { data: profile } = await supabase
+        .from("student_profiles")
+        .select("id, plan_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!profile) {
+        throw new Error("Perfil não encontrado");
+      }
+
+      // Processar pagamento adicional da carteirinha física via edge function
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: {
+          plan_id: profile.plan_id, // Mesmo plano
+          payment_method: "credit_card", // Usar cartão para upsell
+          amount: 15.00, // Valor fixo do upsell
+          is_upsell: true,
+          original_payment_id: paymentData.paymentId,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Carteirinha física adicionada! Será enviada em breve.");
+      setShowUpsell(false);
+    } catch (error) {
+      console.error("Erro ao processar upsell:", error);
+      toast.error("Erro ao processar. Tente novamente.");
+    } finally {
+      setLoadingUpsell(false);
+    }
   };
 
   const handleDeclineUpsell = () => {
     setShowUpsell(false);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
+      {/* Decorative elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+      </div>
+
       <Header variant="app" />
       
-      <main className="container max-w-lg mx-auto px-4 py-8">
+      <main className="relative z-10 container max-w-lg mx-auto px-4 py-8">
         {/* Confirmação de Pagamento */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-12 h-12 text-green-500" />
+          <div className="w-20 h-20 bg-green-500/30 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+            <CheckCircle className="w-12 h-12 text-green-400" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Pagamento Confirmado!</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-2xl font-bold mb-2 text-white">Pagamento Confirmado!</h1>
+          <p className="text-white/80 text-sm">
             Sua carteirinha digital já está disponível no seu perfil
           </p>
         </div>
 
         {/* Card Resumo da Compra */}
-        <Card className="p-4 mb-6">
+        <Card className="p-4 mb-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg border-0">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
               <CreditCard className="w-6 h-6 text-green-500" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-sm mb-1">Carteirinha Digital Geral</h3>
-              <p className="text-muted-foreground text-xs mb-2">Pagamento processado com sucesso</p>
+              <h3 className="font-semibold text-sm mb-1">
+                {paymentData?.planName || "Carteirinha Digital"}
+              </h3>
+              <p className="text-muted-foreground text-xs mb-2">
+                Pagamento processado com sucesso
+              </p>
               <div className="flex items-baseline gap-2">
                 <span className="text-muted-foreground text-xs">Valor pago:</span>
-                <span className="text-green-500 font-semibold">R$ 29,00</span>
+                <span className="text-green-500 font-semibold">
+                  {formatPrice(paymentData?.amount || 29)}
+                </span>
               </div>
             </div>
           </div>
@@ -60,7 +201,7 @@ const PaymentSuccessPage = () => {
 
         {/* Bump Offer */}
         {showUpsell ? (
-          <Card className="relative overflow-hidden border-2 border-primary/50 p-5 mb-6">
+          <Card className="relative overflow-hidden border-2 border-primary/50 p-5 mb-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg">
             {/* Badge destaque */}
             <div className="absolute top-3 right-3">
               <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -139,7 +280,7 @@ const PaymentSuccessPage = () => {
             </div>
           </Card>
         ) : (
-          <Card className="p-6 text-center mb-6">
+          <Card className="p-6 text-center mb-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg border-0">
             <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
             <h3 className="font-semibold mb-2">Tudo pronto!</h3>
             <p className="text-muted-foreground text-sm mb-4">
@@ -152,7 +293,7 @@ const PaymentSuccessPage = () => {
         )}
 
         {/* Próximos Passos */}
-        <Card className="p-4">
+        <Card className="p-4 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-lg border-0">
           <h3 className="font-semibold mb-3 text-sm">Próximos Passos</h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">

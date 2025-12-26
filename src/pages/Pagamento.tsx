@@ -180,8 +180,17 @@ export default function Pagamento() {
       if (paymentMethod === "pix" && data?.pix_code) {
         navigate("/pagamento/pix", { state: { paymentData: data } });
       } else {
+        // Redirecionar para página de sucesso com dados do pagamento
         toast.success("Pagamento processado com sucesso!");
-        navigate("/dashboard");
+        navigate("/pagamento/sucesso", {
+          state: {
+            planName: plan.name,
+            amount: plan.price,
+            paymentId: data?.payment_id,
+            cardType: plan.is_direito ? "direito" : "geral",
+            paymentMethod: paymentMethod === "card" ? cardType : "pix",
+          },
+        });
       }
     } catch (error) {
       console.error("Erro no pagamento:", error);
