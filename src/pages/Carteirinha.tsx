@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import Header from '@/components/Header';
+import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
