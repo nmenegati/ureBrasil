@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePagBank } from "@/hooks/usePagBank";
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,12 @@ const maskCvv = (v: string) => {
 export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { 
+    generateSession, 
+    createCardToken, 
+    processCardPayment,
+    loading: pagbankLoading 
+  } = usePagBank();
 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,15 +70,21 @@ export default function Checkout() {
   const [cardName, setCardName] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
+  const [studentProfile, setStudentProfile] = useState<{
+    cpf: string;
+    phone: string;
+    birth_date: string;
+  } | null>(null);
 
   useEffect(() => {
-    const fetchPlan = async () => {
+    const fetchPlanAndProfile = async () => {
       if (!user) return;
 
       try {
+        // Buscar perfil COM dados necessários para PagBank
         const { data: profile, error: profileError } = await supabase
           .from("student_profiles")
-          .select("plan_id")
+          .select("plan_id, cpf, phone, birth_date")
           .eq("user_id", user.id)
           .single();
 
@@ -80,6 +93,13 @@ export default function Checkout() {
           navigate("/escolher-plano");
           return;
         }
+
+        // Guardar dados do perfil para o PagBank
+        setStudentProfile({
+          cpf: profile.cpf,
+          phone: profile.phone,
+          birth_date: profile.birth_date,
+        });
 
         const { data: planData, error: planError } = await supabase
           .from("plans")
@@ -94,16 +114,19 @@ export default function Checkout() {
         }
 
         setPlan(planData);
+        
+        // Gerar sessão PagBank após carregar dados
+        await generateSession();
       } catch (error) {
-        console.error("Erro ao carregar plano:", error);
+        console.error("Erro ao carregar:", error);
         toast.error("Erro ao carregar informações");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPlan();
-  }, [user, navigate]);
+    fetchPlanAndProfile();
+  }, [user, navigate, generateSession]);
 
   const validateCardForm = () => {
     if (paymentMethod !== "card") return true;
@@ -129,47 +152,56 @@ export default function Checkout() {
   };
 
   const handleSubmit = async () => {
-    if (!plan) return;
+    if (!plan || !studentProfile) return;
     if (!validateCardForm()) return;
 
     setProcessing(true);
 
     try {
-      const payload: Record<string, unknown> = {
-        plan_id: plan.id,
-        payment_method:
-          paymentMethod === "pix"
-            ? "pix"
-            : cardType === "credit"
-            ? "credit_card"
-            : "debit_card",
-      };
-
-      if (paymentMethod === "card") {
-        payload.card_data = {
-          number: cardNumber.replace(/\s/g, ""),
-          name: cardName,
-          expiry: cardExpiry,
-          cvv: cardCvv,
-          installments: cardType === "credit" ? parseInt(installments) : 1,
+      if (paymentMethod === "pix") {
+        // Manter lógica PIX existente
+        const payload = {
+          plan_id: plan.id,
+          payment_method: "pix",
         };
-      }
 
-      const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: payload,
-      });
-
-      if (error) throw error;
-
-      if (paymentMethod === "pix" && data.pix_data) {
-        navigate("/pagamento", {
-          state: { pixData: data.pix_data, paymentId: data.payment_id },
+        const { data, error } = await supabase.functions.invoke("create-payment", {
+          body: payload,
         });
-      } else if (data.status === "approved") {
-        toast.success("Pagamento aprovado!");
-        navigate("/dashboard");
+
+        if (error) throw error;
+
+        if (data.pix_data) {
+          navigate("/pagamento", {
+            state: { pixData: data.pix_data, paymentId: data.payment_id },
+          });
+        }
       } else {
-        toast.error("Pagamento não aprovado");
+        // Usar PagBank para cartão com tokenização segura
+        const cardToken = await createCardToken({
+          cardNumber,
+          cardholderName: cardName,
+          expirationMonth: cardExpiry.split('/')[0],
+          expirationYear: '20' + cardExpiry.split('/')[1],
+          cvv: cardCvv,
+        });
+
+        const result = await processCardPayment({
+          cardToken,
+          cardholderName: cardName,
+          cardholderCPF: studentProfile.cpf,
+          cardholderPhone: studentProfile.phone,
+          cardholderBirthDate: studentProfile.birth_date,
+          installments: cardType === "credit" ? parseInt(installments) : 1,
+          amount: plan.price,
+          planId: plan.id,
+        });
+
+        if (result.success) {
+          navigate('/pagamento/sucesso', { 
+            state: { payment: result.payment } 
+          });
+        }
       }
     } catch (error: unknown) {
       console.error("Erro no pagamento:", error);
@@ -518,7 +550,7 @@ export default function Checkout() {
         {/* 7. Botão Integrado */}
         <Button
           onClick={handleSubmit}
-          disabled={processing || !isFormValid()}
+          disabled={processing || pagbankLoading || !isFormValid()}
           className="w-full py-6 text-base"
         >
           {processing ? (
