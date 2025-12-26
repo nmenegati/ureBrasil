@@ -21,6 +21,7 @@ import Pagamento from "./pages/Pagamento";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import Perfil from "./pages/Perfil";
 import Checkout from "./pages/Checkout";
+import Carteirinha from "./pages/Carteirinha";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
 
@@ -85,6 +86,11 @@ const App = () => (
             <Route path="/perfil" element={
               <ProtectedRoute>
                 <Perfil />
+              </ProtectedRoute>
+            } />
+            <Route path="/carteirinha" element={
+              <ProtectedRoute>
+                <Carteirinha />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
