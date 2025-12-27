@@ -80,13 +80,13 @@ export function Header({ variant = 'app' }: HeaderProps) {
   return (
     <header className={`sticky top-0 z-50 ${headerBg}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-14 sm:h-[72px]">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
             <img
               src={ureBrasilLogo}
               alt="URE Brasil - União Representativa dos Estudantes"
-              className="h-10 sm:h-12 w-auto object-contain"
+              className="h-9 sm:h-11 w-auto object-contain"
             />
           </Link>
 
