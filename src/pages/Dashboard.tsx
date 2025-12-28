@@ -6,12 +6,12 @@ import { formatCPF, formatPhone } from '@/lib/validators';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
   CheckCircle, Clock, FileText, CreditCard, 
   HelpCircle, ChevronRight, User,
-  AlertCircle, Download, QrCode
+  AlertCircle, Download, QrCode, Truck, Loader2
 } from 'lucide-react';
-
 interface StudentProfile {
   id: string;
   full_name: string;
@@ -53,6 +53,11 @@ export default function Dashboard() {
     payment: false,
     card: false
   });
+  
+  // Estados para modal de upsell
+  const [showUpsellModal, setShowUpsellModal] = useState(false);
+  const [loadingUpsell, setLoadingUpsell] = useState(false);
+  const [recentPaymentId, setRecentPaymentId] = useState<string | null>(null);
 
   // Redirecionar se não autenticado
   useEffect(() => {
@@ -67,6 +72,56 @@ export default function Dashboard() {
       fetchData();
     }
   }, [user]);
+
+  // Verificar pagamento recente para mostrar modal de upsell
+  useEffect(() => {
+    const checkRecentPayment = async () => {
+      const paymentId = localStorage.getItem('recent_payment_id');
+      if (!paymentId || !user || !profile) return;
+
+      try {
+        // Verificar se carteirinha já é física
+        const { data: cardData } = await supabase
+          .from('student_cards')
+          .select('is_physical')
+          .eq('payment_id', paymentId)
+          .maybeSingle();
+
+        if (!cardData || cardData.is_physical) {
+          localStorage.removeItem('recent_payment_id');
+          return;
+        }
+
+        // Verificar se já existe pagamento de upsell para este pagamento
+        const { data: existingUpsell } = await supabase
+          .from('payments')
+          .select('id')
+          .eq('student_id', profile.id)
+          .contains('metadata', { original_payment_id: paymentId })
+          .maybeSingle();
+
+        if (existingUpsell) {
+          localStorage.removeItem('recent_payment_id');
+          return;
+        }
+
+        // Mostrar modal após 2 segundos
+        setRecentPaymentId(paymentId);
+        setTimeout(() => {
+          setShowUpsellModal(true);
+        }, 2000);
+
+        localStorage.removeItem('recent_payment_id');
+      } catch (error) {
+        console.error('Error checking payment:', error);
+        localStorage.removeItem('recent_payment_id');
+      }
+    };
+
+    if (!loading && !loadingData && user && profile) {
+      checkRecentPayment();
+    }
+  }, [user, loading, loadingData, profile]);
 
   const fetchData = async () => {
     if (!user) return;
@@ -145,6 +200,70 @@ export default function Dashboard() {
       toast.success('Você saiu com sucesso');
       navigate('/');
     }
+  };
+
+  // Aceitar upsell - criar pagamento R$15 e atualizar is_physical
+  const handleAcceptUpsell = async () => {
+    if (!recentPaymentId || !profile) return;
+    
+    setLoadingUpsell(true);
+    
+    try {
+      // Buscar dados do pagamento original para pegar plan_id
+      const { data: originalPayment } = await supabase
+        .from('payments')
+        .select('plan_id')
+        .eq('id', recentPaymentId)
+        .single();
+
+      if (!originalPayment) throw new Error('Pagamento original não encontrado');
+
+      // Criar pagamento de upsell (usando 'credit_card' que é válido no enum)
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          student_id: profile.id,
+          plan_id: originalPayment.plan_id,
+          amount: 15.00,
+          payment_method: 'credit_card',
+          status: 'approved',
+          confirmed_at: new Date().toISOString(),
+          metadata: {
+            is_upsell: true,
+            original_payment_id: recentPaymentId,
+            description: 'Carteirinha física - Upsell'
+          }
+        });
+
+      if (paymentError) throw paymentError;
+
+      // Atualizar carteirinha para física
+      const { error: cardError } = await supabase
+        .from('student_cards')
+        .update({ 
+          is_physical: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('payment_id', recentPaymentId);
+
+      if (cardError) throw cardError;
+
+      toast.success('Pedido confirmado! 🎉 Sua carteirinha física será enviada em breve.');
+      setShowUpsellModal(false);
+      
+      // Recarregar dados
+      fetchData();
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Não foi possível processar o pedido.');
+    } finally {
+      setLoadingUpsell(false);
+    }
+  };
+
+  const handleDeclineUpsell = () => {
+    setShowUpsellModal(false);
+    toast.success('Tudo certo! Sua carteirinha digital está disponível.');
   };
 
   // Formatação de data: 31/03/2025
@@ -469,6 +588,92 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* Modal Upsell - Carteirinha Física */}
+      <Dialog open={showUpsellModal} onOpenChange={() => {}}>
+        <DialogContent 
+          className="sm:max-w-md p-0 overflow-hidden border-0" 
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <div className="p-6">
+            {/* Badge */}
+            <div className="flex justify-center mb-4">
+              <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-4 py-1.5 rounded-full">
+                🎁 OFERTA ESPECIAL
+              </span>
+            </div>
+
+            {/* Header */}
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Truck className="w-7 h-7 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Quer receber também em casa?</h3>
+                <p className="text-muted-foreground text-sm">Carteirinha física de PVC de alta qualidade</p>
+              </div>
+            </div>
+
+            {/* Benefícios */}
+            <div className="bg-muted/50 rounded-lg p-4 mb-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>Material PVC de alta durabilidade</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>Frete grátis para todo Brasil</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>Entrega em 7-10 dias úteis</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>Mesmos benefícios da digital</span>
+              </div>
+            </div>
+
+            {/* Preço */}
+            <div className="bg-muted/50 rounded-lg p-3 mb-5 text-center">
+              <p className="text-muted-foreground text-xs mb-1">Adicione agora por apenas</p>
+              <div className="flex items-baseline justify-center gap-2">
+                <span className="text-muted-foreground text-sm line-through">R$ 29,90</span>
+                <span className="text-3xl font-bold text-primary">R$ 15,00</span>
+              </div>
+              <p className="text-green-500 text-xs font-semibold mt-1">50% de desconto • Oferta única</p>
+            </div>
+
+            {/* Botões */}
+            <div className="space-y-3">
+              <Button 
+                className="w-full py-6" 
+                onClick={handleAcceptUpsell}
+                disabled={loadingUpsell}
+              >
+                {loadingUpsell ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processando...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5" />
+                    Sim, quero receber em casa!
+                  </span>
+                )}
+              </Button>
+              <button
+                onClick={handleDeclineUpsell}
+                className="w-full text-muted-foreground hover:text-foreground text-sm py-2 transition-colors"
+              >
+                Não, obrigado. Só a digital mesmo.
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
