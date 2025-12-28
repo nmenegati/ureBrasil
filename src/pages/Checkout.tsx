@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePagBank } from "@/hooks/usePagBank";
@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { QrCode, CreditCard, Loader2, Check, IdCard, Shield, Lock, CheckCircle } from "lucide-react";
+import { QrCode, CreditCard, Loader2, Check, IdCard, Shield, Lock, CheckCircle, Package } from "lucide-react";
 import pagseguroLogo from "@/assets/pagseguro-logo.png";
 
 interface Plan {
@@ -35,6 +35,13 @@ interface Plan {
   price: number;
   is_physical: boolean;
   is_direito: boolean;
+}
+
+interface UpsellState {
+  isUpsell?: boolean;
+  amount?: number;
+  originalPaymentId?: string;
+  planType?: string;
 }
 
 // Máscaras de input
@@ -52,6 +59,7 @@ const maskCvv = (v: string) => {
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { 
     generateSession, 
@@ -60,10 +68,16 @@ export default function Checkout() {
     loading: pagbankLoading 
   } = usePagBank();
 
+  // Extrair state de upsell
+  const upsellState = location.state as UpsellState | null;
+  const isUpsell = upsellState?.isUpsell ?? false;
+  const upsellAmount = upsellState?.amount ?? 15;
+  const originalPaymentId = upsellState?.originalPaymentId;
+
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">("pix");
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "card">(isUpsell ? "card" : "pix");
   const [cardType, setCardType] = useState<"credit" | "debit">("credit");
   const [installments, setInstallments] = useState("1");
   const [cardNumber, setCardNumber] = useState("");
@@ -88,9 +102,9 @@ export default function Checkout() {
           .eq("user_id", user.id)
           .single();
 
-        if (profileError || !profile?.plan_id) {
-          toast.error("Nenhum plano selecionado");
-          navigate("/escolher-plano");
+        if (profileError) {
+          toast.error("Erro ao carregar perfil");
+          navigate("/dashboard");
           return;
         }
 
@@ -100,6 +114,40 @@ export default function Checkout() {
           phone: profile.phone,
           birth_date: profile.birth_date,
         });
+
+        // === MODO UPSELL ===
+        if (isUpsell && originalPaymentId) {
+          // Buscar nome do plano original para mostrar no checkout
+          const { data: originalPayment } = await supabase
+            .from("payments")
+            .select("plan_id, plans(name)")
+            .eq("id", originalPaymentId)
+            .single();
+
+          const originalPlanName = originalPayment?.plans 
+            ? (originalPayment.plans as { name: string }).name 
+            : "sua carteirinha";
+
+          setPlan({
+            id: 'physical_addon',
+            name: 'Carteirinha Física',
+            description: `Adicional para ${originalPlanName}`,
+            price: upsellAmount,
+            is_physical: true,
+            is_direito: false,
+          });
+          
+          await generateSession();
+          setLoading(false);
+          return;
+        }
+
+        // === MODO NORMAL ===
+        if (!profile?.plan_id) {
+          toast.error("Nenhum plano selecionado");
+          navigate("/escolher-plano");
+          return;
+        }
 
         const { data: planData, error: planError } = await supabase
           .from("plans")
@@ -126,7 +174,7 @@ export default function Checkout() {
     };
 
     fetchPlanAndProfile();
-  }, [user, navigate, generateSession]);
+  }, [user, navigate, generateSession, isUpsell, originalPaymentId, upsellAmount]);
 
   const validateCardForm = () => {
     if (paymentMethod !== "card") return true;
@@ -198,7 +246,30 @@ export default function Checkout() {
         });
 
         if (result.success) {
-          // Salvar payment_id para o modal de upsell no Dashboard
+          // Se for upsell, atualizar carteirinha original para física
+          if (isUpsell && originalPaymentId) {
+            console.log('📦 Atualizando carteirinha para física...');
+            
+            const { error: updateError } = await supabase
+              .from('student_cards')
+              .update({ 
+                is_physical: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('payment_id', originalPaymentId);
+
+            if (updateError) {
+              console.error('Erro ao atualizar carteirinha:', updateError);
+            } else {
+              console.log('✅ Carteirinha atualizada para física');
+            }
+            
+            toast.success('🎉 Carteirinha física adicionada! Será enviada em breve.');
+            navigate('/dashboard');
+            return;
+          }
+
+          // Fluxo normal: salvar payment_id para modal de upsell
           localStorage.setItem('recent_payment_id', result.payment.id);
           navigate('/pagamento/sucesso', { 
             state: { paymentId: result.payment.id } 
@@ -279,7 +350,10 @@ export default function Checkout() {
         {/* 1. Mensagem Motivacional */}
         <div className="bg-primary/10 text-primary p-4 rounded-lg text-center mb-6">
           <p className="font-medium">
-            🎫 Finalize agora e use sua carteirinha ainda hoje.
+            {isUpsell 
+              ? '📦 Complete seu pedido - Receba em casa!'
+              : '🎫 Finalize agora e use sua carteirinha ainda hoje.'
+            }
           </p>
         </div>
 
@@ -310,19 +384,30 @@ export default function Checkout() {
         {/* 3. Card do Plano com Accordion */}
         <Card className="mb-6">
           <CardContent className="p-4">
+            {isUpsell && (
+              <Badge className="bg-green-500 text-white text-xs font-bold mb-3">
+                ⚡ ADICIONAL - Entrega em casa
+              </Badge>
+            )}
             <div className="flex items-start gap-3 mb-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <IdCard className="w-5 h-5 text-primary" />
+                {isUpsell ? (
+                  <Package className="w-5 h-5 text-primary" />
+                ) : (
+                  <IdCard className="w-5 h-5 text-primary" />
+                )}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-semibold">{plan.name}</h3>
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-500/10 text-green-600 text-xs"
-                  >
-                    Selecionado
-                  </Badge>
+                  {!isUpsell && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-500/10 text-green-600 text-xs"
+                    >
+                      Selecionado
+                    </Badge>
+                  )}
                 </div>
                 {plan.description && (
                   <p className="text-sm text-muted-foreground">
@@ -373,7 +458,10 @@ export default function Checkout() {
                 {formatPrice(plan.price)}
               </div>
               <p className="text-xs text-muted-foreground text-center mt-1">
-                Pagamento único • Validade de 1 ano
+                {isUpsell 
+                  ? 'Adicional • Entrega em 7-10 dias úteis'
+                  : 'Pagamento único • Validade de 1 ano'
+                }
               </p>
             </div>
           </CardContent>
@@ -562,6 +650,8 @@ export default function Checkout() {
             </>
           ) : paymentMethod === "pix" ? (
             "Gerar QR Code PIX"
+          ) : isUpsell ? (
+            `Confirmar Adicional ${formatPrice(plan.price)}`
           ) : (
             "Finalizar Pagamento"
           )}
