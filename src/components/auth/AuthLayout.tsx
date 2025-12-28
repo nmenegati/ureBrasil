@@ -14,7 +14,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <img 
             src={ureBrasilLogo} 
             alt="URE Brasil" 
-            className="h-16 mx-auto"
+            className="h-12 w-auto object-contain mx-auto"
           />
         </div>
 
