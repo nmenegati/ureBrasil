@@ -177,8 +177,8 @@ export default function Dashboard() {
         .eq('student_id', profileData.id)
         .maybeSingle();
 
-      console.log('🎴 Card data:', cardData);
-      console.log('📦 Is physical?', cardData?.is_physical);
+      console.log('🎴 CARD COMPLETO:', JSON.stringify(cardData, null, 2));
+      console.log('📦 is_physical:', cardData?.is_physical, '| tipo:', typeof cardData?.is_physical);
 
       setCard(cardData);
       
@@ -439,6 +439,18 @@ export default function Dashboard() {
                 }`}>
                   {step.status}
                 </span>
+                
+                {/* DEBUG: Log para verificar dados */}
+                {step.id === 'card' && (() => { console.log('🔍 CARD GRID - is_physical:', card?.is_physical, '| card:', card?.id); return null; })()}
+                
+                {/* TESTE FORÇADO: Badge sempre visível para verificar CSS */}
+                {step.id === 'card' && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      🧪 TESTE
+                    </span>
+                  </div>
+                )}
                 
                 {/* Badges para carteirinha física no card de resumo */}
                 {step.id === 'card' && card?.is_physical && (
