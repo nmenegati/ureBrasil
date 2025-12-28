@@ -160,17 +160,22 @@ export default function Dashboard() {
       const approved = docs?.filter(d => d.status === 'approved').length || 0;
       setDocumentsApproved(approved);
 
-      // 3. Buscar pagamento aprovado
+      // 3. Buscar último pagamento aprovado (pode haver múltiplos)
       console.log('🔍 Buscando pagamento para student_id:', profileData.id);
       
-      const { data: payment, error: paymentError } = await supabase
+      const { data: paymentsApproved, error: paymentError } = await supabase
         .from('payments')
         .select('*')
         .eq('student_id', profileData.id)
         .eq('status', 'approved')
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      console.log('💳 PAGAMENTO ENCONTRADO:', payment);
+      // Pegar primeiro resultado (mais recente)
+      const payment = paymentsApproved?.[0] || null;
+
+      console.log('💳 PAGAMENTOS APROVADOS:', paymentsApproved);
+      console.log('💳 ÚLTIMO PAGAMENTO:', payment);
       console.log('💳 ERRO NA QUERY:', paymentError);
       console.log('💳 paymentApproved será:', !!payment);
 
