@@ -137,7 +137,8 @@ export default function Checkout() {
             is_direito: false,
           });
           
-          await generateSession();
+          // NÃO carregar PagBank para upsell - usar mock
+          console.log('📦 Checkout de upsell - usando mock (sem PagBank)');
           setLoading(false);
           return;
         }
@@ -201,11 +202,63 @@ export default function Checkout() {
 
   const handleSubmit = async () => {
     if (!plan || !studentProfile) return;
-    if (!validateCardForm()) return;
+    
+    // Para upsell, não validar formulário de cartão (usa mock)
+    if (!isUpsell && !validateCardForm()) return;
 
     setProcessing(true);
 
     try {
+      // === UPSELL: Usar mock (create-payment) ===
+      if (isUpsell && originalPaymentId) {
+        console.log('💳 Processando upsell com mock...');
+        
+        const { data, error } = await supabase.functions.invoke('create-payment', {
+          body: {
+            plan_id: plan.id,
+            payment_method: paymentMethod === 'pix' ? 'pix' : 'credit_card',
+            card_data: paymentMethod === 'card' ? {
+              card_number: cardNumber.replace(/\s/g, '').slice(-4) || '0000',
+              brand: 'visa'
+            } : undefined,
+            metadata: {
+              is_upsell: true,
+              original_payment_id: originalPaymentId
+            }
+          }
+        });
+
+        if (error) throw error;
+        if (!data.success) throw new Error(data.error || 'Erro ao processar pagamento');
+
+        // Atualizar carteirinha original para física
+        const { error: updateError } = await supabase
+          .from('student_cards')
+          .update({ 
+            is_physical: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('payment_id', originalPaymentId);
+
+        if (updateError) {
+          console.error('Erro ao atualizar carteirinha:', updateError);
+        } else {
+          console.log('✅ Carteirinha atualizada para física');
+        }
+
+        // Limpar flag para não mostrar modal novamente
+        localStorage.removeItem('recent_payment_id');
+        
+        toast.success('🎉 Carteirinha física adicionada! Será enviada em breve.');
+        
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+        
+        return;
+      }
+
+      // === FLUXO NORMAL (não-upsell) ===
       if (paymentMethod === "pix") {
         // Manter lógica PIX existente
         const payload = {
@@ -246,29 +299,6 @@ export default function Checkout() {
         });
 
         if (result.success) {
-          // Se for upsell, atualizar carteirinha original para física
-          if (isUpsell && originalPaymentId) {
-            console.log('📦 Atualizando carteirinha para física...');
-            
-            const { error: updateError } = await supabase
-              .from('student_cards')
-              .update({ 
-                is_physical: true,
-                updated_at: new Date().toISOString()
-              })
-              .eq('payment_id', originalPaymentId);
-
-            if (updateError) {
-              console.error('Erro ao atualizar carteirinha:', updateError);
-            } else {
-              console.log('✅ Carteirinha atualizada para física');
-            }
-            
-            toast.success('🎉 Carteirinha física adicionada! Será enviada em breve.');
-            navigate('/dashboard');
-            return;
-          }
-
           // Fluxo normal: salvar payment_id para modal de upsell
           localStorage.setItem('recent_payment_id', result.payment.id);
           navigate('/pagamento/sucesso', { 
