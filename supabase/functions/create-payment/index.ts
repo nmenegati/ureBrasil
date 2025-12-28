@@ -39,13 +39,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { plan_id, payment_method, card_data } = await req.json();
-    console.log('📦 Dados recebidos:', { plan_id, payment_method, user_id: user.id });
+    const { plan_id, payment_method, card_data, metadata, amount } = await req.json();
+    const isUpsell = metadata?.is_upsell === true;
+    console.log('📦 Dados recebidos:', { plan_id, payment_method, user_id: user.id, is_upsell: isUpsell });
 
     // Buscar perfil do estudante
     const { data: profile, error: profileError } = await supabase
       .from('student_profiles')
-      .select('id')
+      .select('id, plan_id')
       .eq('user_id', user.id)
       .single();
 
@@ -57,7 +58,50 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Buscar plano
+    // === UPSELL: Não buscar plano, usar amount direto ===
+    if (isUpsell) {
+      console.log('📦 Processando upsell de R$', amount || 15);
+      
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          student_id: profile.id,
+          plan_id: profile.plan_id, // Usar plano atual do perfil
+          amount: amount || 15,
+          payment_method: payment_method,
+          status: 'approved',
+          confirmed_at: new Date().toISOString(),
+          metadata: { 
+            mock: true, 
+            is_upsell: true,
+            original_payment_id: metadata?.original_payment_id,
+            card_last_digits: card_data?.card_number?.slice(-4) 
+          }
+        })
+        .select()
+        .single();
+
+      if (paymentError) {
+        console.error('❌ Erro ao criar payment de upsell:', paymentError.message);
+        return new Response(JSON.stringify({ success: false, error: 'Erro ao registrar pagamento' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      console.log('✅ Upsell aprovado! Payment ID:', payment.id);
+      
+      return new Response(JSON.stringify({
+        success: true,
+        payment_id: payment.id,
+        mock: true,
+        is_upsell: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // === FLUXO NORMAL: Buscar plano ===
     const { data: plan, error: planError } = await supabase
       .from('plans')
       .select('*')
@@ -66,7 +110,7 @@ Deno.serve(async (req) => {
 
     if (planError || !plan) {
       console.error('❌ Plano não encontrado:', planError?.message);
-      return new Response(JSON.stringify({ error: 'Plano não encontrado' }), {
+      return new Response(JSON.stringify({ success: false, error: 'Plano não encontrado' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
