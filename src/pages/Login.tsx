@@ -84,7 +84,7 @@ export default function Login() {
       <div className="bg-card shadow-sm sticky top-0 z-10 border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link to="/">
-            <img src={ureBrasilLogo} alt="URE Brasil" className="h-10" />
+            <img src={ureBrasilLogo} alt="URE Brasil" className="h-8 sm:h-9 w-auto object-contain" />
           </Link>
           
           <div className="flex items-center gap-3">

@@ -132,7 +132,7 @@ export default function CompleteProfile() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
-            <img src={ureBrasilLogo} alt="URE Brasil" className="h-10" />
+            <img src={ureBrasilLogo} alt="URE Brasil" className="h-8 sm:h-9 w-auto object-contain" />
           </Link>
           
           <div className="flex items-center gap-4">
