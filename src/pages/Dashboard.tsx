@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   CheckCircle, Clock, FileText, CreditCard, 
   HelpCircle, ChevronRight, User,
@@ -330,16 +331,10 @@ export default function Dashboard() {
       route: '/escolher-plano',
       completed: progress.payment
     },
-    {
-      id: 'carteirinha',
-      label: 'Carteirinha',
-      status: progress.card ? 'Ativa' : 'Aguardando',
-      icon: CreditCard,
-      enabled: progress.payment, // Só habilita se pagou
-      route: '/carteirinha',
-      completed: progress.card
-    }
   ];
+  
+  // Card data alias para o card simplificado
+  const cardData = card;
 
   if (loading || loadingData) {
     return (
@@ -419,8 +414,8 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Cards clicáveis 2x2 */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Cards clicáveis - agora 3 cards (sem Carteirinha) */}
+          <div className="grid grid-cols-3 gap-3">
             {progressSteps.map((step) => (
               <button
                 key={step.id}
@@ -455,35 +450,49 @@ export default function Dashboard() {
                 }`}>
                   {step.status}
                 </span>
-                
-                {/* DEBUG: Log para verificar dados */}
-                {step.id === 'card' && (() => { console.log('🔍 CARD GRID - is_physical:', card?.is_physical, '| card:', card?.id); return null; })()}
-                
-                {/* TESTE FORÇADO: Badge sempre visível para verificar CSS */}
-                {step.id === 'card' && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      🧪 TESTE
-                    </span>
-                  </div>
-                )}
-                
-                {/* Badges para carteirinha física no card de resumo */}
-                {step.id === 'card' && card?.is_physical && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Truck className="w-2.5 h-2.5" />
-                      + Física
-                    </span>
-                    <span className="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full">
-                      📦 7-10 dias
-                    </span>
-                  </div>
-                )}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Card Carteirinha - VERSÃO SIMPLIFICADA (fora do grid) */}
+        <Card 
+          className="cursor-pointer hover:border-primary transition-colors relative overflow-visible bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-xl shadow-black/10"
+          onClick={() => navigate('/carteirinha')}
+        >
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-center gap-3">
+                {cardData?.status === 'active' ? (
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                ) : (
+                  <Clock className="w-8 h-8 text-yellow-500" />
+                )}
+                <div>
+                  <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Carteirinha</h3>
+                  <p className={cardData?.status === 'active' ? 'text-green-500 text-sm font-medium' : 'text-yellow-500 text-sm'}>
+                    {cardData?.status === 'active' ? 'Ativa' : 'Aguardando'}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Badges - FORA DO FLEX PRINCIPAL */}
+              {cardData?.is_physical && (
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+                  <div className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-full">
+                    <Truck className="w-4 h-4" />
+                    <span>Digital + Física</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 bg-orange-500 text-white text-xs font-bold px-3 py-2 rounded-full">
+                    <span>📦</span>
+                    <span>Entrega 7-10 dias</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Próximo Passo (só se houver) */}
         {nextStep && (
