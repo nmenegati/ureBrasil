@@ -215,8 +215,9 @@ export default function Checkout() {
         
         const { data, error } = await supabase.functions.invoke('create-payment', {
           body: {
-            plan_id: plan.id,
+            plan_id: null, // Não necessário para upsell
             payment_method: paymentMethod === 'pix' ? 'pix' : 'credit_card',
+            amount: upsellAmount, // Valor do upsell (R$15)
             card_data: paymentMethod === 'card' ? {
               card_number: cardNumber.replace(/\s/g, '').slice(-4) || '0000',
               brand: 'visa'
