@@ -439,6 +439,19 @@ export default function Dashboard() {
                 }`}>
                   {step.status}
                 </span>
+                
+                {/* Badges para carteirinha física no card de resumo */}
+                {step.id === 'card' && card?.is_physical && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Truck className="w-2.5 h-2.5" />
+                      + Física
+                    </span>
+                    <span className="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                      📦 7-10 dias
+                    </span>
+                  </div>
+                )}
               </button>
             ))}
           </div>
