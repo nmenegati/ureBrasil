@@ -161,12 +161,18 @@ export default function Dashboard() {
       setDocumentsApproved(approved);
 
       // 3. Buscar pagamento aprovado
-      const { data: payment } = await supabase
+      console.log('🔍 Buscando pagamento para student_id:', profileData.id);
+      
+      const { data: payment, error: paymentError } = await supabase
         .from('payments')
-        .select('status')
+        .select('*')
         .eq('student_id', profileData.id)
         .eq('status', 'approved')
         .maybeSingle();
+
+      console.log('💳 PAGAMENTO ENCONTRADO:', payment);
+      console.log('💳 ERRO NA QUERY:', paymentError);
+      console.log('💳 paymentApproved será:', !!payment);
 
       setPaymentApproved(!!payment);
 
@@ -183,12 +189,14 @@ export default function Dashboard() {
       setCard(cardData);
       
       // 5. Calcular progresso
-      setProgress({
+      const newProgress = {
         profile: profileData.profile_completed,
         documents: approved >= 4,
         payment: !!payment,
         card: cardData?.status === 'active'
-      });
+      };
+      console.log('📊 PROGRESSO CALCULADO:', newProgress);
+      setProgress(newProgress);
       
     } catch (error) {
       toast.error('Erro ao carregar dados');
@@ -308,7 +316,10 @@ export default function Dashboard() {
     {
       id: 'pagamento',
       label: 'Pagamento',
-      status: progress.payment ? 'Aprovado' : 'Pendente',
+      status: (() => {
+        console.log('📋 Card Pagamento - progress.payment:', progress.payment);
+        return progress.payment ? 'Aprovado' : 'Pendente';
+      })(),
       icon: CreditCard,
       enabled: progress.documents, // Só habilita se docs aprovados
       route: '/escolher-plano',
