@@ -198,8 +198,10 @@ export default function Checkout() {
         });
 
         if (result.success) {
+          // Salvar payment_id para o modal de upsell no Dashboard
+          localStorage.setItem('recent_payment_id', result.payment.id);
           navigate('/pagamento/sucesso', { 
-            state: { payment: result.payment } 
+            state: { paymentId: result.payment.id } 
           });
         }
       }
