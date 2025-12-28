@@ -29,6 +29,9 @@ interface StudentCard {
   status: 'pending_docs' | 'pending_payment' | 'processing' | 'active' | 'expired' | 'cancelled';
   qr_code: string;
   digital_card_url: string | null;
+  is_physical?: boolean;
+  shipping_status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'failed' | null;
+  shipping_code?: string | null;
 }
 
 interface Progress {
@@ -467,8 +470,23 @@ export default function Dashboard() {
         {progress.card && card && (
           <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-xl shadow-black/10">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-              <div>
-                <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
+                  
+                  {/* Badges para carteirinha física */}
+                  {card.is_physical && (
+                    <>
+                      <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Truck className="w-3 h-3" />
+                        + Física
+                      </span>
+                      <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                        📦 Entrega em 7-10 dias
+                      </span>
+                    </>
+                  )}
+                </div>
                 <h2 className="text-slate-900 dark:text-white text-xl font-bold mt-1">{profile.full_name}</h2>
                 {profile.institution && (
                   <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.institution}</p>

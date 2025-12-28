@@ -7,7 +7,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { QRCodeSVG } from 'qrcode.react';
 import html2canvas from 'html2canvas';
-import { Download, Share2, ArrowLeft, CreditCard, AlertCircle } from 'lucide-react';
+import { Download, Share2, ArrowLeft, CreditCard, AlertCircle, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -188,6 +188,21 @@ export default function Carteirinha() {
             {card.is_physical ? 'Digital + Física' : 'Digital'}
           </p>
         </div>
+
+        {/* Banner de carteirinha física a caminho */}
+        {card.is_physical && (
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg mb-6 shadow-lg">
+            <div className="flex items-center gap-3">
+              <Truck className="w-6 h-6 flex-shrink-0" />
+              <div>
+                <p className="font-semibold">Versão física a caminho! 📦</p>
+                <p className="text-sm opacity-90">
+                  Você receberá sua carteirinha em casa em 7-10 dias úteis
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div
           ref={cardRef}
