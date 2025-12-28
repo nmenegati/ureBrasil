@@ -202,27 +202,54 @@ export default function Dashboard() {
     }
   };
 
-  // Aceitar upsell - criar pagamento R$15 (trigger atualiza is_physical automaticamente)
+  // Aceitar upsell - criar pagamento R$15 + atualizar carteirinha para física
   const handleAcceptUpsell = async () => {
-    if (!recentPaymentId || !profile) return;
+    if (!recentPaymentId) {
+      console.error('❌ No recent payment ID');
+      return;
+    }
     
+    console.log('🚀 Starting upsell for payment:', recentPaymentId);
     setLoadingUpsell(true);
     
     try {
-      // Buscar dados do pagamento original para pegar plan_id e student_id
-      const { data: originalPayment } = await supabase
+      // 1. GET USER
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('👤 User:', user?.id, 'Error:', userError);
+      if (!user) throw new Error('Not authenticated');
+
+      // 2. GET PROFILE  
+      const { data: profileData, error: profileError } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      
+      console.log('📋 Profile:', profileData?.id, 'Error:', profileError);
+      if (!profileData) throw new Error('Profile not found');
+
+      // 3. GET ORIGINAL PAYMENT
+      const { data: originalPayment, error: origError } = await supabase
         .from('payments')
         .select('plan_id, student_id')
         .eq('id', recentPaymentId)
         .single();
 
-      if (!originalPayment) throw new Error('Pagamento original não encontrado');
+      console.log('💳 Original payment:', originalPayment, 'Error:', origError);
+      if (!originalPayment) throw new Error('Original payment not found');
 
-      // Criar pagamento de upsell (trigger vai atualizar is_physical automaticamente)
-      const { error: paymentError } = await supabase
+      // 4. CREATE NEW PAYMENT
+      console.log('📝 Creating payment:', {
+        student_id: originalPayment.student_id,
+        plan_id: originalPayment.plan_id,
+        amount: 15.00,
+        payment_method: 'credit_card'
+      });
+
+      const { data: newPayment, error: paymentError } = await supabase
         .from('payments')
         .insert({
-          student_id: originalPayment.student_id, // Usar student_id do original
+          student_id: originalPayment.student_id,
           plan_id: originalPayment.plan_id,
           amount: 15.00,
           payment_method: 'credit_card',
@@ -233,18 +260,51 @@ export default function Dashboard() {
             original_payment_id: recentPaymentId,
             description: 'Carteirinha física - Upsell'
           }
-        });
+        })
+        .select()
+        .single();
+
+      console.log('✅ Payment created:', newPayment);
+      console.log('❌ Payment error:', paymentError);
 
       if (paymentError) throw paymentError;
 
-      toast.success('Pedido confirmado! 🎉 Sua carteirinha física será enviada em breve.');
+      // 5. UPDATE CARD (backup - trigger também faz isso)
+      console.log('🎴 Updating card for payment:', recentPaymentId);
+      
+      const { data: updatedCard, error: cardError } = await supabase
+        .from('student_cards')
+        .update({ 
+          is_physical: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('payment_id', recentPaymentId)
+        .select();
+
+      console.log('✅ Card updated:', updatedCard);
+      console.log('❌ Card error:', cardError);
+
+      if (cardError) throw cardError;
+
+      console.log('🎉 Upsell completed!');
+
+      toast.success('Pedido confirmado! 🎉 Sua carteirinha física será enviada em 7-10 dias.');
       setShowUpsellModal(false);
       
-      // Recarregar dados
-      fetchData();
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Não foi possível processar o pedido.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
+    } catch (error: any) {
+      console.error('💥 ERROR:', error);
+      console.error('💥 Details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      
+      toast.error(error.message || 'Não foi possível processar o pedido.');
     } finally {
       setLoadingUpsell(false);
     }
