@@ -177,6 +177,9 @@ export default function Dashboard() {
         .eq('student_id', profileData.id)
         .maybeSingle();
 
+      console.log('🎴 Card data:', cardData);
+      console.log('📦 Is physical?', cardData?.is_physical);
+
       setCard(cardData);
       
       // 5. Calcular progresso
@@ -475,8 +478,13 @@ export default function Dashboard() {
                   <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
                   
                   {/* Badges para carteirinha física */}
+                  {(() => {
+                    console.log('🔍 Verificando is_physical no render:', card?.is_physical);
+                    return null;
+                  })()}
                   {card.is_physical && (
                     <>
+                      {console.log('✅ Renderizando badges de carteirinha física')}
                       <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <Truck className="w-3 h-3" />
                         + Física
