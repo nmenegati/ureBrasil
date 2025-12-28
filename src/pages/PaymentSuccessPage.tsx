@@ -119,24 +119,41 @@ const PaymentSuccessPage = () => {
         throw new Error("Perfil não encontrado");
       }
 
-      // Processar pagamento adicional da carteirinha física via edge function
-      const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: {
-          plan_id: profile.plan_id, // Mesmo plano
-          payment_method: "credit_card", // Usar cartão para upsell
-          amount: 15.00, // Valor fixo do upsell
-          is_upsell: true,
-          original_payment_id: paymentData.paymentId,
-        },
-      });
+      // CRIAR NOVO PAGAMENTO para carteirinha física (NÃO alterar o original!)
+      const { error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          student_id: profile.id,
+          plan_id: profile.plan_id,
+          amount: 15.00,
+          payment_method: 'credit_card',
+          status: 'approved',
+          confirmed_at: new Date().toISOString(),
+          metadata: {
+            is_upsell: true,
+            original_payment_id: paymentData.paymentId,
+            description: 'Carteirinha física - Upsell'
+          }
+        });
 
-      if (error) throw error;
+      if (paymentError) throw paymentError;
 
-      toast.success("Carteirinha física adicionada! Será enviada em breve.");
+      // ATUALIZAR CARTEIRINHA existente para incluir física
+      const { error: cardError } = await supabase
+        .from("student_cards")
+        .update({ 
+          is_physical: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq("payment_id", paymentData.paymentId);
+
+      if (cardError) throw cardError;
+
+      toast.success("Pedido confirmado! Sua carteirinha física será enviada em breve.");
       setShowUpsell(false);
     } catch (error) {
       console.error("Erro ao processar upsell:", error);
-      toast.error("Erro ao processar. Tente novamente.");
+      toast.error("Não foi possível processar o pedido. Tente novamente.");
     } finally {
       setLoadingUpsell(false);
     }
