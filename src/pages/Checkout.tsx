@@ -250,11 +250,12 @@ export default function Checkout() {
         // Limpar flag para não mostrar modal novamente
         localStorage.removeItem('recent_payment_id');
         
-        toast.success('🎉 Carteirinha física adicionada! Será enviada em breve.');
+        toast.success('🎉 Carteirinha física adicionada! Você receberá em 7-10 dias úteis.');
         
+        // Usar window.location.href para forçar reload completo do Dashboard
         setTimeout(() => {
-          navigate('/dashboard');
-        }, 1500);
+          window.location.href = '/dashboard';
+        }, 2000);
         
         return;
       }
