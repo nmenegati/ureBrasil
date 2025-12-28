@@ -202,27 +202,27 @@ export default function Dashboard() {
     }
   };
 
-  // Aceitar upsell - criar pagamento R$15 e atualizar is_physical
+  // Aceitar upsell - criar pagamento R$15 (trigger atualiza is_physical automaticamente)
   const handleAcceptUpsell = async () => {
     if (!recentPaymentId || !profile) return;
     
     setLoadingUpsell(true);
     
     try {
-      // Buscar dados do pagamento original para pegar plan_id
+      // Buscar dados do pagamento original para pegar plan_id e student_id
       const { data: originalPayment } = await supabase
         .from('payments')
-        .select('plan_id')
+        .select('plan_id, student_id')
         .eq('id', recentPaymentId)
         .single();
 
       if (!originalPayment) throw new Error('Pagamento original não encontrado');
 
-      // Criar pagamento de upsell (usando 'credit_card' que é válido no enum)
+      // Criar pagamento de upsell (trigger vai atualizar is_physical automaticamente)
       const { error: paymentError } = await supabase
         .from('payments')
         .insert({
-          student_id: profile.id,
+          student_id: originalPayment.student_id, // Usar student_id do original
           plan_id: originalPayment.plan_id,
           amount: 15.00,
           payment_method: 'credit_card',
@@ -236,17 +236,6 @@ export default function Dashboard() {
         });
 
       if (paymentError) throw paymentError;
-
-      // Atualizar carteirinha para física
-      const { error: cardError } = await supabase
-        .from('student_cards')
-        .update({ 
-          is_physical: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('payment_id', recentPaymentId);
-
-      if (cardError) throw cardError;
 
       toast.success('Pedido confirmado! 🎉 Sua carteirinha física será enviada em breve.');
       setShowUpsellModal(false);
