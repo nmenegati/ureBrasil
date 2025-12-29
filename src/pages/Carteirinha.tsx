@@ -319,10 +319,17 @@ export default function Carteirinha() {
     <div className="min-h-screen bg-background">
       {/* Canvas SEMPRE montado para geração */}
       <canvas 
-        ref={canvasRef} 
-        className="hidden"
+        ref={canvasRef}
         width={1010}
         height={644}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+          zIndex: -1
+        }}
       />
 
       {loading ? (
