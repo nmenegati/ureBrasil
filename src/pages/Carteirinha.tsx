@@ -31,11 +31,45 @@ export default function Carteirinha() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(true);
   const [cardData, setCardData] = useState<CardData | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [showFront, setShowFront] = useState(true);
   const [generatedFront, setGeneratedFront] = useState<string>('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Helper para carregar imagem com Promise
+  const loadImage = (src: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        console.log('✅ Imagem carregada:', src.substring(0, 50));
+        resolve(img);
+      };
+      img.onerror = (e) => {
+        console.error('❌ Erro ao carregar imagem:', src.substring(0, 50), e);
+        reject(e);
+      };
+      img.src = src;
+    });
+  };
+
+  // Desenhar fundo fallback quando template não existe
+  const drawFallbackBackground = (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = '#5B21B6';
+    ctx.fillRect(0, 0, 1010, 128);
+    ctx.fillStyle = '#E5E7EB';
+    ctx.fillRect(0, 128, 1010, 420);
+    ctx.fillStyle = '#0EA5E9';
+    ctx.fillRect(0, 548, 1010, 96);
+
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 28px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('CARTEIRINHA DE ESTUDANTE', 505, 60);
+    ctx.textAlign = 'left';
+  };
 
   useEffect(() => {
     fetchData();
@@ -75,12 +109,14 @@ export default function Carteirinha() {
       setCardData(card);
 
       // Gerar QR Code
+      console.log('🔄 Gerando QR Code...');
       const qrData = card.qr_code || card.card_number;
       const qrUrl = await QRCode.toDataURL(qrData, {
         width: 256,
         margin: 0,
         color: { dark: '#000000', light: '#ffffff' }
       });
+      console.log('✅ QR Code gerado');
 
       // Gerar frente da carteirinha
       await generateFrontCard(profileData, card, qrUrl);
@@ -94,6 +130,7 @@ export default function Carteirinha() {
       });
     } finally {
       setLoading(false);
+      setGenerating(false);
     }
   };
 
@@ -102,149 +139,100 @@ export default function Carteirinha() {
     card: CardData, 
     qrUrl: string
   ): Promise<void> => {
-    return new Promise((resolve) => {
-      const canvas = canvasRef.current;
-      if (!canvas) {
-        resolve();
-        return;
+    console.log('🎨 Iniciando geração do card...');
+    
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      console.error('❌ Canvas não encontrado');
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('❌ Contexto 2D não disponível');
+      return;
+    }
+
+    // Tamanho original do template (1010x644)
+    canvas.width = 1010;
+    canvas.height = 644;
+    console.log('📐 Canvas configurado: 1010x644');
+
+    // Tentar carregar template
+    try {
+      const template = await loadImage('/templates/frente-template.png');
+      ctx.drawImage(template, 0, 0, 1010, 644);
+      console.log('✅ Template desenhado no canvas');
+    } catch (e) {
+      console.warn('⚠️ Template não encontrado, usando fallback');
+      drawFallbackBackground(ctx);
+    }
+
+    // Configurar texto
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+
+    // Nome (bold, uppercase)
+    ctx.font = 'bold 26px Arial';
+    ctx.fillStyle = '#1F2937';
+    ctx.fillText(profileData.full_name.toUpperCase(), 56, 224);
+
+    // Instituição, Curso, Período
+    ctx.font = '20px Arial';
+    ctx.fillStyle = '#4B5563';
+    ctx.fillText(profileData.institution || 'Instituição não informada', 56, 261);
+    ctx.fillText(profileData.course || 'Curso não informado', 56, 289);
+    ctx.fillText(profileData.period || '1º Período', 56, 317);
+
+    // Dados pessoais
+    ctx.font = '19px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(`CPF: ${profileData.cpf}`, 56, 364);
+    ctx.fillText(`RG: ${profileData.rg || 'Não informado'}`, 56, 392);
+    ctx.fillText(`DATA NASC.: ${new Date(profileData.birth_date).toLocaleDateString('pt-BR')}`, 56, 420);
+
+    // Ano de validade (grande)
+    ctx.font = 'bold 52px Arial';
+    ctx.fillStyle = '#000000';
+    const year = new Date(card.valid_until).getFullYear();
+    ctx.fillText(year.toString(), 75, 541);
+
+    // Data validade
+    ctx.font = '19px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(new Date(card.valid_until).toLocaleDateString('pt-BR'), 205, 569);
+
+    // Código de uso
+    ctx.font = '22px monospace';
+    ctx.fillText(card.usage_code || 'XXXX-XXXX', 635, 569);
+
+    console.log('✅ Textos desenhados');
+
+    // Carregar foto (se existir)
+    if (profileData.avatar_url) {
+      try {
+        const foto = await loadImage(profileData.avatar_url);
+        ctx.drawImage(foto, 710, 168, 240, 299);
+        console.log('✅ Foto desenhada');
+      } catch (e) {
+        console.warn('⚠️ Foto não carregada');
       }
+    }
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        resolve();
-        return;
-      }
+    // Carregar QR Code
+    try {
+      const qr = await loadImage(qrUrl);
+      ctx.drawImage(qr, 859, 522, 120, 120);
+      console.log('✅ QR Code desenhado');
+    } catch (e) {
+      console.warn('⚠️ QR Code não carregado');
+    }
 
-      // Tamanho original do template (1010x644)
-      canvas.width = 1010;
-      canvas.height = 644;
-
-      // Carregar template
-      const template = new Image();
-      template.crossOrigin = 'anonymous';
-      template.src = '/templates/frente-template.png';
-
-      template.onload = () => {
-        // Desenhar template base
-        ctx.drawImage(template, 0, 0, 1010, 644);
-
-        // Configurar texto
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-
-        // Nome (bold, uppercase)
-        ctx.font = 'bold 26px Arial';
-        ctx.fillStyle = '#1F2937';
-        ctx.fillText(profileData.full_name.toUpperCase(), 56, 224);
-
-        // Instituição, Curso, Período
-        ctx.font = '20px Arial';
-        ctx.fillStyle = '#4B5563';
-        ctx.fillText(profileData.institution || 'Instituição não informada', 56, 261);
-        ctx.fillText(profileData.course || 'Curso não informado', 56, 289);
-        ctx.fillText(profileData.period || '1º Período', 56, 317);
-
-        // Dados pessoais
-        ctx.font = '19px Arial';
-        ctx.fillStyle = '#374151';
-        ctx.fillText(`CPF: ${profileData.cpf}`, 56, 364);
-        ctx.fillText(`RG: ${profileData.rg || 'Não informado'}`, 56, 392);
-        ctx.fillText(`DATA NASC.: ${new Date(profileData.birth_date).toLocaleDateString('pt-BR')}`, 56, 420);
-
-        // Ano de validade (grande)
-        ctx.font = 'bold 52px Arial';
-        ctx.fillStyle = '#000000';
-        const year = new Date(card.valid_until).getFullYear();
-        ctx.fillText(year.toString(), 75, 541);
-
-        // Data validade
-        ctx.font = '19px Arial';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(new Date(card.valid_until).toLocaleDateString('pt-BR'), 205, 569);
-
-        // Código de uso
-        ctx.font = '22px monospace';
-        ctx.fillText(card.usage_code || 'XXXX-XXXX', 635, 569);
-
-        // Função para finalizar com QR Code
-        const drawQRAndFinish = () => {
-          const qr = new Image();
-          qr.src = qrUrl;
-          qr.onload = () => {
-            ctx.drawImage(qr, 859, 522, 120, 120);
-            createPreview();
-          };
-          qr.onerror = () => {
-            console.warn('Erro ao carregar QR Code');
-            createPreview();
-          };
-        };
-
-        // Função para criar preview
-        const createPreview = () => {
-          const maxWidth = 500;
-          const scale = Math.min(1, maxWidth / 1010);
-          const previewWidth = Math.round(1010 * scale);
-          const previewHeight = Math.round(644 * scale);
-
-          const preview = document.createElement('canvas');
-          preview.width = previewWidth;
-          preview.height = previewHeight;
-          const previewCtx = preview.getContext('2d');
-          if (previewCtx) {
-            previewCtx.drawImage(canvas, 0, 0, previewWidth, previewHeight);
-            setGeneratedFront(preview.toDataURL('image/png'));
-          }
-          resolve();
-        };
-
-        // Carregar e desenhar foto
-        if (profileData.avatar_url) {
-          const foto = new Image();
-          foto.crossOrigin = 'anonymous';
-          foto.src = profileData.avatar_url;
-          foto.onload = () => {
-            ctx.drawImage(foto, 710, 168, 240, 299);
-            drawQRAndFinish();
-          };
-          foto.onerror = () => {
-            console.warn('Erro ao carregar foto');
-            drawQRAndFinish();
-          };
-        } else {
-          drawQRAndFinish();
-        }
-      };
-
-      template.onerror = () => {
-        console.error('Template não encontrado em /templates/frente-template.png');
-
-        // Placeholder se template não existir
-        ctx.fillStyle = '#5B21B6';
-        ctx.fillRect(0, 0, 1010, 128);
-        ctx.fillStyle = '#E5E7EB';
-        ctx.fillRect(0, 128, 1010, 420);
-        ctx.fillStyle = '#0EA5E9';
-        ctx.fillRect(0, 548, 1010, 96);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 32px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('TEMPLATE NÃO ENCONTRADO', 505, 280);
-        ctx.font = '20px Arial';
-        ctx.fillText('Adicione frente-template.png em public/templates/', 505, 320);
-
-        const preview = document.createElement('canvas');
-        preview.width = 500;
-        preview.height = 319;
-        const previewCtx = preview.getContext('2d');
-        if (previewCtx) {
-          previewCtx.drawImage(canvas, 0, 0, 500, 319);
-          setGeneratedFront(preview.toDataURL('image/png'));
-        }
-        resolve();
-      };
-    });
+    // Gerar Data URL diretamente do canvas principal
+    const dataUrl = canvas.toDataURL('image/png');
+    console.log('✅ Data URL gerado, tamanho:', dataUrl.length);
+    setGeneratedFront(dataUrl);
+    console.log('🎉 Geração concluída!');
   };
 
   const downloadCard = (side: 'front' | 'back') => {
