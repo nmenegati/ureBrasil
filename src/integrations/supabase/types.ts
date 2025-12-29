@@ -349,6 +349,7 @@ export type Database = {
           status: Database["public"]["Enums"]["card_status"]
           student_id: string
           updated_at: string
+          usage_code: string | null
           valid_until: string
         }
         Insert: {
@@ -370,6 +371,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["card_status"]
           student_id: string
           updated_at?: string
+          usage_code?: string | null
           valid_until: string
         }
         Update: {
@@ -391,6 +393,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["card_status"]
           student_id?: string
           updated_at?: string
+          usage_code?: string | null
           valid_until?: string
         }
         Relationships: [
@@ -830,6 +833,7 @@ export type Database = {
       check_cpf_exists: { Args: { p_cpf: string }; Returns: boolean }
       check_phone_exists: { Args: { p_phone: string }; Returns: boolean }
       generate_card_number: { Args: never; Returns: string }
+      generate_usage_code: { Args: never; Returns: string }
       has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["user_role"][]
