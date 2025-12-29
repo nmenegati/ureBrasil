@@ -4,25 +4,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Download, ArrowLeft, RotateCw } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import QRCode from 'qrcode';
+
+interface StudentProfile {
+  id: string;
+  full_name: string;
+  cpf: string;
+  rg: string | null;
+  birth_date: string;
+  institution: string | null;
+  course: string | null;
+  period: string | null;
+  avatar_url: string | null;
+}
 
 interface CardData {
   card_number: string;
-  usage_code: string;
+  usage_code: string | null;
   qr_code: string;
   valid_until: string;
   status: string;
   card_type: string;
-  student_profiles: {
-    full_name: string;
-    cpf: string;
-    rg: string | null;
-    birth_date: string;
-    institution: string | null;
-    course: string | null;
-    period: string | null;
-    avatar_url: string | null;
-  };
 }
 
 export default function Carteirinha() {
@@ -30,14 +32,16 @@ export default function Carteirinha() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [cardData, setCardData] = useState<CardData | null>(null);
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [showFront, setShowFront] = useState(true);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const [generatedFront, setGeneratedFront] = useState<string>('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    fetchCardData();
+    fetchData();
   }, []);
 
-  const fetchCardData = async () => {
+  const fetchData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -45,51 +49,47 @@ export default function Carteirinha() {
         return;
       }
 
-      // Primeiro buscar o student_profile do usuário
-      const { data: profile, error: profileError } = await supabase
+      // Buscar perfil
+      const { data: profileData, error: profileError } = await supabase
         .from('student_profiles')
-        .select('id')
+        .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (profileError || !profile) {
+      if (profileError || !profileData) {
         throw new Error('Perfil não encontrado');
       }
 
-      // Depois buscar a carteirinha ativa
+      // Buscar carteirinha ativa
       const { data: card, error: cardError } = await supabase
         .from('student_cards')
-        .select(`
-          card_number,
-          usage_code,
-          qr_code,
-          valid_until,
-          status,
-          card_type,
-          student_profiles (
-            full_name,
-            cpf,
-            rg,
-            birth_date,
-            institution,
-            course,
-            period,
-            avatar_url
-          )
-        `)
-        .eq('student_id', profile.id)
+        .select('card_number, usage_code, qr_code, valid_until, status, card_type')
+        .eq('student_id', profileData.id)
         .eq('status', 'active')
         .single();
 
       if (cardError) throw cardError;
       if (!card) throw new Error('Carteirinha não encontrada');
 
-      setCardData(card as unknown as CardData);
+      setProfile(profileData);
+      setCardData(card);
+
+      // Gerar QR Code
+      const qrData = card.qr_code || card.card_number;
+      const qrUrl = await QRCode.toDataURL(qrData, {
+        width: 256,
+        margin: 0,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
+
+      // Gerar frente da carteirinha
+      await generateFrontCard(profileData, card, qrUrl);
+
     } catch (error) {
       console.error('Error:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar a carteirinha.',
+        description: error instanceof Error ? error.message : 'Não foi possível carregar a carteirinha.',
         variant: 'destructive'
       });
     } finally {
@@ -97,37 +97,177 @@ export default function Carteirinha() {
     }
   };
 
-  const downloadCard = async (side: 'frente' | 'verso') => {
-    try {
-      const { default: html2canvas } = await import('html2canvas');
-      
-      const element = cardRef.current;
-      if (!element) return;
+  const generateFrontCard = async (
+    profileData: StudentProfile, 
+    card: CardData, 
+    qrUrl: string
+  ): Promise<void> => {
+    return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        resolve();
+        return;
+      }
 
-      const canvas = await html2canvas(element, {
-        scale: 3,
-        backgroundColor: null,
-        logging: false,
-        useCORS: true
-      });
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve();
+        return;
+      }
 
-      const link = document.createElement('a');
-      link.download = `carteirinha-${side}-${cardData?.card_number}.png`;
-      link.href = canvas.toDataURL('image/png');
+      // Tamanho original do template (1010x644)
+      canvas.width = 1010;
+      canvas.height = 644;
+
+      // Carregar template
+      const template = new Image();
+      template.crossOrigin = 'anonymous';
+      template.src = '/templates/frente-template.png';
+
+      template.onload = () => {
+        // Desenhar template base
+        ctx.drawImage(template, 0, 0, 1010, 644);
+
+        // Configurar texto
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+
+        // Nome (bold, uppercase)
+        ctx.font = 'bold 26px Arial';
+        ctx.fillStyle = '#1F2937';
+        ctx.fillText(profileData.full_name.toUpperCase(), 56, 224);
+
+        // Instituição, Curso, Período
+        ctx.font = '20px Arial';
+        ctx.fillStyle = '#4B5563';
+        ctx.fillText(profileData.institution || 'Instituição não informada', 56, 261);
+        ctx.fillText(profileData.course || 'Curso não informado', 56, 289);
+        ctx.fillText(profileData.period || '1º Período', 56, 317);
+
+        // Dados pessoais
+        ctx.font = '19px Arial';
+        ctx.fillStyle = '#374151';
+        ctx.fillText(`CPF: ${profileData.cpf}`, 56, 364);
+        ctx.fillText(`RG: ${profileData.rg || 'Não informado'}`, 56, 392);
+        ctx.fillText(`DATA NASC.: ${new Date(profileData.birth_date).toLocaleDateString('pt-BR')}`, 56, 420);
+
+        // Ano de validade (grande)
+        ctx.font = 'bold 52px Arial';
+        ctx.fillStyle = '#000000';
+        const year = new Date(card.valid_until).getFullYear();
+        ctx.fillText(year.toString(), 75, 541);
+
+        // Data validade
+        ctx.font = '19px Arial';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(new Date(card.valid_until).toLocaleDateString('pt-BR'), 205, 569);
+
+        // Código de uso
+        ctx.font = '22px monospace';
+        ctx.fillText(card.usage_code || 'XXXX-XXXX', 635, 569);
+
+        // Função para finalizar com QR Code
+        const drawQRAndFinish = () => {
+          const qr = new Image();
+          qr.src = qrUrl;
+          qr.onload = () => {
+            ctx.drawImage(qr, 859, 522, 120, 120);
+            createPreview();
+          };
+          qr.onerror = () => {
+            console.warn('Erro ao carregar QR Code');
+            createPreview();
+          };
+        };
+
+        // Função para criar preview
+        const createPreview = () => {
+          const maxWidth = 500;
+          const scale = Math.min(1, maxWidth / 1010);
+          const previewWidth = Math.round(1010 * scale);
+          const previewHeight = Math.round(644 * scale);
+
+          const preview = document.createElement('canvas');
+          preview.width = previewWidth;
+          preview.height = previewHeight;
+          const previewCtx = preview.getContext('2d');
+          if (previewCtx) {
+            previewCtx.drawImage(canvas, 0, 0, previewWidth, previewHeight);
+            setGeneratedFront(preview.toDataURL('image/png'));
+          }
+          resolve();
+        };
+
+        // Carregar e desenhar foto
+        if (profileData.avatar_url) {
+          const foto = new Image();
+          foto.crossOrigin = 'anonymous';
+          foto.src = profileData.avatar_url;
+          foto.onload = () => {
+            ctx.drawImage(foto, 710, 168, 240, 299);
+            drawQRAndFinish();
+          };
+          foto.onerror = () => {
+            console.warn('Erro ao carregar foto');
+            drawQRAndFinish();
+          };
+        } else {
+          drawQRAndFinish();
+        }
+      };
+
+      template.onerror = () => {
+        console.error('Template não encontrado em /templates/frente-template.png');
+
+        // Placeholder se template não existir
+        ctx.fillStyle = '#5B21B6';
+        ctx.fillRect(0, 0, 1010, 128);
+        ctx.fillStyle = '#E5E7EB';
+        ctx.fillRect(0, 128, 1010, 420);
+        ctx.fillStyle = '#0EA5E9';
+        ctx.fillRect(0, 548, 1010, 96);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('TEMPLATE NÃO ENCONTRADO', 505, 280);
+        ctx.font = '20px Arial';
+        ctx.fillText('Adicione frente-template.png em public/templates/', 505, 320);
+
+        const preview = document.createElement('canvas');
+        preview.width = 500;
+        preview.height = 319;
+        const previewCtx = preview.getContext('2d');
+        if (previewCtx) {
+          previewCtx.drawImage(canvas, 0, 0, 500, 319);
+          setGeneratedFront(preview.toDataURL('image/png'));
+        }
+        resolve();
+      };
+    });
+  };
+
+  const downloadCard = (side: 'front' | 'back') => {
+    const link = document.createElement('a');
+    link.download = `carteirinha-${side === 'front' ? 'frente' : 'verso'}-${cardData?.card_number || 'ure'}.png`;
+
+    if (side === 'front') {
+      // Download da frente em alta resolução (1010x644)
+      const canvas = canvasRef.current;
+      if (canvas) {
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }
+    } else {
+      // Download do verso (template estático)
+      link.href = '/templates/verso-template.png';
       link.click();
-
-      toast({
-        title: 'Download iniciado!',
-        description: `Carteirinha (${side}) baixada com sucesso.`
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível baixar a carteirinha.',
-        variant: 'destructive'
-      });
     }
+
+    toast({
+      title: 'Download iniciado!',
+      description: `Carteirinha (${side === 'front' ? 'frente' : 'verso'}) baixada com sucesso.`
+    });
   };
 
   if (loading) {
@@ -135,17 +275,20 @@ export default function Carteirinha() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">Carregando carteirinha...</p>
         </div>
       </div>
     );
   }
 
-  if (!cardData) {
+  if (!cardData || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <p className="text-xl text-foreground">Carteirinha não encontrada</p>
+          <p className="text-sm text-muted-foreground">
+            Complete seu cadastro e pagamento para gerar sua carteirinha.
+          </p>
           <Button onClick={() => navigate('/dashboard')}>
             Voltar ao Dashboard
           </Button>
@@ -154,11 +297,11 @@ export default function Carteirinha() {
     );
   }
 
-  const profile = cardData.student_profiles;
-  const validYear = new Date(cardData.valid_until).getFullYear();
-
   return (
     <div className="min-h-screen bg-background py-6 px-4">
+      {/* Canvas oculto para geração em alta resolução */}
+      <canvas ref={canvasRef} className="hidden" />
+
       {/* Header */}
       <div className="max-w-lg mx-auto mb-6">
         <Button
@@ -169,7 +312,7 @@ export default function Carteirinha() {
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </Button>
-        
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Minha Carteirinha</h1>
@@ -177,7 +320,7 @@ export default function Carteirinha() {
               {cardData.card_number} • Válida até {new Date(cardData.valid_until).toLocaleDateString('pt-BR')}
             </p>
           </div>
-          
+
           {/* Toggle Frente/Verso */}
           <div className="flex gap-2">
             <Button
@@ -198,41 +341,32 @@ export default function Carteirinha() {
         </div>
       </div>
 
-      {/* Carteirinha */}
+      {/* Preview da Carteirinha */}
       <div className="max-w-lg mx-auto">
         <div className="flex justify-center mb-6">
-          <div ref={cardRef}>
-            {showFront ? (
-              <CardFront 
-                profile={profile} 
-                cardData={cardData} 
-                validYear={validYear} 
-              />
-            ) : (
-              <CardBack />
-            )}
-          </div>
+          <img
+            src={showFront ? generatedFront : '/templates/verso-template.png'}
+            alt={showFront ? 'Frente da carteirinha' : 'Verso da carteirinha'}
+            className="max-w-full h-auto rounded-lg shadow-xl"
+            style={{ maxWidth: '500px' }}
+          />
         </div>
 
         {/* Botões de Download */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
-            onClick={() => {
-              setShowFront(true);
-              setTimeout(() => downloadCard('frente'), 100);
-            }}
+            onClick={() => downloadCard('front')}
             className="gap-2"
+            size="lg"
           >
             <Download className="h-4 w-4" />
-            Baixar Frente
+            Baixar Frente (Alta Resolução)
           </Button>
           <Button
-            onClick={() => {
-              setShowFront(false);
-              setTimeout(() => downloadCard('verso'), 100);
-            }}
+            onClick={() => downloadCard('back')}
             variant="outline"
             className="gap-2"
+            size="lg"
           >
             <Download className="h-4 w-4" />
             Baixar Verso
@@ -242,212 +376,7 @@ export default function Carteirinha() {
         {/* Dica */}
         <p className="text-center text-xs text-muted-foreground mt-4">
           <RotateCw className="inline h-3 w-3 mr-1" />
-          Clique em "Frente" ou "Verso" para alternar a visualização
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// Componente Frente
-function CardFront({ 
-  profile, 
-  cardData, 
-  validYear 
-}: { 
-  profile: CardData['student_profiles']; 
-  cardData: CardData; 
-  validYear: number;
-}) {
-  // Parse QR code data
-  const qrData = cardData.qr_code || JSON.stringify({
-    card_number: cardData.card_number,
-    usage_code: cardData.usage_code
-  });
-
-  return (
-    <div 
-      className="w-[340px] bg-white rounded-lg overflow-hidden shadow-xl"
-      style={{ aspectRatio: '1.586' }}
-    >
-      {/* Topo Roxo */}
-      <div className="bg-[#4338CA] px-4 py-3">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-[#FACC15] font-bold text-sm tracking-wide">
-              CARTEIRA DO ESTUDANTE
-            </h2>
-            <p className="text-white text-[10px] opacity-90">
-              Documento Nacional do Estudante
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="bg-white/10 rounded px-2 py-1">
-              <span className="text-white font-bold text-xs">URE</span>
-            </div>
-            <p className="text-white text-[6px] mt-0.5 max-w-[80px] text-right leading-tight opacity-80">
-              UNIÃO REPRESENTATIVA DOS ESTUDANTES E JUVENTUDE DO BRASIL
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo Principal */}
-      <div className="bg-[#E5E7EB] px-4 py-3">
-        <div className="flex gap-3">
-          {/* Dados */}
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-[#1F2937] text-sm truncate leading-tight">
-              {profile.full_name}
-            </p>
-            <p className="text-[#4B5563] text-[10px] truncate mt-1">
-              {profile.institution || 'Instituição não informada'}
-            </p>
-            <p className="text-[#4B5563] text-[10px] truncate">
-              {profile.course || 'Curso não informado'}
-            </p>
-            <p className="text-[#4B5563] text-[10px] truncate">
-              {profile.period || 'Período não informado'}
-            </p>
-            
-            <div className="mt-2 space-y-0.5">
-              <p className="text-[#374151] text-[9px]">
-                <span className="font-semibold">CPF:</span> {profile.cpf}
-              </p>
-              <p className="text-[#374151] text-[9px]">
-                <span className="font-semibold">RG:</span> {profile.rg || 'Não informado'}
-              </p>
-              <p className="text-[#374151] text-[9px]">
-                <span className="font-semibold">DATA NASC.:</span> {new Date(profile.birth_date).toLocaleDateString('pt-BR')}
-              </p>
-            </div>
-          </div>
-
-          {/* Foto */}
-          <div className="flex-shrink-0">
-            <div className="w-[70px] h-[90px] bg-white border-2 border-[#9CA3AF] rounded overflow-hidden flex items-center justify-center">
-              {profile.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt="Foto do estudante"
-                  className="w-full h-full object-cover"
-                  crossOrigin="anonymous"
-                />
-              ) : (
-                <div className="text-[#9CA3AF] text-3xl">👤</div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Rodapé Azul */}
-      <div className="bg-[#7DD3FC] px-3 py-2">
-        <div className="flex items-center justify-between">
-          {/* Ano e Validade */}
-          <div className="flex items-center gap-2">
-            <div className="bg-[#FDE047] border-2 border-[#3B82F6] rounded px-2 py-0.5">
-              <span className="font-bold text-[#1E3A8A] text-xs">{validYear}</span>
-            </div>
-            <div>
-              <p className="text-[#1E3A8A] text-[8px] font-semibold">VÁLIDO ATÉ:</p>
-              <p className="text-[#1E3A8A] text-[10px] font-bold">
-                {new Date(cardData.valid_until).toLocaleDateString('pt-BR')}
-              </p>
-            </div>
-          </div>
-
-          {/* Código de Uso */}
-          <div className="text-center">
-            <p className="text-[#1E3A8A] text-[8px] font-semibold">COD. USO:</p>
-            <p className="text-[#1E3A8A] text-[11px] font-bold font-mono">
-              {cardData.usage_code}
-            </p>
-          </div>
-
-          {/* QR Code */}
-          <div className="bg-white p-1 rounded">
-            <QRCodeSVG 
-              value={qrData}
-              size={45}
-              level="M"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Componente Verso (Estático)
-function CardBack() {
-  return (
-    <div 
-      className="w-[340px] bg-white rounded-lg overflow-hidden shadow-xl"
-      style={{ aspectRatio: '1.586' }}
-    >
-      {/* Topo */}
-      <div className="bg-[#4338CA] px-4 py-3">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-[#FACC15] font-bold text-sm tracking-wide">
-              CARTEIRA DO ESTUDANTE
-            </h2>
-            <p className="text-white text-[10px] opacity-90">
-              Documento Nacional do Estudante
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="bg-white/10 rounded px-2 py-1">
-              <span className="text-white font-bold text-xs">URE</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo */}
-      <div className="bg-[#F3F4F6] px-4 py-2 flex-1">
-        {/* Apoio */}
-        <div className="text-center mb-2">
-          <p className="text-[#6B7280] text-[8px] font-semibold">APOIO:</p>
-          <div className="bg-[#1F2937] rounded px-3 py-1 inline-block mt-1">
-            <p className="text-white text-[10px] font-bold">NOSSA SERTANEJA FM</p>
-          </div>
-        </div>
-
-        {/* Assinatura */}
-        <div className="text-center mb-2">
-          <div className="border-b border-[#9CA3AF] pb-1 mb-1 mx-8">
-            <p className="text-[#374151] text-sm italic font-serif">Jorge André</p>
-          </div>
-          <p className="text-[#1F2937] text-[9px] font-bold">JORGE ANDRÉ PERIQUITO</p>
-          <p className="text-[#6B7280] text-[8px]">FUNDADOR DA UREC</p>
-        </div>
-
-        {/* Box amarelo */}
-        <div className="bg-[#FEF3C7] border border-[#F59E0B] rounded px-3 py-2 text-center">
-          <p className="text-[#92400E] text-[9px] font-bold">
-            ATENDIMENTO: (31) 4063-2828
-          </p>
-          <p className="text-[#78350F] text-[7px] mt-1">
-            Documento padronizado nacionalmente
-          </p>
-          <p className="text-[#78350F] text-[7px]">
-            conforme lei nº 12.933 de 26/12/2013
-          </p>
-          <p className="text-[#92400E] text-[8px] font-bold mt-1">
-            JUVENTUDECIDADA.ORG.BR
-          </p>
-          <p className="text-[#78350F] text-[7px] mt-1">
-            VALIDADE: MARÇO ANO SEGUINTE
-          </p>
-        </div>
-      </div>
-
-      {/* Rodapé */}
-      <div className="bg-[#4338CA] px-3 py-1.5">
-        <p className="text-white text-[7px] text-center">
-          UNIÃO REPRESENTATIVA DOS ESTUDANTES DE CONFRESA - UREC
+          Alterne entre frente e verso usando os botões acima
         </p>
       </div>
     </div>
