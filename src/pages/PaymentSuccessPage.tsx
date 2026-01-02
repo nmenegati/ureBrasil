@@ -14,9 +14,9 @@ const PaymentSuccessPage = () => {
       localStorage.setItem('recent_payment_id', paymentId);
     }
     
-    // Redirecionar para o Dashboard após 2 segundos
+    // Redirecionar para completar perfil após 2 segundos
     const timer = setTimeout(() => {
-      navigate('/dashboard', { replace: true });
+      navigate('/complete-profile', { replace: true });
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -44,13 +44,13 @@ const PaymentSuccessPage = () => {
             Pagamento Aprovado!
           </h1>
           <p className="text-white/80 text-sm mb-8">
-            Sua carteirinha digital está sendo ativada...
+            Agora complete seu cadastro para emitir a carteirinha...
           </p>
           
           {/* Loader de redirecionamento */}
           <div className="flex items-center justify-center gap-3 text-white/70">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="text-sm">Redirecionando para o painel...</span>
+            <span className="text-sm">Redirecionando para completar perfil...</span>
           </div>
         </div>
       </main>

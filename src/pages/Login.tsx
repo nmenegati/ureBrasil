@@ -60,18 +60,54 @@ export default function Login() {
         return;
       }
       
-      // 2. Verificar estado do perfil
+      // 2. Buscar perfil
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('profile_completed')
+        .select('id, profile_completed')
         .eq('user_id', data.user.id)
         .maybeSingle();
-      
-      if (!profile || !profile.profile_completed) {
-        window.location.href = '/complete-profile';
-      } else {
-        window.location.href = '/dashboard';
+
+      if (!profile) {
+        // Perfil básico não existe - ir para escolher plano (será criado após pagamento)
+        window.location.href = '/escolher-plano';
+        return;
       }
+
+      // 3. Verificar pagamento aprovado
+      const { data: payment } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('student_id', profile.id)
+        .eq('status', 'approved')
+        .limit(1)
+        .maybeSingle();
+
+      if (!payment) {
+        // Sem pagamento aprovado - ir para escolher plano
+        window.location.href = '/escolher-plano';
+        return;
+      }
+
+      // 4. Verificar perfil completo
+      if (!profile.profile_completed) {
+        window.location.href = '/complete-profile';
+        return;
+      }
+
+      // 5. Verificar documentos aprovados
+      const { count: docsApproved } = await supabase
+        .from('documents')
+        .select('id', { count: 'exact', head: true })
+        .eq('student_id', profile.id)
+        .eq('status', 'approved');
+
+      if ((docsApproved || 0) < 4) {
+        window.location.href = '/upload-documentos';
+        return;
+      }
+
+      // 6. Tudo OK - ir para dashboard
+      window.location.href = '/dashboard';
       return;
     }
     

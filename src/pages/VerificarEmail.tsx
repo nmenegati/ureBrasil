@@ -108,10 +108,10 @@ export default function VerificarEmail() {
               )}
 
               <Button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/escolher-plano')}
                 className="w-full"
               >
-                Ir para Login
+                Escolher meu Plano
               </Button>
             </div>
 
