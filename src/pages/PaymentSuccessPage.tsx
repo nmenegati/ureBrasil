@@ -145,13 +145,13 @@ const PaymentSuccessPage = () => {
             {/* Preço */}
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <span className="text-muted-foreground line-through text-lg">R$ 25,00</span>
+                <span className="text-gray-500 line-through text-lg">R$ 25,00</span>
                 <Badge variant="destructive" className="text-xs">-40%</Badge>
               </div>
               <div className="text-4xl font-bold text-green-600">
                 R$ 15,00
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Pagamento único • Sem mensalidade
               </p>
             </div>
@@ -159,22 +159,22 @@ const PaymentSuccessPage = () => {
             {/* Benefícios */}
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Truck className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Truck className="w-4 h-4 text-blue-600" />
                 </div>
-                <span className="text-foreground">Entrega em todo Brasil via Correios</span>
+                <span className="text-gray-700">Entrega em todo Brasil via Correios</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CreditCard className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CreditCard className="w-4 h-4 text-blue-600" />
                 </div>
-                <span className="text-foreground">Material premium com QR Code integrado</span>
+                <span className="text-gray-700">Material premium com QR Code integrado</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-4 h-4 text-blue-600" />
                 </div>
-                <span className="text-foreground">Aceita em cinemas, teatros e eventos</span>
+                <span className="text-gray-700">Aceita em cinemas, teatros e eventos</span>
               </div>
             </div>
 
@@ -197,7 +197,7 @@ const PaymentSuccessPage = () => {
               
               <button
                 onClick={handleDeclineUpsell}
-                className="w-full text-muted-foreground text-sm hover:text-foreground transition-colors py-2"
+                className="w-full text-gray-500 text-sm hover:text-gray-700 transition-colors py-2"
               >
                 Continuar apenas com a digital
               </button>
