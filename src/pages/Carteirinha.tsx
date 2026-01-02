@@ -206,63 +206,72 @@ export default function Carteirinha() {
     ctx.imageSmoothingQuality = 'high';
 
     // ========================================
-    // ÁREA DE DADOS - ALINHAMENTO MELHORADO
+    // ÁREA DE DADOS - ALINHADO COM TÍTULO
     // ========================================
+    const xStart = 115; // Alinhado com "CARTEIRA DO ESTUDANTE"
 
-    // NOME (bold, uppercase, alinhado à esquerda)
+    // NOME (bold, uppercase)
     console.log('✍️ Escrevendo nome:', profileData.full_name);
-    ctx.font = 'bold 30px Arial';
+    ctx.font = 'bold 28px Arial';
     ctx.fillStyle = '#000000';
-    ctx.fillText(profileData.full_name.toUpperCase(), 40, 182);
+    ctx.fillText(profileData.full_name.toUpperCase(), xStart, 165);
 
     // INSTITUIÇÃO
-    ctx.font = '22px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.institution || 'Instituição', 40, 220);
-
-    // CURSO
-    ctx.font = '22px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.course || 'Curso', 40, 248);
-
-    // PERÍODO
     ctx.font = '20px Arial';
     ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.period || '1º Período', 40, 276);
+    ctx.fillText(profileData.institution || 'Instituição', xStart, 200);
+
+    // CURSO
+    ctx.font = '20px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.course || 'Curso', xStart, 228);
+
+    // PERÍODO
+    ctx.font = '18px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.period || '1º Período', xStart, 256);
 
     // ========================================
     // DADOS PESSOAIS - COM LABELS BOLD
     // ========================================
-    const yStart = 315;
+    const yStart = 290;
 
     // CPF
-    ctx.font = 'bold 20px Arial';
+    ctx.font = 'bold 18px Arial';
     ctx.fillStyle = '#1F2937';
-    ctx.fillText('CPF:', 40, yStart);
-    ctx.font = '20px Arial';
-    ctx.fillText(profileData.cpf, 90, yStart);
+    ctx.fillText('CPF:', xStart, yStart);
+    ctx.font = '18px Arial';
+    ctx.fillText(profileData.cpf, xStart + 50, yStart);
 
     // RG
-    ctx.font = 'bold 20px Arial';
-    ctx.fillText('RG:', 40, yStart + 30);
-    ctx.font = '20px Arial';
-    ctx.fillText(profileData.rg || 'Não informado', 90, yStart + 30);
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('RG:', xStart, yStart + 28);
+    ctx.font = '18px Arial';
+    ctx.fillText(profileData.rg || 'Não informado', xStart + 40, yStart + 28);
 
     // DATA NASC
-    ctx.font = 'bold 20px Arial';
-    ctx.fillText('DATA NASC.:', 40, yStart + 60);
-    ctx.font = '20px Arial';
-    ctx.fillText(new Date(profileData.birth_date).toLocaleDateString('pt-BR'), 160, yStart + 60);
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('DATA NASC.:', xStart, yStart + 56);
+    ctx.font = '18px Arial';
+    ctx.fillText(new Date(profileData.birth_date).toLocaleDateString('pt-BR'), xStart + 115, yStart + 56);
+
+    // COD. USO (na área cinza, não no rodapé)
+    ctx.font = 'bold 16px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText('COD. USO:', xStart, yStart + 90);
+    ctx.font = 'bold 20px monospace';
+    ctx.fillStyle = '#1F2937';
+    ctx.fillText(card.usage_code || 'XXXX-XXXX', xStart, yStart + 115);
 
     console.log('✅ Textos desenhados');
 
     // ========================================
-    // FOTO - POSICIONAMENTO ALINHADO
+    // FOTO 3/4 - REPOSICIONADA
     // ========================================
-    const fotoX = 710;
-    const fotoY = 150;
-    const fotoW = 250;
-    const fotoH = 312;
+    const fotoX = 680;
+    const fotoY = 155;
+    const fotoW = 200;
+    const fotoH = 250;
 
     if (profileData.avatar_url) {
       console.log('📸 Carregando foto:', profileData.avatar_url);
@@ -293,26 +302,17 @@ export default function Carteirinha() {
     }
 
     // ========================================
-    // RODAPÉ - COD USO + QR CODE
+    // QR CODE - LOGO ABAIXO DA FOTO
     // ========================================
     console.log('📱 Carregando QR Code');
     try {
       const qr = await loadImage(qrUrl);
       console.log('✅ QR Code carregado');
 
-      // COD. USO - Lado esquerdo do rodapé
-      ctx.fillStyle = '#374151';
-      ctx.font = 'bold 16px Arial';
-      ctx.fillText('COD. USO:', 370, 520);
-
-      ctx.fillStyle = '#1F2937';
-      ctx.font = 'bold 26px monospace';
-      ctx.fillText(card.usage_code || 'XXXX-XXXX', 370, 545);
-
-      // QR CODE - Lado direito do rodapé
-      const qrSize = 130;
-      const qrX = 850;
-      const qrY = 505;
+      // QR CODE centralizado abaixo da foto
+      const qrSize = 100;
+      const qrX = fotoX + (fotoW - qrSize) / 2; // Centralizado com a foto
+      const qrY = fotoY + fotoH + 10; // 10px abaixo da foto
       ctx.drawImage(qr, qrX, qrY, qrSize, qrSize);
 
       console.log('✅ Todos os elementos desenhados');
