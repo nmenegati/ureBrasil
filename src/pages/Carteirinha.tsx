@@ -197,44 +197,64 @@ export default function Carteirinha() {
       drawFallbackBackground(ctx);
     }
 
-    // Configurar texto
+    // Configurar texto para melhor qualidade
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
-    // Nome (bold, uppercase)
+    // ========================================
+    // ÁREA DE DADOS (meio cinza)
+    // ========================================
+
+    // NOME (aumentar fonte, bold, uppercase)
     console.log('✍️ Escrevendo nome:', profileData.full_name);
-    ctx.font = 'bold 26px Arial';
-    ctx.fillStyle = '#1F2937';
-    ctx.fillText(profileData.full_name.toUpperCase(), 56, 224);
-
-    // Instituição, Curso, Período
-    ctx.font = '20px Arial';
-    ctx.fillStyle = '#4B5563';
-    ctx.fillText(profileData.institution || 'Instituição não informada', 56, 261);
-    ctx.fillText(profileData.course || 'Curso não informado', 56, 289);
-    ctx.fillText(profileData.period || '1º Período', 56, 317);
-
-    // Dados pessoais
-    ctx.font = '19px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(`CPF: ${profileData.cpf}`, 56, 364);
-    ctx.fillText(`RG: ${profileData.rg || 'Não informado'}`, 56, 392);
-    ctx.fillText(`DATA NASC.: ${new Date(profileData.birth_date).toLocaleDateString('pt-BR')}`, 56, 420);
-
-    // Ano de validade (grande)
-    ctx.font = 'bold 52px Arial';
+    ctx.font = 'bold 32px Arial';
     ctx.fillStyle = '#000000';
-    const year = new Date(card.valid_until).getFullYear();
-    ctx.fillText(year.toString(), 75, 541);
+    ctx.fillText(profileData.full_name.toUpperCase(), 45, 195);
 
-    // Data validade
-    ctx.font = '19px Arial';
+    // INSTITUIÇÃO (aumentar fonte)
+    ctx.font = '24px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.institution || 'Instituição não informada', 45, 235);
+
+    // CURSO (aumentar fonte)
+    ctx.font = '24px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.course || 'Curso não informado', 45, 265);
+
+    // PERÍODO (aumentar fonte)
+    ctx.font = '22px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.period || '1º Período', 45, 295);
+
+    // ========================================
+    // DADOS PESSOAIS (labels em bold)
+    // ========================================
+    const drawLabelValue = (label: string, value: string, x: number, y: number) => {
+      ctx.font = 'bold 22px Arial';
+      ctx.fillStyle = '#000000';
+      ctx.fillText(label, x, y);
+      const labelWidth = ctx.measureText(label).width;
+      ctx.font = '22px Arial';
+      ctx.fillText(value, x + labelWidth, y);
+    };
+
+    drawLabelValue('CPF: ', profileData.cpf, 45, 340);
+    drawLabelValue('RG: ', profileData.rg || 'Não informado', 45, 372);
+    drawLabelValue('DATA NASC.: ', new Date(profileData.birth_date).toLocaleDateString('pt-BR'), 45, 404);
+
+    // ========================================
+    // RODAPÉ AZUL - APENAS COD USO + QR CODE
+    // ========================================
+    // (Ano e data de validade já estão no template)
+
+    // COD. USO (posicionado à esquerda do rodapé)
+    ctx.font = 'bold 18px Arial';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(new Date(card.valid_until).toLocaleDateString('pt-BR'), 205, 569);
-
-    // Código de uso
-    ctx.font = '22px monospace';
-    ctx.fillText(card.usage_code || 'XXXX-XXXX', 635, 569);
+    ctx.fillText('COD. USO:', 180, 530);
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText(card.usage_code || 'XXXX-XXXX', 180, 555);
 
     console.log('✅ Textos desenhados');
 
@@ -273,7 +293,7 @@ export default function Carteirinha() {
     try {
       const qr = await loadImage(qrUrl);
       console.log('✅ QR Code carregado');
-      ctx.drawImage(qr, 859, 522, 120, 120);
+      ctx.drawImage(qr, 850, 510, 140, 140);
       console.log('✅ QR Code desenhado');
     } catch (e) {
       console.warn('⚠️ Erro ao carregar QR Code:', e);
