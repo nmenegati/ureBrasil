@@ -31,7 +31,7 @@ export default function Carteirinha() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [cardData, setCardData] = useState<CardData | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [showFront, setShowFront] = useState(true);
@@ -124,11 +124,11 @@ export default function Carteirinha() {
 
   // Effect separado para gerar card quando dados e canvas estiverem prontos
   useEffect(() => {
-    if (profile && cardData && canvasRef.current && !generatedFront && !generating) {
+    if (profile && cardData && canvasRef.current && !generatedFront) {
       console.log('🔄 Triggering card generation via useEffect');
       generateCard();
     }
-  }, [profile, cardData, generatedFront, generating]);
+  }, [profile, cardData, generatedFront]);
 
   const generateCard = async () => {
     if (!profile || !cardData) return;
