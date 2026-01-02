@@ -179,7 +179,7 @@ export default function StatusValidacao() {
       
       if (allApproved) {
         toast.success('Todos os documentos foram aprovados! 🎉');
-        setTimeout(() => navigate('/escolher-plano'), 2000);
+        setTimeout(() => navigate('/dashboard'), 2000);
       } else if (documents.some(d => d.status === 'rejected')) {
         toast.error('Alguns documentos precisam ser corrigidos');
       }
@@ -243,7 +243,7 @@ export default function StatusValidacao() {
           <Alert className="mb-6 bg-green-500/10 border-green-500/30">
             <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
             <AlertDescription className="text-green-600 dark:text-green-300">
-              Todos os documentos foram aprovados! Redirecionando para escolha de plano...
+              Todos os documentos foram aprovados! Redirecionando para o painel...
             </AlertDescription>
           </Alert>
         )}
@@ -313,10 +313,10 @@ export default function StatusValidacao() {
           
           {documents.length === 4 && documents.every(d => d.status === 'approved') && (
             <Button
-              onClick={() => navigate('/escolher-plano')}
+              onClick={() => navigate('/dashboard')}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white"
             >
-              Escolher Plano →
+              Ir para o Painel →
             </Button>
           )}
         </div>

@@ -258,17 +258,29 @@ export default function Dashboard() {
     return "Parabéns! Sua carteirinha está pronta!";
   };
 
-  // Determina o próximo passo - retorna null quando tudo completo
+  // Determina o próximo passo - NOVA ORDEM: Pagamento → Perfil → Docs → Carteirinha
   const getNextStep = () => {
+    // 1. PAGAMENTO PRIMEIRO
+    if (!progress.payment) {
+      return {
+        title: 'Escolha seu Plano',
+        description: 'Realize o pagamento para continuar',
+        buttonText: 'Escolher Plano',
+        route: '/escolher-plano'
+      };
+    }
+    
+    // 2. DEPOIS PERFIL
     if (!progress.profile) {
       return {
         title: 'Complete seu Perfil',
-        description: 'Preencha seus dados para continuar',
+        description: 'Preencha seus dados para emissão da carteirinha',
         buttonText: 'Completar Perfil',
         route: '/complete-profile'
       };
     }
     
+    // 3. DEPOIS DOCUMENTOS
     if (!progress.documents) {
       return {
         title: 'Envie seus Documentos',
@@ -278,15 +290,7 @@ export default function Dashboard() {
       };
     }
     
-    if (!progress.payment) {
-      return {
-        title: 'Escolha seu Plano',
-        description: 'Realize o pagamento para ativar sua carteirinha',
-        buttonText: 'Escolher Plano',
-        route: '/escolher-plano'
-      };
-    }
-    
+    // 4. AGUARDANDO CARTEIRINHA
     if (!progress.card) {
       return {
         title: 'Processando...',
@@ -299,26 +303,8 @@ export default function Dashboard() {
     return null; // Tudo completo, não mostra
   };
 
-  // Cards de progresso clicáveis com estados
+  // Cards de progresso clicáveis - NOVA ORDEM: Pagamento → Perfil → Docs
   const progressSteps = [
-    {
-      id: 'perfil',
-      label: 'Perfil',
-      status: progress.profile ? 'Concluído' : 'Pendente',
-      icon: User,
-      enabled: true, // Sempre habilitado
-      route: '/perfil',
-      completed: progress.profile
-    },
-    {
-      id: 'documentos',
-      label: 'Documentos',
-      status: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4`,
-      icon: FileText,
-      enabled: progress.profile, // Só habilita se perfil completo
-      route: '/upload-documentos',
-      completed: progress.documents
-    },
     {
       id: 'pagamento',
       label: 'Pagamento',
@@ -327,9 +313,27 @@ export default function Dashboard() {
         return progress.payment ? 'Aprovado' : 'Pendente';
       })(),
       icon: CreditCard,
-      enabled: progress.documents, // Só habilita se docs aprovados
+      enabled: true, // Sempre habilitado
       route: '/escolher-plano',
       completed: progress.payment
+    },
+    {
+      id: 'perfil',
+      label: 'Perfil',
+      status: progress.profile ? 'Concluído' : 'Pendente',
+      icon: User,
+      enabled: progress.payment, // Só habilita após pagamento
+      route: '/complete-profile',
+      completed: progress.profile
+    },
+    {
+      id: 'documentos',
+      label: 'Documentos',
+      status: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4`,
+      icon: FileText,
+      enabled: progress.profile, // Só habilita após perfil
+      route: '/upload-documentos',
+      completed: progress.documents
     },
   ];
   

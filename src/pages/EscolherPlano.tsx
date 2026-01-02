@@ -116,20 +116,23 @@ export default function EscolherPlano() {
   }, [user]);
 
   const handleSelectPlan = async (planId: string, planName: string) => {
-    if (!profileId) {
-      toast.error('Perfil não encontrado');
-      return;
-    }
-
     setSelecting(planId);
 
     try {
-      const { error } = await supabase
-        .from('student_profiles')
-        .update({ plan_id: planId })
-        .eq('id', profileId);
+      // Armazenar no localStorage para uso na página de pagamento
+      localStorage.setItem('selected_plan_id', planId);
+      
+      // Se tiver profileId, atualizar no banco também
+      if (profileId) {
+        const { error } = await supabase
+          .from('student_profiles')
+          .update({ plan_id: planId })
+          .eq('id', profileId);
 
-      if (error) throw error;
+        if (error) {
+          console.warn('Erro ao atualizar plan_id no perfil (não crítico):', error);
+        }
+      }
 
       toast.success(`Plano "${planName}" selecionado!`);
       navigate('/pagamento');
