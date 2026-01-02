@@ -197,104 +197,125 @@ export default function Carteirinha() {
       drawFallbackBackground(ctx);
     }
 
-    // Configurar texto para melhor qualidade
+    // ========================================
+    // CONFIGURAÇÕES GERAIS
+    // ========================================
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
     // ========================================
-    // ÁREA DE DADOS (meio cinza)
+    // ÁREA DE DADOS - ALINHAMENTO MELHORADO
     // ========================================
 
-    // NOME (aumentar fonte, bold, uppercase)
+    // NOME (bold, uppercase, alinhado à esquerda)
     console.log('✍️ Escrevendo nome:', profileData.full_name);
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 30px Arial';
     ctx.fillStyle = '#000000';
-    ctx.fillText(profileData.full_name.toUpperCase(), 45, 195);
+    ctx.fillText(profileData.full_name.toUpperCase(), 40, 182);
 
-    // INSTITUIÇÃO (aumentar fonte)
-    ctx.font = '24px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.institution || 'Instituição não informada', 45, 235);
-
-    // CURSO (aumentar fonte)
-    ctx.font = '24px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.course || 'Curso não informado', 45, 265);
-
-    // PERÍODO (aumentar fonte)
+    // INSTITUIÇÃO
     ctx.font = '22px Arial';
     ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.period || '1º Período', 45, 295);
+    ctx.fillText(profileData.institution || 'Instituição', 40, 220);
+
+    // CURSO
+    ctx.font = '22px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.course || 'Curso', 40, 248);
+
+    // PERÍODO
+    ctx.font = '20px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.period || '1º Período', 40, 276);
 
     // ========================================
-    // DADOS PESSOAIS (labels em bold)
+    // DADOS PESSOAIS - COM LABELS BOLD
     // ========================================
-    const drawLabelValue = (label: string, value: string, x: number, y: number) => {
-      ctx.font = 'bold 22px Arial';
-      ctx.fillStyle = '#000000';
-      ctx.fillText(label, x, y);
-      const labelWidth = ctx.measureText(label).width;
-      ctx.font = '22px Arial';
-      ctx.fillText(value, x + labelWidth, y);
-    };
+    const yStart = 315;
 
-    drawLabelValue('CPF: ', profileData.cpf, 45, 340);
-    drawLabelValue('RG: ', profileData.rg || 'Não informado', 45, 372);
-    drawLabelValue('DATA NASC.: ', new Date(profileData.birth_date).toLocaleDateString('pt-BR'), 45, 404);
+    // CPF
+    ctx.font = 'bold 20px Arial';
+    ctx.fillStyle = '#1F2937';
+    ctx.fillText('CPF:', 40, yStart);
+    ctx.font = '20px Arial';
+    ctx.fillText(profileData.cpf, 90, yStart);
 
-    // ========================================
-    // RODAPÉ AZUL - APENAS COD USO + QR CODE
-    // ========================================
-    // (Ano e data de validade já estão no template)
+    // RG
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText('RG:', 40, yStart + 30);
+    ctx.font = '20px Arial';
+    ctx.fillText(profileData.rg || 'Não informado', 90, yStart + 30);
 
-    // COD. USO (posicionado à esquerda do rodapé)
-    ctx.font = 'bold 18px Arial';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('COD. USO:', 180, 530);
-    ctx.font = 'bold 28px monospace';
-    ctx.fillText(card.usage_code || 'XXXX-XXXX', 180, 555);
+    // DATA NASC
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText('DATA NASC.:', 40, yStart + 60);
+    ctx.font = '20px Arial';
+    ctx.fillText(new Date(profileData.birth_date).toLocaleDateString('pt-BR'), 160, yStart + 60);
 
     console.log('✅ Textos desenhados');
 
-    // Carregar foto (se existir)
+    // ========================================
+    // FOTO - POSICIONAMENTO ALINHADO
+    // ========================================
+    const fotoX = 710;
+    const fotoY = 150;
+    const fotoW = 250;
+    const fotoH = 312;
+
     if (profileData.avatar_url) {
       console.log('📸 Carregando foto:', profileData.avatar_url);
       try {
         const foto = await loadImage(profileData.avatar_url);
         console.log('✅ Foto carregada');
-        ctx.drawImage(foto, 710, 168, 240, 299);
+        ctx.drawImage(foto, fotoX, fotoY, fotoW, fotoH);
         console.log('✅ Foto desenhada');
       } catch (e) {
         console.warn('⚠️ Erro ao carregar foto:', e);
-        // Desenhar placeholder
         ctx.fillStyle = '#E5E7EB';
-        ctx.fillRect(710, 168, 240, 299);
+        ctx.fillRect(fotoX, fotoY, fotoW, fotoH);
         ctx.fillStyle = '#9CA3AF';
-        ctx.font = '48px Arial';
+        ctx.font = '60px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('👤', 830, 300);
+        ctx.fillText('👤', fotoX + fotoW / 2, fotoY + fotoH / 2 - 30);
         ctx.textAlign = 'left';
       }
     } else {
       console.log('ℹ️ Sem foto, usando placeholder');
       ctx.fillStyle = '#E5E7EB';
-      ctx.fillRect(710, 168, 240, 299);
+      ctx.fillRect(fotoX, fotoY, fotoW, fotoH);
       ctx.fillStyle = '#9CA3AF';
-      ctx.font = '48px Arial';
+      ctx.font = '60px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('👤', 830, 300);
+      ctx.fillText('👤', fotoX + fotoW / 2, fotoY + fotoH / 2 - 30);
       ctx.textAlign = 'left';
     }
 
-    // Carregar QR Code
+    // ========================================
+    // RODAPÉ - COD USO + QR CODE
+    // ========================================
     console.log('📱 Carregando QR Code');
     try {
       const qr = await loadImage(qrUrl);
       console.log('✅ QR Code carregado');
-      ctx.drawImage(qr, 850, 510, 140, 140);
-      console.log('✅ QR Code desenhado');
+
+      // COD. USO - Lado esquerdo do rodapé
+      ctx.fillStyle = '#374151';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('COD. USO:', 370, 520);
+
+      ctx.fillStyle = '#1F2937';
+      ctx.font = 'bold 26px monospace';
+      ctx.fillText(card.usage_code || 'XXXX-XXXX', 370, 545);
+
+      // QR CODE - Lado direito do rodapé
+      const qrSize = 130;
+      const qrX = 850;
+      const qrY = 505;
+      ctx.drawImage(qr, qrX, qrY, qrSize, qrSize);
+
+      console.log('✅ Todos os elementos desenhados');
     } catch (e) {
       console.warn('⚠️ Erro ao carregar QR Code:', e);
     }
