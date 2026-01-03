@@ -3,77 +3,53 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/Header';
-import { Check, FileText, Scale, CreditCard, Award, Loader2 } from 'lucide-react';
+import { Check, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Configuração visual dos planos (ordem e benefícios)
-const planConfig: Record<string, { 
-  icon: typeof FileText; 
-  benefits: string[]; 
-  popular?: boolean;
-  order: number;
-}> = {
-  'geral_digital': {
-    icon: FileText,
-    order: 1,
-    benefits: [
-      'Carteirinha digital PDF',
-      'QR Code de validação',
-      'Validade 1 ano',
-      'Entrega instantânea por email'
-    ]
+// Configuração visual dos planos digitais
+const digitalPlans = [
+  {
+    type: 'geral_digital',
+    name: 'Digital Geral',
+    price: 29,
+    description: 'Ensino médio, superior, cursos',
+    features: [
+      'Carteirinha digital',
+      'QR Code de verificação',
+      'Validade até 31/03/2026',
+      'Emissão em até 2h',
+      'Acesso ilimitado ao app',
+      'Suporte prioritário'
+    ],
+    highlight: false,
+    badge: null
   },
-  'direito_digital': {
-    icon: Scale,
-    order: 2,
-    benefits: [
-      'Carteirinha digital PDF',
-      'QR Code + Selo OAB Estudante',
-      'Validade 1 ano',
-      'Reconhecimento profissional',
-      'Descontos advocacia'
-    ]
-  },
-  'geral_fisica': {
-    icon: CreditCard,
-    order: 3,
-    popular: true,
-    benefits: [
-      'Tudo do plano digital',
-      'Carteirinha física impressa (PVC)',
-      'Frete grátis para todo Brasil',
-      'Entrega em 7-15 dias úteis',
-      'Digital liberada imediatamente'
-    ]
-  },
-  'direito_fisica': {
-    icon: Award,
-    order: 4,
-    benefits: [
-      'Tudo do plano digital OAB',
-      'Carteirinha física impressa (PVC)',
-      'Selo OAB impresso',
-      'Frete grátis para todo Brasil',
-      'Entrega em 7-15 dias úteis',
-      'Digital liberada imediatamente'
-    ]
+  {
+    type: 'direito_digital',
+    name: 'Digital Direito',
+    price: 44,
+    description: 'Para futuros advogados',
+    features: [
+      'Carteirinha digital',
+      'QR Code de verificação',
+      'Validade até 31/03/2026',
+      'Emissão em até 2h',
+      'Benefícios exclusivos Direito',
+      'Material de estudo OAB',
+      'Descontos em cursos jurídicos',
+      'Rede de networking jurídico'
+    ],
+    highlight: true,
+    badge: 'JURISESTUDANTE'
   }
-};
-
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  type: string;
-  is_active: boolean;
-}
+];
 
 export default function EscolherPlano() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [planIds, setPlanIds] = useState<Record<string, string>>({});
   const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
@@ -116,22 +92,19 @@ export default function EscolherPlano() {
         return;
       }
 
-      // É estudante de Direito - buscar apenas planos digitais (geral + direito)
+      // É estudante de Direito - buscar IDs dos planos digitais
       const { data: plansData } = await supabase
         .from('plans')
-        .select('*')
+        .select('id, type')
         .eq('is_active', true)
-        .in('type', ['geral_digital', 'direito_digital'])
-        .order('price', { ascending: true });
+        .in('type', ['geral_digital', 'direito_digital']);
 
       if (plansData) {
-        // Ordenar conforme config
-        const sortedPlans = plansData.sort((a, b) => {
-          const orderA = planConfig[a.type]?.order || 99;
-          const orderB = planConfig[b.type]?.order || 99;
-          return orderA - orderB;
+        const ids: Record<string, string> = {};
+        plansData.forEach(p => {
+          ids[p.type] = p.id;
         });
-        setPlans(sortedPlans);
+        setPlanIds(ids);
       }
 
       setLoading(false);
@@ -140,8 +113,14 @@ export default function EscolherPlano() {
     checkEligibilityAndLoadPlans();
   }, [user, navigate]);
 
-  const handleSelectPlan = async (planId: string, planName: string) => {
-    setSelecting(planId);
+  const handleSelectPlan = async (planType: string, planName: string) => {
+    const planId = planIds[planType];
+    if (!planId) {
+      toast.error('Plano não encontrado');
+      return;
+    }
+
+    setSelecting(planType);
 
     try {
       // Armazenar no localStorage para uso na página de pagamento
@@ -187,7 +166,7 @@ export default function EscolherPlano() {
       <Header variant="app" />
       
       <main className="relative z-10 py-8 px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
@@ -198,77 +177,108 @@ export default function EscolherPlano() {
             </p>
           </div>
 
-        {/* Grid de Planos */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {plans.map(plan => {
-            const config = planConfig[plan.type] || { icon: FileText, benefits: [], order: 99 };
-            const Icon = config.icon;
-            const isPopular = config.popular;
-
-            return (
+          {/* Grid de Planos Digitais */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {digitalPlans.map((plan) => (
               <Card 
-                key={plan.id}
-                className={`relative p-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border-white/20 shadow-xl shadow-black/10 hover:shadow-2xl hover:scale-[1.02] transition-all ${
-                  isPopular ? 'border-2 border-primary ring-2 ring-primary/20' : ''
+                key={plan.type}
+                className={`relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all ${
+                  plan.highlight 
+                    ? 'border-2 border-yellow-500 shadow-yellow-500/20' 
+                    : 'border-white/20'
                 }`}
               >
-                {isPopular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
-                      ⭐ MAIS POPULAR
+                {plan.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="bg-yellow-500 text-black text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                      {plan.badge}
                     </span>
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 mb-4 mt-2">
-                  <div className={`p-2 rounded-lg ${isPopular ? 'bg-primary/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
-                    <Icon className={`w-6 h-6 ${isPopular ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`} />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                <CardContent className="p-6 pt-8">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                     {plan.name}
                   </h3>
-                </div>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    {plan.description}
+                  </p>
 
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-slate-900 dark:text-white">
-                    R$ {Number(plan.price).toFixed(0)}
-                  </span>
-                  <span className="text-slate-500 dark:text-slate-400 ml-2">/ ano</span>
-                </div>
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold text-primary">
+                      R$ {plan.price}
+                    </span>
+                    <span className="text-muted-foreground ml-2">/ano</span>
+                  </div>
 
-                <ul className="space-y-3 mb-6">
-                  {config.benefits.map((benefit, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-slate-600 dark:text-slate-300">{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-600 dark:text-slate-300">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-                <Button
-                  onClick={() => handleSelectPlan(plan.id, plan.name)}
-                  disabled={selecting !== null}
-                  className={`w-full ${
-                    isPopular 
-                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                      : 'bg-muted hover:bg-muted/80 text-foreground'
-                  }`}
-                >
-                  {selecting === plan.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : null}
-                  Escolher Plano
-                </Button>
+                  <Button
+                    onClick={() => handleSelectPlan(plan.type, plan.name)}
+                    disabled={selecting !== null}
+                    className={`w-full ${
+                      plan.highlight 
+                        ? 'bg-yellow-500 hover:bg-yellow-600 text-black' 
+                        : 'bg-primary hover:bg-primary/90'
+                    }`}
+                    size="lg"
+                  >
+                    {selecting === plan.type && (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    )}
+                    Solicitar {plan.name}
+                  </Button>
+                </CardContent>
               </Card>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        {/* Footer */}
-        <div className="mt-10 text-center text-sm text-white/80">
-          <p>🔒 Pagamento 100% seguro</p>
-          <p className="mt-2">Dúvidas? contato@urebrasil.com.br</p>
-        </div>
+          {/* Informação sobre versão física */}
+          <div className="mt-8">
+            <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/50 backdrop-blur-sm">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <CreditCard className="w-6 h-6 text-blue-500" />
+                  <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                    Carteirinha Física Disponível
+                  </h4>
+                </div>
+
+                <p className="text-muted-foreground mb-4">
+                  Após o pagamento, você poderá adicionar a versão física em PVC 
+                  de alta qualidade por apenas <strong className="text-foreground">R$ 15,00</strong>
+                </p>
+
+                <div className="flex flex-wrap justify-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-slate-600 dark:text-slate-300">Material PVC durável</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-slate-600 dark:text-slate-300">Frete para todo Brasil</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-slate-600 dark:text-slate-300">Entrega em 7-10 dias</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-10 text-center text-sm text-white/80">
+            <p>🔒 Pagamento 100% seguro</p>
+            <p className="mt-2">Dúvidas? contato@urebrasil.com.br</p>
+          </div>
         </div>
       </main>
     </div>
