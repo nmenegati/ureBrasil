@@ -108,10 +108,10 @@ export default function VerificarEmail() {
               )}
 
               <Button
-                onClick={() => navigate('/escolher-plano')}
+                onClick={() => navigate('/complete-profile')}
                 className="w-full"
               >
-                Escolher meu Plano
+                Completar meu Perfil
               </Button>
             </div>
 

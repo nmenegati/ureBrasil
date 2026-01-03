@@ -78,25 +78,50 @@ export default function EscolherPlano() {
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
 
-  // Carregar perfil e planos
+  // ID do plano Geral Digital para redirecionamento automático
+  const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
+
+  // Carregar perfil e verificar elegibilidade
   useEffect(() => {
-    const loadData = async () => {
+    const checkEligibilityAndLoadPlans = async () => {
       if (!user) return;
 
-      // Buscar perfil
+      // Buscar perfil com is_law_student
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('id')
+        .select('id, is_law_student')
         .eq('user_id', user.id)
         .single();
 
-      if (profile) setProfileId(profile.id);
+      if (!profile) {
+        // Sem perfil, redirecionar para completar
+        navigate('/complete-profile');
+        return;
+      }
 
-      // Buscar planos ativos
+      setProfileId(profile.id);
+
+      // Se NÃO é estudante de Direito, redirecionar direto para pagamento
+      if (!profile.is_law_student) {
+        localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
+        
+        // Atualizar plan_id no banco
+        await supabase
+          .from('student_profiles')
+          .update({ plan_id: PLAN_GERAL_DIGITAL_ID })
+          .eq('id', profile.id);
+        
+        toast.info('Plano Geral Digital selecionado automaticamente');
+        navigate('/pagamento');
+        return;
+      }
+
+      // É estudante de Direito - buscar apenas planos digitais (geral + direito)
       const { data: plansData } = await supabase
         .from('plans')
         .select('*')
         .eq('is_active', true)
+        .in('type', ['geral_digital', 'direito_digital'])
         .order('price', { ascending: true });
 
       if (plansData) {
@@ -112,8 +137,8 @@ export default function EscolherPlano() {
       setLoading(false);
     };
 
-    loadData();
-  }, [user]);
+    checkEligibilityAndLoadPlans();
+  }, [user, navigate]);
 
   const handleSelectPlan = async (planId: string, planName: string) => {
     setSelecting(planId);

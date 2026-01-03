@@ -21,6 +21,7 @@ interface StudentProfile {
   institution: string | null;
   course: string | null;
   profile_completed: boolean;
+  is_law_student?: boolean;
 }
 
 interface StudentCard {
@@ -51,6 +52,7 @@ export default function Dashboard() {
   const [card, setCard] = useState<StudentCard | null>(null);
   const [documentsApproved, setDocumentsApproved] = useState(0);
   const [paymentApproved, setPaymentApproved] = useState(false);
+  const [isLawStudent, setIsLawStudent] = useState(false);
   const [progress, setProgress] = useState<Progress>({
     profile: false,
     documents: false,
@@ -146,6 +148,7 @@ export default function Dashboard() {
       }
 
       setProfile(profileData);
+      setIsLawStudent(profileData?.is_law_student || false);
 
       if (!profileData) {
         setLoadingData(false);
@@ -258,25 +261,25 @@ export default function Dashboard() {
     return "Parabéns! Sua carteirinha está pronta!";
   };
 
-  // Determina o próximo passo - NOVA ORDEM: Pagamento → Perfil → Docs → Carteirinha
+  // Determina o próximo passo - NOVA ORDEM: Perfil → Pagamento → Docs → Carteirinha
   const getNextStep = () => {
-    // 1. PAGAMENTO PRIMEIRO
-    if (!progress.payment) {
-      return {
-        title: 'Escolha seu Plano',
-        description: 'Realize o pagamento para continuar',
-        buttonText: 'Escolher Plano',
-        route: '/escolher-plano'
-      };
-    }
-    
-    // 2. DEPOIS PERFIL
+    // 1. PERFIL PRIMEIRO
     if (!progress.profile) {
       return {
         title: 'Complete seu Perfil',
         description: 'Preencha seus dados para emissão da carteirinha',
         buttonText: 'Completar Perfil',
         route: '/complete-profile'
+      };
+    }
+    
+    // 2. DEPOIS PAGAMENTO
+    if (!progress.payment) {
+      return {
+        title: isLawStudent ? 'Escolha seu Plano' : 'Realize o Pagamento',
+        description: isLawStudent ? 'Escolha entre Geral ou JurisEstudante' : 'Finalize com o plano Geral Digital',
+        buttonText: isLawStudent ? 'Escolher Plano' : 'Pagar Agora',
+        route: isLawStudent ? '/escolher-plano' : '/pagamento'
       };
     }
     
@@ -303,8 +306,17 @@ export default function Dashboard() {
     return null; // Tudo completo, não mostra
   };
 
-  // Cards de progresso clicáveis - NOVA ORDEM: Pagamento → Perfil → Docs
+  // Cards de progresso clicáveis - NOVA ORDEM: Perfil → Pagamento → Docs
   const progressSteps = [
+    {
+      id: 'perfil',
+      label: 'Perfil',
+      status: progress.profile ? 'Concluído' : 'Pendente',
+      icon: User,
+      enabled: true, // Sempre habilitado
+      route: '/complete-profile',
+      completed: progress.profile
+    },
     {
       id: 'pagamento',
       label: 'Pagamento',
@@ -313,25 +325,16 @@ export default function Dashboard() {
         return progress.payment ? 'Aprovado' : 'Pendente';
       })(),
       icon: CreditCard,
-      enabled: true, // Sempre habilitado
-      route: '/escolher-plano',
+      enabled: progress.profile, // Só após perfil
+      route: isLawStudent ? '/escolher-plano' : '/pagamento',
       completed: progress.payment
-    },
-    {
-      id: 'perfil',
-      label: 'Perfil',
-      status: progress.profile ? 'Concluído' : 'Pendente',
-      icon: User,
-      enabled: progress.payment, // Só habilita após pagamento
-      route: '/complete-profile',
-      completed: progress.profile
     },
     {
       id: 'documentos',
       label: 'Documentos',
       status: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4`,
       icon: FileText,
-      enabled: progress.profile, // Só habilita após perfil
+      enabled: progress.payment, // Só após pagamento
       route: '/upload-documentos',
       completed: progress.documents
     },

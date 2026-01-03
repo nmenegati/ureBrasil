@@ -54,26 +54,35 @@ export default function Login() {
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // ID do plano Geral Digital para não-Direito
+      const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
+      
       // 1. Verificar se email está confirmado
       if (!data.user.email_confirmed_at) {
         window.location.href = `/verificar-email?email=${encodeURIComponent(data.user.email || '')}`;
         return;
       }
       
-      // 2. Buscar perfil
+      // 2. Buscar perfil com is_law_student
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('id, profile_completed')
+        .select('id, profile_completed, is_law_student')
         .eq('user_id', data.user.id)
         .maybeSingle();
 
       if (!profile) {
-        // Perfil básico não existe - ir para escolher plano (será criado após pagamento)
-        window.location.href = '/escolher-plano';
+        // Perfil básico não existe - ir para completar perfil
+        window.location.href = '/complete-profile';
         return;
       }
 
-      // 3. Verificar pagamento aprovado
+      // 3. Verificar perfil completo (ANTES do pagamento no novo fluxo)
+      if (!profile.profile_completed) {
+        window.location.href = '/complete-profile';
+        return;
+      }
+
+      // 4. Verificar pagamento aprovado
       const { data: payment } = await supabase
         .from('payments')
         .select('id')
@@ -83,14 +92,15 @@ export default function Login() {
         .maybeSingle();
 
       if (!payment) {
-        // Sem pagamento aprovado - ir para escolher plano
-        window.location.href = '/escolher-plano';
-        return;
-      }
-
-      // 4. Verificar perfil completo
-      if (!profile.profile_completed) {
-        window.location.href = '/complete-profile';
+        // Sem pagamento aprovado - rota depende de is_law_student
+        if (profile.is_law_student) {
+          // Estudante de Direito pode escolher plano
+          window.location.href = '/escolher-plano';
+        } else {
+          // Não-Direito vai direto para pagamento com plano Geral
+          localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
+          window.location.href = '/pagamento';
+        }
         return;
       }
 
