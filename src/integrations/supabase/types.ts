@@ -441,6 +441,7 @@ export type Database = {
           full_name: string
           id: string
           institution: string | null
+          is_law_student: boolean | null
           neighborhood: string | null
           number: string | null
           period: string | null
@@ -470,6 +471,7 @@ export type Database = {
           full_name: string
           id?: string
           institution?: string | null
+          is_law_student?: boolean | null
           neighborhood?: string | null
           number?: string | null
           period?: string | null
@@ -499,6 +501,7 @@ export type Database = {
           full_name?: string
           id?: string
           institution?: string | null
+          is_law_student?: boolean | null
           neighborhood?: string | null
           number?: string | null
           period?: string | null

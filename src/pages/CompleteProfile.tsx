@@ -94,6 +94,9 @@ export default function CompleteProfile() {
 
     setLoading(true);
 
+    // ID do plano Geral Digital para não-Direito
+    const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
+
     // APENAS UPDATE - perfil SEMPRE existe graças à trigger do banco
     const { error } = await supabase
       .from('student_profiles')
@@ -121,9 +124,32 @@ export default function CompleteProfile() {
       return;
     }
 
+    // Buscar perfil atualizado para verificar is_law_student (trigger já atualizou)
+    const { data: updatedProfile } = await supabase
+      .from('student_profiles')
+      .select('is_law_student')
+      .eq('user_id', user.id)
+      .single();
+
     toast.success('Perfil completado com sucesso!');
     setLoading(false);
-    window.location.href = '/upload-documentos';
+
+    // Redirecionar baseado em is_law_student
+    if (updatedProfile?.is_law_student) {
+      // Estudante de Direito → pode escolher plano
+      window.location.href = '/escolher-plano';
+    } else {
+      // Não é Direito → plano Geral Digital automaticamente
+      localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
+      
+      // Atualizar plan_id no banco
+      await supabase
+        .from('student_profiles')
+        .update({ plan_id: PLAN_GERAL_DIGITAL_ID })
+        .eq('user_id', user.id);
+      
+      window.location.href = '/pagamento';
+    }
   };
 
   return (
