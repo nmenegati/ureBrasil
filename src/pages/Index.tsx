@@ -581,8 +581,8 @@ const Index = () => {
             <p className="text-xl text-muted-foreground">Transparente, simples e sem surpresas</p>
           </div>
 
-          {/* Pricing Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Pricing Grid - 2 Digital Plans */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Plan 1 - Digital Geral */}
             <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-blue relative">
               <CardContent className="pt-8 pb-6 flex flex-col h-full">
@@ -591,42 +591,7 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground mb-4">Ensino médio, superior, cursos</p>
                   <div className="flex items-baseline justify-center gap-2">
                     <span className="text-5xl font-black text-ure-blue">R$ 29</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-6 flex-grow">
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Carteirinha digital</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">QR Code de verificação</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Emissão em até 2h</span>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-ure-orange text-white hover:bg-ure-orange/90 font-bold" onClick={() => navigate('/signup')}>
-                  Solicitar Agora
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Plan 2 - Digital + Física Geral */}
-            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-green relative">
-              <CardContent className="pt-8 pb-6 flex flex-col h-full">
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Digital + Física</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Completo</p>
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-black text-ure-green">R$ 44</span>
+                    <span className="text-muted-foreground">/ano</span>
                   </div>
                 </div>
 
@@ -649,11 +614,11 @@ const Index = () => {
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Carteirinha física em casa</span>
+                    <span className="text-sm text-foreground">Acesso ilimitado ao app</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Envio em até 7 dias úteis</span>
+                    <span className="text-sm text-foreground">Suporte prioritário</span>
                   </div>
                 </div>
 
@@ -663,9 +628,9 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Plan 3 - Digital Direito */}
-            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-purple-600 relative">
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white border-none px-4 py-1 text-xs font-bold">
+            {/* Plan 2 - Digital Direito (Destacado) */}
+            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-yellow-500 relative ring-2 ring-yellow-500/30 shadow-xl">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-black border-none px-4 py-1 text-xs font-bold">
                 JURISESTUDANTE
               </Badge>
               <CardContent className="pt-8 pb-6 flex flex-col h-full">
@@ -673,7 +638,8 @@ const Index = () => {
                   <h3 className="text-2xl font-bold text-foreground mb-2">Digital Direito</h3>
                   <p className="text-sm text-muted-foreground mb-4">Para futuros advogados</p>
                   <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-black text-purple-600">R$ 44</span>
+                    <span className="text-5xl font-black text-yellow-500">R$ 44</span>
+                    <span className="text-muted-foreground">/ano</span>
                   </div>
                 </div>
 
@@ -706,70 +672,49 @@ const Index = () => {
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
                     <span className="text-sm text-foreground font-bold">Descontos em cursos jurídicos</span>
                   </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-foreground font-bold">Rede de networking jurídico</span>
+                  </div>
                 </div>
 
-                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold" onClick={() => navigate('/signup')}>
+                <Button className="w-full bg-yellow-500 text-black hover:bg-yellow-600 font-bold" onClick={() => navigate('/signup')}>
                   Solicitar JurisEstudante
                 </Button>
               </CardContent>
             </Card>
+          </div>
 
-            {/* Plan 4 - Digital + Física Direito */}
-            <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-purple-600 relative ring-2 ring-ure-yellow/50">
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white border-none px-4 py-1 text-xs font-bold">
-                JURISESTUDANTE
-              </Badge>
-              <CardContent className="pt-8 pb-6 flex flex-col h-full">
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Digital + Física Direito</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Pacote completo</p>
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-black text-purple-600">R$ 59</span>
+          {/* Physical Card Info */}
+          <div className="mt-12 max-w-3xl mx-auto">
+            <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/30">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <CreditCard className="w-6 h-6 text-blue-500" />
+                  <h4 className="text-xl font-bold text-foreground">
+                    Carteirinha Física Disponível
+                  </h4>
+                </div>
+                
+                <p className="text-muted-foreground mb-4">
+                  Após o pagamento, você poderá adicionar a versão física em PVC 
+                  de alta qualidade por apenas <strong className="text-foreground">R$ 15,00</strong>
+                </p>
+                
+                <div className="flex flex-wrap justify-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-ure-green" />
+                    <span className="text-foreground">Material PVC durável</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-ure-green" />
+                    <span className="text-foreground">Frete para todo Brasil</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-ure-green" />
+                    <span className="text-foreground">Entrega em 7-10 dias</span>
                   </div>
                 </div>
-
-                <div className="space-y-3 mb-6 flex-grow">
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Carteirinha digital</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">QR Code de verificação</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Emissão em até 2h</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Carteirinha física em casa</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Envio em até 7 dias úteis</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Benefícios exclusivos Direito</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Material de estudo OAB</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Descontos em cursos jurídicos</span>
-                  </div>
-                </div>
-
-                <Button className="w-full bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 font-bold" onClick={() => navigate('/signup')}>
-                  Solicitar JurisEstudante
-                </Button>
               </CardContent>
             </Card>
           </div>
