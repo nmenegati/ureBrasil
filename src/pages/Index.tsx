@@ -56,7 +56,7 @@ const Index = () => {
       <Header variant="landing" />
 
       {/* Hero Section */}
-      <section className="relative -mt-16 sm:-mt-20 pt-36 pb-16 md:pt-44 md:pb-20 bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end overflow-hidden">
+      <section className="relative pt-20 pb-16 md:pt-24 md:pb-20 bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -76,16 +76,16 @@ const Index = () => {
 
               {/* Main Heading */}
               <div className="space-y-1 sm:space-y-2">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight">
-                  Sua Carteirinha Estudantil Digital, Simples e Válida em Todo o Brasil
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight">
+                  Sua Carteirinha Estudantil Válida em Todo o Brasil
                 </h1>
                 <div className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start">
                   <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-ure-yellow min-h-[80px] sm:min-h-[96px] lg:min-h-[112px] xl:min-h-[128px] flex items-center">
                     <Typewriter
                       text={[
+                        "100% digital no seu celular",
                         "Aprovação rápida",
-                        "100% Digital no seu celular",
-                        "Documento estudantil válido nacionalmente",
+                        "Carteirinha física disponível",
                       ]}
                       speed={70}
                       deleteSpeed={40}
@@ -100,7 +100,7 @@ const Index = () => {
 
               {/* Subtitle */}
               <p className="text-base sm:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Pare de pagar inteira. Tenha em mãos uma carteirinha estudantil digital, válida conforme a Lei da Meia-Entrada, para usar em cinemas, shows, teatros e eventos culturais.
+                Pare de pagar inteira. Emita sua carteirinha estudantil digital, válida pela Lei da Meia-Entrada. Economize em cinemas, shows, teatros e eventos culturais.
               </p>
 
               {/* Feature Badges - Removed as per new design focus on text, or keep if user didn't ask to remove? 
@@ -112,13 +112,12 @@ const Index = () => {
               {/* CTA Buttons */}
               <div className="flex flex-col items-center lg:items-start pt-4 sm:pt-6 space-y-4">
                 <Button
-                  variant="hero-primary"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto shadow-xl hover:scale-105 transition-transform"
+                  className="bg-ure-yellow text-ure-dark hover:bg-ure-yellow/90 text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto shadow-xl hover:scale-105 transition-transform"
                   onClick={() => navigate('/signup')}
                 >
                   <Rocket className="mr-2 h-5 w-5" />
-                  Quero Minha Carteirinha Digital 🎟️
+                  Emitir Agora
                 </Button>
                 
                 {/* Microtext below CTA */}
