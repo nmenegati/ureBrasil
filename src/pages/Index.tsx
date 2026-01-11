@@ -201,11 +201,11 @@ const Index = () => {
             <span className="hidden md:block text-gray-300 dark:text-gray-700">•</span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-ure-green" />
-              Validação para evitar fraudes
+              Verificação de autenticidade
             </span>
           </div>
           <p className="mt-3 text-center text-sm text-muted-foreground/80">
-            Atendimento humano sempre que precisar.
+            Suporte disponível em nossos canais de atendimento.
           </p>
         </div>
       </section>
