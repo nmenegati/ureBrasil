@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Typewriter } from "@/components/ui/typewriter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ImageAutoSlider } from "@/components/ui/image-auto-slider";
 import {
   Check,
   Rocket,
