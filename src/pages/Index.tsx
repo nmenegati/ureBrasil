@@ -215,8 +215,8 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Faça Tudo em Poucos Minutos</h2>
-            <p className="text-xl text-muted-foreground">Sem filas, sem papelada e sem complicação.</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua Carteirinha em poucos minutos</h2>
+            <p className="text-xl text-muted-foreground">Sem complicação.</p>
           </div>
 
           {/* Steps Grid */}
@@ -230,7 +230,8 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Cadastro Rápido</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Crie sua conta em menos de 2 minutos. Seus dados são protegidos conforme a LGPD.
+                  Crie sua conta em minutos.<br />
+                  Seus dados são protegidos conforme a LGPD.
                 </p>
               </CardContent>
             </Card>
@@ -244,7 +245,8 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Pagamento Online</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Pague com PIX ou cartão. O pagamento libera automaticamente o envio para validação.
+                  Pague com PIX ou cartão.<br />
+                  O pagamento libera o envio para validação.
                 </p>
               </CardContent>
             </Card>
@@ -258,7 +260,8 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Carteirinha Digital</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Após a aprovação, sua carteirinha fica disponível no seu painel para uso direto no celular.
+                  Envie seus documentos.<br />
+                  Após validação, sua carteirinha fica disponível.
                 </p>
               </CardContent>
             </Card>
