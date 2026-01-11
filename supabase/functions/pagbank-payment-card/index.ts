@@ -56,7 +56,20 @@ serve(async (req) => {
     // Get student profile
     const { data: profile, error: profileError } = await supabase
       .from('student_profiles')
-      .select('id, full_name, cpf, phone')
+      .select(`
+        id, 
+        full_name, 
+        cpf, 
+        phone,
+        birth_date,
+        street,
+        number,
+        complement,
+        neighborhood,
+        city,
+        state,
+        postal_code
+      `)
       .eq('user_id', userId)
       .single()
 

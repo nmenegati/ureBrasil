@@ -19,11 +19,12 @@ import {
   Clock, 
   AlertCircle,
   File,
-  ChevronDown
+  ChevronDown,
+  Shield
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
-type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
+type DocumentType = 'rg' | 'matricula' | 'selfie';
 
 interface DocumentConfig {
   type: DocumentType;
@@ -55,8 +56,8 @@ interface StudentProfile {
 const documentConfigs: DocumentConfig[] = [
   {
     type: 'rg',
-    label: 'RG ou CNH',
-    description: 'Frente e verso do documento',
+    label: 'Documento de Identidade',
+    description: 'Pode ser RG, CNH ou passaporte. Envie fotos nítidas da frente e do verso.',
     icon: FileText,
     acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
     maxSizeMB: 5
@@ -64,7 +65,7 @@ const documentConfigs: DocumentConfig[] = [
   {
     type: 'matricula',
     label: 'Comprovante de Matrícula',
-    description: 'Documento oficial da instituição',
+    description: 'Pode ser declaração, boleto recente ou print do portal do aluno.',
     icon: GraduationCap,
     acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
     maxSizeMB: 5
@@ -80,7 +81,7 @@ const documentConfigs: DocumentConfig[] = [
   {
     type: 'selfie',
     label: 'Selfie com Documento',
-    description: 'Segure seu RG/CNH ao lado do rosto',
+    description: 'Tire uma selfie segurando o documento ao lado do rosto. Isso protege você contra uso indevido.',
     icon: UserCircle,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 2
@@ -591,7 +592,7 @@ export default function UploadDocumentos() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
+    <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
@@ -602,12 +603,16 @@ export default function UploadDocumentos() {
       <main className="relative z-10 p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              Envie seus Documentos
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Validar Minha Carteirinha Estudantil
             </h1>
-            <p className="text-white/80 mt-2">
-              Passo 2 de 4 - Validação de documentos
+            <p className="text-white/80 max-w-2xl mx-auto">
+              Para garantir a autenticidade do documento e evitar fraudes, solicitamos o envio de alguns arquivos. O processo é rápido e seguro.
+              <br />
+              <span className="text-sm font-medium text-emerald-300 flex items-center justify-center gap-1 mt-1">
+                <CheckCircle className="w-4 h-4" /> Seus dados estão protegidos pela LGPD
+              </span>
             </p>
           </div>
         
@@ -616,6 +621,14 @@ export default function UploadDocumentos() {
           {documentConfigs.map(config => (
             <DocumentCard key={config.type} config={config} />
           ))}
+        </div>
+
+        {/* Texto de segurança */}
+        <div className="mb-8 text-center">
+          <p className="text-white/80 text-sm bg-white/10 inline-block px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10">
+            <Shield className="w-4 h-4 inline mr-2 text-emerald-400" />
+            Se algum arquivo não estiver legível, avisaremos você rapidamente para corrigir.
+          </p>
         </div>
         
         {/* Contador de progresso */}

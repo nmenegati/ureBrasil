@@ -277,7 +277,7 @@ export default function Dashboard() {
     if (!progress.payment) {
       return {
         title: isLawStudent ? 'Escolha seu Plano' : 'Realize o Pagamento',
-        description: isLawStudent ? 'Escolha entre Geral ou JurisEstudante' : 'Finalize com o plano Geral Digital',
+        description: isLawStudent ? 'Escolha entre Carteira Digital (Geral) ou LexPraxis' : 'Finalize com a Carteira Estudantil Digital (Geral)',
         buttonText: isLawStudent ? 'Escolher Plano' : 'Pagar Agora',
         route: isLawStudent ? '/escolher-plano' : '/pagamento'
       };
@@ -358,9 +358,9 @@ export default function Dashboard() {
 
   // Se não tem perfil, mostrar tela para completar
   if (!profile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
-        {/* Decorative elements */}
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
+          {/* Decorative elements */}
         <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
@@ -369,9 +369,9 @@ export default function Dashboard() {
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-lg mx-auto shadow-xl shadow-black/10">
             <AlertCircle className="w-16 h-16 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Complete seu Perfil</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Ative Sua Economia Agora</h2>
             <p className="text-slate-600 dark:text-slate-300 mt-2">
-              Para acessar todas as funcionalidades e obter sua carteirinha estudantil, complete seu cadastro.
+              Finalize seu pedido para desbloquear todos os benefícios estudantis.
             </p>
             <Button 
               className="mt-6 bg-primary hover:bg-primary/90 text-primary-foreground"

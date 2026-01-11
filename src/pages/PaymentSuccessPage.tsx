@@ -79,7 +79,7 @@ const PaymentSuccessPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
+    <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />

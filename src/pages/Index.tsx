@@ -56,7 +56,7 @@ const Index = () => {
       <Header variant="landing" />
 
       {/* Hero Section */}
-      <section className="relative -mt-16 sm:-mt-20 pt-36 pb-16 md:pt-44 md:pb-20 bg-gradient-to-br from-[#0D7DBF] to-[#00A859] overflow-hidden">
+      <section className="relative -mt-16 sm:-mt-20 pt-36 pb-16 md:pt-44 md:pb-20 bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
@@ -77,18 +77,15 @@ const Index = () => {
               {/* Main Heading */}
               <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight">
-                  Sua Carteirinha
-                  <br />
-                  Estudantil
+                  Sua Carteirinha Estudantil Digital, Simples e Válida em Todo o Brasil
                 </h1>
                 <div className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start">
                   <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-ure-yellow min-h-[80px] sm:min-h-[96px] lg:min-h-[112px] xl:min-h-[128px] flex items-center">
                     <Typewriter
                       text={[
-                        "⏱️ Em Minutos!",
-                        "☁️ 100% na Nuvem!",
-                        "🇧🇷 Vale em Todo Brasil!",
-                        "💵 Economiza de Verdade!",
+                        "Aprovação rápida",
+                        "100% Digital no seu celular",
+                        "Documento estudantil válido nacionalmente",
                       ]}
                       speed={70}
                       deleteSpeed={40}
@@ -103,40 +100,32 @@ const Index = () => {
 
               {/* Subtitle */}
               <p className="text-base sm:text-lg lg:text-xl text-white/90 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Chega de pagar inteira! A sua carteirinha URE te garante até 50% de desconto em cinema, shows, transporte, cursos e mais. Não é só uma carteirinha é acesso, é vantagem. Aproveita!
+                Pare de pagar inteira. Tenha em mãos uma carteirinha estudantil digital, válida conforme a Lei da Meia-Entrada, para usar em cinemas, shows, teatros e eventos culturais.
               </p>
 
-              {/* Feature Badges */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 justify-center lg:justify-start">
-                {["Emissão em até 2 horas", "Válida nacionalmente"].map((feature) => (
-                  <Badge
-                    key={feature}
-                    variant="secondary"
-                    className="bg-white/20 text-white border-white/30 backdrop-blur-sm px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
-                  >
-                    <Check className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    {feature}
-                  </Badge>
-                ))}
-              </div>
+              {/* Feature Badges - Removed as per new design focus on text, or keep if user didn't ask to remove? 
+                  User didn't explicitly ask to remove badges, but the new copy seems self-contained. 
+                  I'll keep them but update if needed. Actually, the prompt implies replacing content. 
+                  The new subtitle and typewriter cover the badge content. I will remove the old badges to clean up.
+              */}
 
               {/* CTA Buttons */}
-              <div className="flex justify-center lg:justify-start pt-4 sm:pt-6">
+              <div className="flex flex-col items-center lg:items-start pt-4 sm:pt-6 space-y-4">
                 <Button
                   variant="hero-primary"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto shadow-xl hover:scale-105 transition-transform"
                   onClick={() => navigate('/signup')}
                 >
                   <Rocket className="mr-2 h-5 w-5" />
-                  Solicitar Minha Carteirinha
+                  Quero Minha Carteirinha Digital 🎟️
                 </Button>
+                
+                {/* Microtext below CTA */}
+                <p className="text-sm text-white/80 font-medium">
+                  Processo online • Pagamento seguro • Uso imediato após aprovação
+                </p>
               </div>
-
-              {/* Social Proof */}
-              <p className="text-sm sm:text-base text-white/80 flex items-center justify-center lg:justify-start gap-2">
-                ✨ Mais de 15.000 estudantes já economizaram com a URE
-              </p>
             </div>
 
             {/* Right Content - Carousel de Carteirinhas */}
@@ -197,13 +186,38 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Prova de Confiança Section */}
+      <section className="py-8 bg-white dark:bg-[#1A1A2E] border-b border-gray-100 dark:border-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-sm md:text-base font-medium text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-ure-green" />
+              Documento estudantil digital
+            </span>
+            <span className="hidden md:block text-gray-300 dark:text-gray-700">•</span>
+            <span className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-ure-green" />
+              Processo seguro
+            </span>
+            <span className="hidden md:block text-gray-300 dark:text-gray-700">•</span>
+            <span className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-ure-green" />
+              Validação para evitar fraudes
+            </span>
+          </div>
+          <p className="mt-3 text-center text-sm text-muted-foreground/80">
+            Atendimento humano sempre que precisar.
+          </p>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section id="como-funciona" className="py-20 bg-white dark:bg-[#1A1A2E]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Como Funciona? É Simples e Rápido!</h2>
-            <p className="text-xl text-muted-foreground">Sua carteirinha em 3 passos</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Faça Tudo em Poucos Minutos</h2>
+            <p className="text-xl text-muted-foreground">Sem filas, sem papelada e sem complicação.</p>
           </div>
 
           {/* Steps Grid */}
@@ -215,9 +229,9 @@ const Index = () => {
                   <UserPlus className="w-10 h-10 text-white" />
                   <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white dark:bg-background border-2 border-ure-blue flex items-center justify-center text-sm font-bold text-ure-blue">1</span>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">Cadastro</h3>
+                <h3 className="text-2xl font-bold text-foreground">Cadastro Rápido</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Crie sua conta, confirme seu email e complete seu perfil. Rápido e seguro.
+                  Crie sua conta em menos de 2 minutos. Seus dados são protegidos conforme a LGPD.
                 </p>
               </CardContent>
             </Card>
@@ -231,7 +245,7 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Pagamento Online</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Escolha seu plano e pague com cartão, PIX ou boleto. Seguro e prático.
+                  Pague com PIX ou cartão. O pagamento libera automaticamente o envio para validação.
                 </p>
               </CardContent>
             </Card>
@@ -243,9 +257,9 @@ const Index = () => {
                   <FileCheck className="w-10 h-10 text-white" />
                   <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white dark:bg-background border-2 border-ure-orange flex items-center justify-center text-sm font-bold text-ure-orange">3</span>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">Envio e Validação</h3>
+                <h3 className="text-2xl font-bold text-foreground">Carteirinha Digital</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Envie seus documentos e receba sua carteirinha digital validada em minutos!
+                  Após a aprovação, sua carteirinha fica disponível no seu painel para uso direto no celular.
                 </p>
               </CardContent>
             </Card>
@@ -261,9 +275,7 @@ const Index = () => {
             {/* Linha decorativa amarela */}
             <div className="w-24 h-1 bg-[#FFD100] mx-auto mb-6"></div>
 
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">Economize de Verdade!</h2>
-
-            <p className="text-lg text-gray-700 dark:text-gray-300">Descontos e benefícios em todo Brasil</p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">Economize de Verdade ao Longo do Ano</h2>
           </div>
 
           {/* Grid de 3 Cards */}
@@ -276,15 +288,12 @@ const Index = () => {
               </div>
 
               {/* Título */}
-              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Meia-Entrada</h3>
+              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Pague Meia em Eventos Culturais</h3>
 
               {/* Descrição */}
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Cinemas, teatros, shows, eventos esportivos e culturais. Economize até 50%!
+                Use sua carteirinha estudantil em cinemas, teatros, shows e eventos culturais conforme a legislação vigente.
               </p>
-
-              {/* Economia */}
-              <div className="text-[#00A859] dark:text-[#4ade80] font-semibold text-lg">Economia média: R$ 40/mês</div>
             </div>
 
             {/* Card 2 - Transporte */}
@@ -295,15 +304,12 @@ const Index = () => {
               </div>
 
               {/* Título */}
-              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Transporte</h3>
+              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Mais Liberdade para se Deslocar</h3>
 
               {/* Descrição */}
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Descontos em transporte público e intermunicipal em diversas cidades.
+                Tenha acesso a benefícios estudantis e descontos disponíveis para estudantes em transporte e serviços parceiros.
               </p>
-
-              {/* Economia */}
-              <div className="text-[#00A859] dark:text-[#4ade80] font-semibold text-lg">Economia média: R$ 80/mês</div>
             </div>
 
             {/* Card 3 - Educação */}
@@ -314,15 +320,12 @@ const Index = () => {
               </div>
 
               {/* Título */}
-              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Educação</h3>
+              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Vantagens para Quem Estuda</h3>
 
               {/* Descrição */}
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Cursos online, softwares, livros, plataformas de estudo e muito mais.
+                Benefícios em cursos, plataformas educacionais, softwares e serviços voltados ao público estudantil.
               </p>
-
-              {/* Economia */}
-              <div className="text-[#00A859] dark:text-[#4ade80] font-semibold text-lg">Economia média: R$ 60/mês</div>
             </div>
           </div>
 
@@ -332,11 +335,13 @@ const Index = () => {
               <div className="flex items-center justify-center gap-3 mb-3">
                 <span className="text-4xl">💰</span>
                 <p className="text-2xl md:text-3xl font-bold text-green-800 dark:text-green-200">
-                  Potencial de economia: Até R$ 180/mês = R$ 2.160/ano!
+                  Ela se paga rapidamente
                 </p>
               </div>
               <p className="text-gray-700 dark:text-gray-300 text-lg mb-6">
-                Sua carteirinha se paga em menos de uma semana!
+                Com poucos usos ao longo do ano, o valor da carteirinha já se transforma em economia.
+                <br />
+                <span className="text-sm italic mt-2 block">Estimativa baseada em uso recorrente de meia-entrada em atividades culturais.</span>
               </p>
               <Button
                 variant="hero-primary"
@@ -406,7 +411,7 @@ const Index = () => {
 
                 {/* Review Text */}
                 <p className="text-foreground leading-relaxed text-base">
-                  "A JurisEstudante foi essencial na minha preparação para OAB. Os materiais exclusivos são excelentes!"
+                  "A LexPraxis foi essencial na minha preparação para OAB. Os materiais exclusivos são excelentes!"
                 </p>
 
                 {/* Author */}
@@ -474,8 +479,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* JurisEstudante Section */}
-      <section id="juris-estudante" className="py-20 bg-gradient-to-br from-[#252543] to-[#3d3d5c] text-white">
+      {/* LexPraxis Section */}
+      <section id="lex-praxis" className="py-20 bg-gradient-to-br from-[#252543] to-[#3d3d5c] text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -487,29 +492,12 @@ const Index = () => {
 
               {/* Title */}
               <div className="space-y-2">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">JurisEstudante</h2>
-                <div className="flex items-start gap-3 min-h-[100px] sm:min-h-[100px]">
-                  <Typewriter
-                    text={[
-                      "🚀 Sua Carreira Começa Aqui!",
-                      "💰 Prepare-se Gastando Menos!",
-                      "⚖️ Da Faculdade à Aprovação!",
-                      "🤝 Networking Que Abre Portas!",
-                    ]}
-                    className="text-3xl sm:text-4xl font-black text-ure-yellow"
-                    speed={50}
-                    deleteSpeed={30}
-                    waitTime={3000}
-                    loop={true}
-                    showCursor={false}
-                  />
-                </div>
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight">LexPraxis — Para Quem Leva a Carreira Jurídica a Sério</h2>
               </div>
 
               {/* Description */}
               <p className="text-lg sm:text-xl text-white/90 leading-relaxed">
-                Carteirinha especial para estudantes de Direito com benefícios exclusivos voltados para sua formação e
-                preparação para OAB.
+                Mais que uma carteirinha estudantil. Uma identificação pensada para estudantes de Direito que buscam economia, posicionamento e preparação desde a faculdade.
               </p>
 
               {/* Benefits */}
@@ -520,8 +508,8 @@ const Index = () => {
                     <Scale className="w-7 h-7 text-[#1A1A2E]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold mb-1">Descontos em Cursos Jurídicos</h3>
-                    <p className="text-white/80">Preparatórios OAB, pós-graduações e especializações</p>
+                    <h3 className="text-xl font-bold mb-1">Benefícios Educacionais Jurídicos</h3>
+                    <p className="text-white/80">Acesso a vantagens e condições especiais em cursos, eventos e serviços voltados à área jurídica.</p>
                   </div>
                 </div>
 
@@ -531,19 +519,8 @@ const Index = () => {
                     <BookOpen className="w-7 h-7 text-[#1A1A2E]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold mb-1">Material de Estudo Exclusivo</h3>
-                    <p className="text-white/80">Simulados, cronogramas, e-books e videoaulas</p>
-                  </div>
-                </div>
-
-                {/* Benefit 3 */}
-                <div className="flex gap-4 items-start">
-                  <div className="w-14 h-14 rounded-full bg-ure-yellow flex items-center justify-center flex-shrink-0">
-                    <GraduationCap className="w-7 h-7 text-[#1A1A2E]" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold mb-1">Eventos e Congressos</h3>
-                    <p className="text-white/80">Acesso facilitado a eventos jurídicos pelo Brasil</p>
+                    <h3 className="text-xl font-bold mb-1">Ambiente Acadêmico Profissional</h3>
+                    <p className="text-white/80">Uma carteirinha alinhada à sua formação e ao seu futuro profissional.</p>
                   </div>
                 </div>
               </div>
@@ -554,7 +531,7 @@ const Index = () => {
                 className="bg-ure-yellow text-[#1A1A2E] hover:bg-ure-yellow/90 text-lg px-8 py-6 h-auto font-bold w-full sm:w-auto"
                 onClick={() => navigate('/signup')}
               >
-                Quero a JurisEstudante
+                Garantir Minha LexPraxis ⚖️
               </Button>
             </div>
 
@@ -583,12 +560,12 @@ const Index = () => {
 
           {/* Pricing Grid - 2 Digital Plans */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Plan 1 - Digital Geral */}
+            {/* Plan 1 - Carteira Digital (Geral) */}
             <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-blue relative">
               <CardContent className="pt-8 pb-6 flex flex-col h-full">
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Digital Geral</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Ensino médio, superior, cursos</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Carteira Estudantil Digital (Geral)</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Educação básica e ensino superior</p>
                   <div className="flex items-baseline justify-center gap-2">
                     <span className="text-5xl font-black text-ure-blue">R$ 29</span>
                     <span className="text-muted-foreground">/ano</span>
@@ -631,12 +608,12 @@ const Index = () => {
             {/* Plan 2 - Digital Direito (Destacado) */}
             <Card className="bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-yellow-500 relative ring-2 ring-yellow-500/30 shadow-xl">
               <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-black border-none px-4 py-1 text-xs font-bold">
-                JURISESTUDANTE
+                LEXPRAXIS
               </Badge>
               <CardContent className="pt-8 pb-6 flex flex-col h-full">
                 <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Digital Direito</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Para futuros advogados</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Carteira Estudantil LexPraxis</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Exclusiva para estudantes de Direito</p>
                   <div className="flex items-baseline justify-center gap-2">
                     <span className="text-5xl font-black text-yellow-500">R$ 44</span>
                     <span className="text-muted-foreground">/ano</span>
@@ -679,7 +656,7 @@ const Index = () => {
                 </div>
 
                 <Button className="w-full bg-yellow-500 text-black hover:bg-yellow-600 font-bold" onClick={() => navigate('/signup')}>
-                  Solicitar JurisEstudante
+                  Solicitar LexPraxis
                 </Button>
               </CardContent>
             </Card>
@@ -784,7 +761,7 @@ const Index = () => {
 
             <AccordionItem value="item-6" className="border border-border rounded-lg px-6 bg-card">
               <AccordionTrigger className="hover:no-underline text-left">
-                <span className="text-lg font-semibold text-foreground">Como funciona a JurisEstudante?</span>
+                <span className="text-lg font-semibold text-foreground">Como funciona a LexPraxis?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
                 É nossa carteirinha especial para estudantes de Direito, com acesso a materiais de estudo para OAB,

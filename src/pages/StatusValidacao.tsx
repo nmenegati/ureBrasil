@@ -205,7 +205,7 @@ export default function StatusValidacao() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
+    <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
@@ -219,7 +219,9 @@ export default function StatusValidacao() {
         {/* Título */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-            {allPending ? (
+            {documents.length === 4 && documents.every(d => d.status === 'approved') ? (
+              <CheckCircle className="w-8 h-8 text-green-300" />
+            ) : allPending ? (
               <Loader2 className="w-8 h-8 text-white animate-spin" />
             ) : hasRejected ? (
               <XCircle className="w-8 h-8 text-red-300" />
@@ -228,12 +230,19 @@ export default function StatusValidacao() {
             )}
           </div>
           <h1 className="text-2xl font-bold text-white">
-            {hasRejected ? 'Documentos Precisam de Correção' : 'Validando seus Documentos'}
+            {documents.length === 4 && documents.every(d => d.status === 'approved')
+              ? 'Tudo Certo! Sua Carteirinha Estudantil Está Ativa 🎓'
+              : hasRejected 
+                ? 'Documentos Precisam de Correção' 
+                : 'Nossa IA está analisando seus documentos'
+            }
           </h1>
           <p className="text-white/80 mt-2">
-            {hasRejected 
-              ? 'Alguns documentos foram rejeitados. Veja os motivos abaixo.'
-              : 'Aguarde enquanto analisamos seus documentos'
+            {documents.length === 4 && documents.every(d => d.status === 'approved')
+              ? 'Acesse agora pelo seu painel e utilize diretamente no celular.'
+              : hasRejected 
+                ? 'Alguns documentos foram rejeitados. Veja os motivos abaixo.'
+                : 'Normalmente esse processo leva apenas alguns minutos.'
             }
           </p>
         </div>

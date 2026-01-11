@@ -62,7 +62,9 @@ export default {
   				green: 'hsl(var(--ure-green))',
   				yellow: 'hsl(var(--ure-yellow))',
   				orange: 'hsl(var(--ure-orange))',
-  				dark: 'hsl(var(--ure-dark))'
+  				dark: 'hsl(var(--ure-dark))',
+				'gradient-start': 'hsl(var(--gradient-start))',
+				'gradient-end': 'hsl(var(--gradient-end))'
   			}
   		},
   		fontFamily: {
@@ -115,19 +117,29 @@ export default {
   				}
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			}
-  		},
-  		animation: {
-  			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+				from: {
+					height: 'var(--radix-accordion-content-height)'
+				},
+				to: {
+					height: '0'
+				}
+			},
+			'shimmer': {
+				'0%': {
+					backgroundPosition: '-200% center'
+				},
+				'100%': {
+					backgroundPosition: '200% center'
+				}
+			}
+		},
+		animation: {
+			'accordion-down': 'accordion-down 0.2s ease-out',
+			'accordion-up': 'accordion-up 0.2s ease-out',
+			'shimmer': 'shimmer 4s linear infinite'
+		}
   	}
   },
+  // @ts-ignore
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;

@@ -43,10 +43,18 @@ export default function VerificarEmail() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-card shadow-sm sticky top-0 z-10 border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/">
-            <img src={ureBrasilLogo} alt="URE Brasil" className="h-8 sm:h-9 w-auto object-contain" />
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-14 sm:h-[72px]">
+          <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
+            <img src={ureBrasilLogo} alt="URE Brasil" className="h-9 sm:h-11 w-auto object-contain" />
+            <div className="hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer">
+              <span className="text-[10px] font-medium tracking-wide uppercase">
+                UNIÃO REPRESENTATIVA
+              </span>
+              <span className="text-[10px] font-bold tracking-wide uppercase">
+                DOS ESTUDANTES DO BRASIL
+              </span>
+            </div>
           </Link>
           
           <div className="flex items-center gap-3">

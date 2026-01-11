@@ -213,7 +213,7 @@ export default function CompleteProfile() {
                   {/* CEP com mensagem informativa ao lado */}
                   <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4">
                     <div className="w-full sm:w-36">
-                      <Label htmlFor="cep" className="text-foreground">CEP</Label>
+                      <Label htmlFor="cep" className="text-foreground">CEP (preenchimento automático do endereço)</Label>
                       <div className="relative">
                         <Input
                           id="cep"

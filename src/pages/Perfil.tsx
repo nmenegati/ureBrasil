@@ -567,10 +567,10 @@ export default function Perfil() {
   const initials = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
-      </div>
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
     );
   }
 

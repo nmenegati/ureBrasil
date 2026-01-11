@@ -58,7 +58,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
     const sectionIds: Record<string, string> = {
       'Como Funciona': 'como-funciona',
       'Benefícios': 'beneficios',
-      'JurisEstudante': 'juris-estudante',
+      'LexPraxis': 'lex-praxis',
       'Planos': 'planos',
       'Dúvidas': 'faq',
     };
@@ -72,7 +72,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
     }
   };
 
-  const menuItems = ['Como Funciona', 'Benefícios', 'JurisEstudante', 'Planos', 'Dúvidas'];
+  const menuItems = ['Como Funciona', 'Benefícios', 'LexPraxis', 'Planos', 'Dúvidas'];
   
   // Determine background based on variant - both use CSS variables for theme support
   const headerBg = 'bg-background/95 backdrop-blur-lg border-b border-border';
@@ -88,6 +88,14 @@ export function Header({ variant = 'app' }: HeaderProps) {
               alt="URE Brasil - União Representativa dos Estudantes"
               className="h-9 sm:h-11 w-auto object-contain"
             />
+            <div className="hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer">
+              <span className="text-[10px] font-medium tracking-wide uppercase">
+                UNIÃO REPRESENTATIVA
+              </span>
+              <span className="text-[10px] font-bold tracking-wide uppercase">
+                DOS ESTUDANTES DO BRASIL
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation - Only on landing page and not PWA */}

@@ -1,0 +1,200 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { RekognitionClient, CompareFacesCommand } from "https://esm.sh/@aws-sdk/client-rekognition@3.451.0"
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const { student_id } = await req.json()
+    if (!student_id) throw new Error('student_id is required')
+
+    console.log(`[INIT] Comparação facial para student_id: ${student_id}`)
+
+    // Init Clients
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
+    const rekognition = new RekognitionClient({
+      region: Deno.env.get('AWS_REGION') || 'us-east-1',
+      credentials: {
+        accessKeyId: Deno.env.get('AWS_ACCESS_KEY_ID')!,
+        secretAccessKey: Deno.env.get('AWS_SECRET_ACCESS_KEY')!
+      }
+    })
+
+    // Fetch documents (pending or approved, we want the latest uploaded ones)
+    const { data: docs, error: docsError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('student_id', student_id)
+      .in('type', ['rg', 'foto', 'selfie'])
+      .order('created_at', { ascending: false })
+
+    if (docsError) throw docsError
+    
+    // Group by type to get latest
+    const latestDocs: any = {}
+    docs.forEach((d: any) => {
+        if (!latestDocs[d.type]) {
+            latestDocs[d.type] = d
+        }
+    })
+
+    const rg = latestDocs['rg']
+    const foto = latestDocs['foto']
+    const selfie = latestDocs['selfie']
+
+    // Validar apenas se tivermos pelo menos RG e Selfie
+    if (!rg || !selfie) {
+      console.log('Documentos insuficientes para comparação:', { 
+        hasRg: !!rg, 
+        hasFoto: !!foto, 
+        hasSelfie: !!selfie 
+      })
+      return new Response(JSON.stringify({ 
+        message: 'Aguardando envio de RG e Selfie',
+        ready: false 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      })
+    }
+
+    console.log('Baixando imagens...')
+    // Download images
+    const downloadPromises = [
+      downloadFile(supabase, rg.file_url),
+      downloadFile(supabase, selfie.file_url)
+    ]
+    if (foto) downloadPromises.push(downloadFile(supabase, foto.file_url))
+
+    const results = await Promise.all(downloadPromises)
+    const rgBuffer = results[0]
+    const selfieBuffer = results[1]
+    const fotoBuffer = foto ? results[2] : null
+
+    console.log('Iniciando comparação AWS Rekognition...')
+    
+    // Compare Selfie vs RG
+    const matchRG = await compareTwoFaces(rekognition, selfieBuffer, rgBuffer)
+    console.log('Selfie vs RG:', matchRG)
+    
+    let matchFoto = { match: true, similarity: 100, note: 'Skipped (no foto)' }
+    if (foto && fotoBuffer) {
+        // Compare Selfie vs Foto 3x4
+        matchFoto = await compareTwoFaces(rekognition, selfieBuffer, fotoBuffer)
+        console.log('Selfie vs Foto:', matchFoto)
+    }
+
+    // Regra: Deve bater com RG (obrigatório) e Foto (se existir)
+    const passed = matchRG.match && matchFoto.match
+    const details = {
+      rg_match: matchRG,
+      foto_match: matchFoto
+    }
+
+    if (passed) {
+        console.log('Validação facial APROVADA')
+        // Success: Mark profile as validated
+        await supabase.from('student_profiles')
+          .update({ face_validated: true })
+          .eq('id', student_id)
+        
+        // Optional: Auto-approve documents if they were pending
+        const docIdsToApprove = [rg.id, selfie.id]
+        if (foto) docIdsToApprove.push(foto.id)
+        
+        await supabase.from('documents')
+            .update({ status: 'approved' })
+            .in('id', docIdsToApprove)
+            .eq('status', 'pending')
+
+        await logAudit(supabase, student_id, 'approved', details)
+    } else {
+        console.log('Validação facial FALHOU')
+        // Fail: Reject Selfie (usually the one being verified)
+        let reason = ''
+        if (!matchRG.match) reason += `Rosto não confere com RG (${Math.round(matchRG.similarity)}%). `
+        if (!matchFoto.match) reason += `Rosto não confere com Foto 3x4 (${Math.round(matchFoto.similarity)}%).`
+        
+        await supabase.from('documents').update({
+            status: 'rejected',
+            rejection_reason: reason.trim()
+        }).eq('id', selfie.id)
+
+        await logAudit(supabase, student_id, 'rejected', { ...details, reason })
+    }
+
+    return new Response(JSON.stringify({ success: true, passed, details }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
+    })
+
+  } catch (error: any) {
+    console.error('Error:', error)
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
+    })
+  }
+})
+
+async function downloadFile(supabase: any, path: string) {
+  // Handle cases where path might be full URL or just path
+  // Usually storage path is "folder/filename"
+  const cleanPath = path.split('/documents/').pop() || path // rough cleanup if needed, but supabase storage download needs relative path usually
+  
+  // Try downloading directly with the path provided
+  const { data, error } = await supabase.storage.from('documents').download(path)
+  if (error) {
+      console.error(`Error downloading ${path}:`, error)
+      throw error
+  }
+  return new Uint8Array(await data.arrayBuffer())
+}
+
+async function compareTwoFaces(client: RekognitionClient, source: Uint8Array, target: Uint8Array) {
+    const command = new CompareFacesCommand({
+        SourceImage: { Bytes: source },
+        TargetImage: { Bytes: target },
+        SimilarityThreshold: 80 // 80% confidence
+    })
+    
+    try {
+        const response = await client.send(command)
+        const match = (response.FaceMatches?.length || 0) > 0
+        const similarity = match ? response.FaceMatches![0].Similarity : 0
+        return { match, similarity: similarity || 0 }
+    } catch (e: any) {
+        console.error('Rekognition Error:', e)
+        // If no faces found in source or target, it throws InvalidParameterException
+        if (e.name === 'InvalidParameterException') {
+            return { match: false, similarity: 0, error: 'Face not detected in one of the images' }
+        }
+        return { match: false, similarity: 0, error: e.message }
+    }
+}
+
+async function logAudit(supabase: any, studentId: string, result: string, details: any) {
+    try {
+        await supabase.from('audit_logs').insert({
+            action: 'face_comparison',
+            resource_type: 'student_profile',
+            resource_id: studentId, 
+            student_id: studentId,
+            details: { result, ...details }
+        })
+    } catch (e) {
+        console.error('Audit log error:', e)
+    }
+}

@@ -24,6 +24,7 @@ import Checkout from "./pages/Checkout";
 import Carteirinha from "./pages/Carteirinha";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
+import { ChatWrapper } from "./components/ChatWrapper";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+          <ChatWrapper />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />

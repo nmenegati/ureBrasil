@@ -12,37 +12,37 @@ import { toast } from 'sonner';
 const digitalPlans = [
   {
     type: 'geral_digital',
-    name: 'Digital Geral',
+    name: 'Carteira Estudantil Digital (Geral)',
     price: 29,
-    description: 'Ensino médio, superior, cursos',
+    description: 'Carteira estudantil válida para estudantes da educação básica (ensino infantil, fundamental e médio) e do ensino superior, incluindo cursos presenciais ou a distância.',
     features: [
-      'Carteirinha digital',
-      'QR Code de verificação',
+      'Carteirinha 100% Digital',
+      'QR Code Nacional (Lei 12.933)',
       'Validade até 31/03/2026',
-      'Emissão em até 2h',
-      'Acesso ilimitado ao app',
-      'Suporte prioritário'
+      'Entrega Imediata (Email/App)',
+      'Meia-entrada em Shows e Jogos',
+      'Suporte via WhatsApp'
     ],
     highlight: false,
-    badge: null
+    badge: 'MAIS POPULAR'
   },
   {
     type: 'direito_digital',
-    name: 'Digital Direito',
+    name: 'Carteira Estudantil LexPraxis',
     price: 44,
-    description: 'Para futuros advogados',
+    description: 'Carteira estudantil exclusiva para estudantes regularmente matriculados em cursos de Direito no ensino superior.',
     features: [
-      'Carteirinha digital',
-      'QR Code de verificação',
+      'Carteirinha Digital Exclusiva',
+      'QR Code Nacional (Lei 12.933)',
       'Validade até 31/03/2026',
-      'Emissão em até 2h',
-      'Benefícios exclusivos Direito',
-      'Material de estudo OAB',
-      'Descontos em cursos jurídicos',
-      'Rede de networking jurídico'
+      'Prioridade na Emissão',
+      'Clube de Vantagens OAB/Estudante',
+      'Descontos em Livros Jurídicos',
+      'Acesso a Eventos da Área',
+      'Networking Jurídico'
     ],
     highlight: true,
-    badge: 'JURISESTUDANTE'
+    badge: 'RECOMENDADO'
   }
 ];
 
@@ -157,7 +157,7 @@ export default function EscolherPlano() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
+    <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
@@ -247,13 +247,12 @@ export default function EscolherPlano() {
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <CreditCard className="w-6 h-6 text-blue-500" />
                   <h4 className="text-xl font-bold text-slate-900 dark:text-white">
-                    Carteirinha Física Disponível
+                    Quer Receber a Carteirinha em PVC?
                   </h4>
                 </div>
 
                 <p className="text-muted-foreground mb-4">
-                  Após o pagamento, você poderá adicionar a versão física em PVC 
-                  de alta qualidade por apenas <strong className="text-foreground">R$ 15,00</strong>
+                  Adicione a versão física, resistente e durável, entregue no seu endereço.
                 </p>
 
                 <div className="flex flex-wrap justify-center gap-4 text-sm">
@@ -267,7 +266,7 @@ export default function EscolherPlano() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-slate-600 dark:text-slate-300">Entrega em 7-10 dias</span>
+                    <span className="text-slate-600 dark:text-slate-300">Adicionar por apenas <strong className="text-foreground">R$ 15,00</strong></span>
                   </div>
                 </div>
               </CardContent>
