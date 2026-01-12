@@ -281,55 +281,9 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">Economize de Verdade ao Longo do Ano</h2>
           </div>
 
-          {/* Grid de 3 Cards */}
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1 - Meia-Entrada */}
-            <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              {/* Círculo com ícone */}
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                <Ticket className="w-10 h-10 text-blue-600 dark:text-blue-300" />
-              </div>
-
-              {/* Título */}
-              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Pague Meia em Eventos Culturais</h3>
-
-              {/* Descrição */}
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Use sua carteirinha estudantil em cinemas, teatros, shows e eventos culturais conforme a legislação vigente.
-              </p>
-            </div>
-
-            {/* Card 2 - Transporte */}
-            <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              {/* Círculo com ícone */}
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <Bus className="w-10 h-10 text-green-600 dark:text-green-300" />
-              </div>
-
-              {/* Título */}
-              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Mais Liberdade para se Deslocar</h3>
-
-              {/* Descrição */}
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Tenha acesso a benefícios estudantis e descontos disponíveis para estudantes em transporte e serviços parceiros.
-              </p>
-            </div>
-
-            {/* Card 3 - Educação */}
-            <div className="bg-white dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              {/* Círculo com ícone */}
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
-                <GraduationCap className="w-10 h-10 text-yellow-600 dark:text-yellow-300" />
-              </div>
-
-              {/* Título */}
-              <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Vantagens para Quem Estuda</h3>
-
-              {/* Descrição */}
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Benefícios em cursos, plataformas educacionais, softwares e serviços voltados ao público estudantil.
-              </p>
-            </div>
+          {/* Slider de Imagens */}
+          <div className="w-full py-8">
+            <ImageAutoSlider />
           </div>
 
           {/* Banner de Economia Total */}
