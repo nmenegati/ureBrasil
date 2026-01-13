@@ -25,6 +25,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const resolvedTheme = (typeof theme === 'string' ? theme : 'light');
+  const [scrolled, setScrolled] = useState(false);
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -36,6 +38,12 @@ export function Header({ variant = 'app' }: HeaderProps) {
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true;
     setIsPWA(checkPWA);
+  }, []);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
   
   const toggleDarkMode = () => {
@@ -75,7 +83,9 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const menuItems = ['Como Funciona', 'Benefícios', 'LexPraxis', 'Planos', 'Dúvidas'];
   
   // Determine background based on variant - both use CSS variables for theme support
-  const headerBg = 'bg-background/95 backdrop-blur-lg border-b border-border';
+  const headerBg = scrolled
+    ? 'bg-secondary/85 backdrop-blur-lg shadow-sm'
+    : 'bg-background/95 backdrop-blur-lg border-b border-border';
   
   return (
     <header className={`sticky top-0 z-50 ${headerBg}`}>
@@ -88,7 +98,17 @@ export function Header({ variant = 'app' }: HeaderProps) {
               alt="URE Brasil - União Representativa dos Estudantes"
               className="h-9 sm:h-11 w-auto object-contain"
             />
-            <div className="hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer">
+            <div
+              className={`hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 ${
+                resolvedTheme === 'light'
+                  ? (scrolled
+                      ? 'bg-gradient-to-r from-primary-foreground via-primary-foreground to-primary-foreground'
+                      : 'bg-gradient-to-r from-foreground via-primary to-foreground')
+                  : (scrolled
+                      ? 'bg-gradient-to-r from-secondary-foreground via-secondary-foreground to-secondary-foreground'
+                      : 'bg-gradient-to-r from-foreground via-foreground to-foreground')
+              } bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer`}
+            >
               <span className="text-[10px] font-medium tracking-wide uppercase">
                 UNIÃO REPRESENTATIVA
               </span>
@@ -105,7 +125,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 <Button
                   key={item}
                   variant="ghost"
-                  className="text-foreground hover:text-primary font-medium"
+                  className={scrolled ? 'text-secondary-foreground hover:text-primary font-medium' : 'text-foreground hover:text-primary font-medium'}
                   onClick={() => scrollToSection(item)}
                 >
                   {item}
@@ -116,7 +136,6 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
           {/* Right Section */}
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Dark Mode Toggle */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -134,7 +153,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   <Button
                     type="button"
                     onClick={() => navigate('/dashboard')}
-                    className="bg-ure-orange hover:bg-ure-orange/90 text-white gap-2"
+                    variant="brand-primary"
+                    className="gap-2"
                   >
                     <CreditCard className="w-4 h-4" />
                     Minha Carteirinha
@@ -151,7 +171,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                           {initials}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium hidden sm:block text-foreground">
+                      <span className={`font-medium hidden sm:block ${scrolled ? 'text-secondary-foreground' : 'text-foreground'}`}>
                         {firstName}
                       </span>
                     </button>
@@ -209,7 +229,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 </Button>
                 <Button 
                   asChild 
-                  className="bg-ure-orange text-white hover:bg-ure-orange/90 hidden sm:inline-flex"
+                  variant="brand-primary"
+                  className="hidden sm:inline-flex"
                 >
                   <Link to="/signup">Cadastrar</Link>
                 </Button>
@@ -260,7 +281,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   <Button asChild variant="header-outline" className="w-full">
                     <Link to="/login">Entrar</Link>
                   </Button>
-                  <Button asChild className="w-full bg-ure-orange text-white hover:bg-ure-orange/90">
+                  <Button asChild variant="brand-primary" className="w-full">
                     <Link to="/signup">Cadastrar</Link>
                   </Button>
                 </>

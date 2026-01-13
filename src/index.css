@@ -15,13 +15,13 @@ All colors MUST be HSL.
 @layer base {
   :root {
     --background: 209 40% 96%;
-    --foreground: 222 47% 11%;
+    --foreground: 215 28% 17%;
 
     --card: 210 40% 98%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 215 28% 17%;
 
     --popover: 214 31% 91%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 215 28% 17%;
 
     --primary: 200 98% 39%;
     --primary-foreground: 204 100% 97%;
@@ -30,7 +30,7 @@ All colors MUST be HSL.
     --secondary-foreground: 210 40% 98%;
 
     --muted: 215 20% 65%;
-    --muted-foreground: 222 47% 11%;
+    --muted-foreground: 215 16% 47%;
 
     --accent: 210 40% 98%;
     --accent-foreground: 215 19% 34%;
@@ -50,8 +50,8 @@ All colors MUST be HSL.
     --ure-orange: 14 100% 60%;
     --ure-dark: 232 26% 14%;
 
-    --gradient-start: 204 100% 25%; /* #004e82 */
-    --gradient-end: 147 100% 24%;   /* #007a41 */
+    --gradient-start: 201 89% 42%;
+    --gradient-end: 154 100% 34%;
     
     --gradient-hero: linear-gradient(135deg, hsl(var(--gradient-start)) 0%, hsl(var(--gradient-end)) 100%);
 
@@ -121,7 +121,7 @@ All colors MUST be HSL.
     --ure-orange: 14 100% 65%;
     --ure-dark: 232 26% 14%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(201 89% 35%) 0%, hsl(154 100% 28%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(201 89% 42%) 0%, hsl(154 100% 34%) 100%);
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 210 40% 98%;
@@ -188,8 +188,6 @@ All colors MUST be HSL.
       0 10px 30px -5px rgba(0, 0, 0, 0.3);
   }
 }
-
-a[href*="lovable.dev"], iframe [src*="lovable.dev"], div[style*="Edit with Lovable"], .lovable-badge { display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; position: absolute !important; z-index: -9999 !important; }
 
 /* ---break---
 */

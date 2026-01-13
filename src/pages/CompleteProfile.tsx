@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +10,7 @@ import { useViaCep } from '@/hooks/useViaCep';
 import { formatCEP } from '@/lib/validators';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Sun, Moon, Info, AlertTriangle } from 'lucide-react';
+import { Loader2, Info, AlertTriangle } from 'lucide-react';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 
 const periods = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º'];
@@ -19,7 +18,6 @@ const periods = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', 
 export default function CompleteProfile() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   const { fetchAddress, loading: cepLoading, error: cepError } = useViaCep();
 
   const [cep, setCep] = useState('');
@@ -162,18 +160,6 @@ export default function CompleteProfile() {
           </Link>
           
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              aria-label="Alternar tema"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5 text-foreground" />
-              ) : (
-                <Moon className="h-5 w-5 text-foreground" />
-              )}
-            </button>
-            
             <span className="text-sm text-muted-foreground">
               Já tem conta?{' '}
               <Link to="/login" className="text-primary font-semibold hover:underline">

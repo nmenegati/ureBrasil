@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sun, Moon, Loader2, Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 
@@ -18,12 +17,7 @@ export default function RedefinirSenha() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
-  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
-
-  const toggleDarkMode = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
 
   useEffect(() => {
     console.log('🔍 RedefinirSenha montou');
@@ -141,14 +135,6 @@ export default function RedefinirSenha() {
           </Link>
           
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleDarkMode}
-              className="text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
           </div>
         </div>
       </div>

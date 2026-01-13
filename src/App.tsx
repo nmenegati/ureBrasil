@@ -30,7 +30,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="ure-theme">
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} storageKey="ure-theme">
       <TooltipProvider>
         <ProfileProvider>
           <Toaster />

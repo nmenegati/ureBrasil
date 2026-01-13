@@ -1,0 +1,20 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="hsl(201, 89%, 40%)" />
+      <stop offset="100%" stop-color="hsl(204, 100%, 25%)" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg-gradient)"/>
+  
+  <!-- Decorative Elements -->
+  <circle cx="100" cy="100" r="300" fill="hsl(49, 100%, 50%)" opacity="0.1"/>
+  <circle cx="1100" cy="530" r="200" fill="hsl(154, 100%, 33%)" opacity="0.1"/>
+
+  <!-- Main Text -->
+  <text x="600" y="280" font-family="Arial, sans-serif" font-weight="900" font-size="140" fill="hsl(49, 100%, 50%)" text-anchor="middle" letter-spacing="4">URE BRASIL</text>
+  <text x="600" y="380" font-family="Arial, sans-serif" font-weight="500" font-size="50" fill="white" text-anchor="middle" letter-spacing="2">Carteirinha Estudantil Digital</text>
+  
+  <!-- Footer Bar -->
+  <rect x="0" y="610" width="1200" height="20" fill="hsl(49, 100%, 50%)"/>
+</svg>

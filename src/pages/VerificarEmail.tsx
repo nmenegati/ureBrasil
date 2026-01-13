@@ -2,9 +2,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Mail, Loader2, Sun, Moon } from 'lucide-react'
+import { Mail, Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import { useTheme } from 'next-themes'
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png'
 
 export default function VerificarEmail() {
@@ -12,11 +11,6 @@ export default function VerificarEmail() {
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email') || ''
   const [resending, setResending] = useState(false)
-  const { theme, setTheme } = useTheme()
-
-  const toggleDarkMode = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
 
   const handleResend = async () => {
     if (!email) {
@@ -58,10 +52,6 @@ export default function VerificarEmail() {
           </Link>
           
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            
             <Link to="/login" className="flex items-center">
               <span className="text-muted-foreground text-sm">Já confirmou?</span>
               <span className="text-primary font-medium ml-1">Entrar</span>
