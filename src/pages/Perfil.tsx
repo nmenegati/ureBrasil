@@ -679,7 +679,7 @@ export default function Perfil() {
                       id="phone"
                       value={formatPhone(personalForm.phone)}
                       onChange={(e) => setPersonalForm(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
-                      placeholder="(99) 99999-9999"
+                      placeholder="(00) 00000-0000"
                       maxLength={15}
                     />
                     <span className="text-xs text-muted-foreground block text-right mt-1">{personalForm.phone.length}/15</span>
@@ -786,7 +786,7 @@ export default function Perfil() {
                       id="complement"
                       value={addressForm.complement}
                       onChange={(e) => setAddressForm(prev => ({ ...prev, complement: e.target.value }))}
-                      placeholder="Opcional"
+                      placeholder="Apto, bloco... (opcional)"
                       maxLength={100}
                     />
                     <span className="text-xs text-muted-foreground block text-right mt-1">{addressForm.complement.length}/100</span>

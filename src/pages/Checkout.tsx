@@ -595,7 +595,7 @@ export default function Checkout() {
                   <Label htmlFor="cardName">Nome no cartão</Label>
                   <Input
                     id="cardName"
-                    placeholder="Como está no cartão"
+                    placeholder="Como está impresso no cartão"
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value.toUpperCase())}
                     className="mt-1"

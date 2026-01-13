@@ -254,7 +254,7 @@ export default function AdminEditEmail() {
                     <Input
                       id="newEmail"
                       type="email"
-                      placeholder="novo-email@exemplo.com"
+                      placeholder="novo@email.com"
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                       disabled={updating}

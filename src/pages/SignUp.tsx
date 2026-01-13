@@ -205,8 +205,8 @@ export default function SignUp() {
     
     const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
     
-    if (actualAge < 16) {
-      toast.error('Você deve ter pelo menos 16 anos');
+    if (actualAge < 6) {
+      toast.error('Você deve ter pelo menos 6 anos');
       return;
     }
 
@@ -351,7 +351,7 @@ export default function SignUp() {
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="João Silva Santos"
+                  placeholder="Seu nome completo"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   maxLength={100}
@@ -405,11 +405,12 @@ export default function SignUp() {
                     id="birthdate"
                     type="text"
                     inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="01/01/2000"
+                    pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
+                    placeholder="DD/MM/AAAA"
                     value={birthDateText}
                     onChange={(e) => setBirthDateText(formatBirthDateBR(e.target.value))}
                     maxLength={10}
+                    autoComplete="bday"
                     className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
                     required
                   />
@@ -523,7 +524,7 @@ export default function SignUp() {
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder="Digite a senha novamente"
+                      placeholder="Repita a senha"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       minLength={6}
