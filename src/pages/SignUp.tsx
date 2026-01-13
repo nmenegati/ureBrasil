@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { validateCPF, formatCPF, formatPhone } from '@/lib/validators';
+import { validateCPF, formatCPF, formatPhone, formatBirthDateBR, parseBirthDateBR, isDisposableEmailDomain } from '@/lib/validators';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Loader2, Sun, Moon } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
+import { Header } from '@/components/Header';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function SignUp() {
@@ -22,9 +21,7 @@ export default function SignUp() {
   const [cpfError, setCpfError] = useState<string>('');
   const [isCpfValid, setIsCpfValid] = useState(false);
   const [checkingCpf, setCheckingCpf] = useState(false);
-  const [birthDay, setBirthDay] = useState<string>('');
-  const [birthMonth, setBirthMonth] = useState<string>('');
-  const [birthYear, setBirthYear] = useState<string>('');
+  const [birthDateText, setBirthDateText] = useState<string>('');
   const [dateError, setDateError] = useState<string>('');
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>('');
@@ -39,30 +36,10 @@ export default function SignUp() {
   const [checkingPhone, setCheckingPhone] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
-
-  const toggleDarkMode = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
+ 
 
   // Constantes para os dropdowns de data
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const months = [
-    { value: '01', label: 'Janeiro' },
-    { value: '02', label: 'Fevereiro' },
-    { value: '03', label: 'Março' },
-    { value: '04', label: 'Abril' },
-    { value: '05', label: 'Maio' },
-    { value: '06', label: 'Junho' },
-    { value: '07', label: 'Julho' },
-    { value: '08', label: 'Agosto' },
-    { value: '09', label: 'Setembro' },
-    { value: '10', label: 'Outubro' },
-    { value: '11', label: 'Novembro' },
-    { value: '12', label: 'Dezembro' },
-  ];
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 1940 + 1 }, (_, i) => currentYear - i);
 
   // Verificar se CPF já existe no banco (usando RPC que ignora RLS)
   const checkCpfExists = async (cpfValue: string): Promise<boolean> => {
@@ -126,23 +103,11 @@ export default function SignUp() {
   }, [cpf]);
 
   const getBirthDate = (): Date | null => {
-    if (!birthDay || !birthMonth || !birthYear) return null;
-    
-    const day = parseInt(birthDay);
-    const month = parseInt(birthMonth) - 1;
-    const year = parseInt(birthYear);
-    
-    const date = new Date(year, month, day);
-    
-    if (
-      date.getDate() !== day ||
-      date.getMonth() !== month ||
-      date.getFullYear() !== year
-    ) {
+    const date = parseBirthDateBR(birthDateText);
+    if (!date) {
       setDateError('Data inválida');
       return null;
     }
-    
     setDateError('');
     return date;
   };
@@ -157,6 +122,10 @@ export default function SignUp() {
     // Validar formato do email
     if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       setEmailError('Formato de email inválido');
+    }
+    // Bloquear domínios temporários
+    if (value && isDisposableEmailDomain(value)) {
+      setEmailError('Email temporário não permitido');
     }
   };
 
@@ -243,6 +212,11 @@ export default function SignUp() {
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error('Email inválido');
+      return;
+    }
+    if (isDisposableEmailDomain(email)) {
+      toast.error('Emails temporários não são permitidos');
+      setEmailError('Email temporário não permitido');
       return;
     }
 
@@ -342,43 +316,16 @@ export default function SignUp() {
         setLoading(false);
       }
 
-    } catch (err: any) {
-      toast.error('Erro ao criar conta: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast.error('Erro ao criar conta: ' + msg);
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header com logo */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-14 sm:h-[72px]">
-          <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            <img src={ureBrasilLogo} alt="URE Brasil" className="h-9 sm:h-11 w-auto object-contain" />
-            <div className="hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer">
-              <span className="text-[10px] font-medium tracking-wide uppercase">
-                UNIÃO REPRESENTATIVA
-              </span>
-              <span className="text-[10px] font-bold tracking-wide uppercase">
-                DOS ESTUDANTES DO BRASIL
-              </span>
-            </div>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleDarkMode}
-              className="text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
-              Já tem conta? <span className="font-semibold text-primary">Entrar</span>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <Header variant="app" />
 
       {/* Conteúdo principal */}
       <div className="container mx-auto px-4 py-8">
@@ -387,10 +334,10 @@ export default function SignUp() {
           {/* Título centralizado */}
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Comece a Economizar
+              Crie sua conta URE
             </h1>
             <p className="text-muted-foreground">
-              Leva menos de 1 minuto para criar sua conta. Seus dados estão protegidos.
+              Cinema, shows, teatro e eventos culturais com meia-entrada. Um benefício simples que gera economia ao longo do ano.
             </p>
           </div>
 
@@ -447,68 +394,25 @@ export default function SignUp() {
                     </p>
                   )}
                   {isCpfValid && !cpfError && !checkingCpf && (
-                    <p className="text-green-600 text-sm">✓ CPF válido</p>
+                    <p className="text-green-600 dark:text-green-400 text-sm">✓ CPF válido</p>
                   )}
                 </div>
 
                 {/* Data de nascimento */}
                 <div className="space-y-2">
-                  <Label className="text-foreground font-medium">Data de nascimento *</Label>
-                  <div className="flex gap-2">
-                    {/* Dia */}
-                    <Select value={birthDay} onValueChange={setBirthDay}>
-                      <SelectTrigger className="flex-1 bg-background text-foreground border-input focus:border-primary h-11">
-                        <SelectValue placeholder="Dia" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border max-h-60">
-                        {days.map((day) => (
-                          <SelectItem 
-                            key={day} 
-                            value={day.toString().padStart(2, '0')}
-                            className="text-popover-foreground hover:bg-accent focus:bg-accent"
-                          >
-                            {day.toString().padStart(2, '0')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    {/* Mês */}
-                    <Select value={birthMonth} onValueChange={setBirthMonth}>
-                      <SelectTrigger className="flex-1 bg-background text-foreground border-input focus:border-primary h-11">
-                        <SelectValue placeholder="Mês" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border max-h-60">
-                        {months.map((month) => (
-                          <SelectItem 
-                            key={month.value} 
-                            value={month.value}
-                            className="text-popover-foreground hover:bg-accent focus:bg-accent"
-                          >
-                            {month.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    {/* Ano */}
-                    <Select value={birthYear} onValueChange={setBirthYear}>
-                      <SelectTrigger className="flex-1 bg-background text-foreground border-input focus:border-primary h-11">
-                        <SelectValue placeholder="Ano" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border max-h-60">
-                        {years.map((year) => (
-                          <SelectItem 
-                            key={year} 
-                            value={year.toString()}
-                            className="text-popover-foreground hover:bg-accent focus:bg-accent"
-                          >
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Label htmlFor="birthdate" className="text-foreground font-medium">Data de nascimento *</Label>
+                  <Input
+                    id="birthdate"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="01/01/2000"
+                    value={birthDateText}
+                    onChange={(e) => setBirthDateText(formatBirthDateBR(e.target.value))}
+                    maxLength={10}
+                    className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
+                    required
+                  />
                   {dateError && (
                     <p className="text-destructive text-sm">{dateError}</p>
                   )}

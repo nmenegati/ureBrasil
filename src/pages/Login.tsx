@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
+import { Header } from '@/components/Header';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -120,29 +120,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header com logo + tema + cadastro */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-14 sm:h-[72px]">
-          <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            <img src={ureBrasilLogo} alt="URE Brasil" className="h-9 sm:h-11 w-auto object-contain" />
-            <div className="hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer">
-              <span className="text-[10px] font-medium tracking-wide uppercase">
-                UNIÃO REPRESENTATIVA
-              </span>
-              <span className="text-[10px] font-bold tracking-wide uppercase">
-                DOS ESTUDANTES DO BRASIL
-              </span>
-            </div>
-          </Link>
-          
-          <div className="flex items-center gap-3">
-            {/* Link cadastro */}
-            <Link to="/signup" className="text-sm text-muted-foreground hover:text-foreground">
-              Não tem conta? <span className="font-semibold text-primary">Cadastre-se</span>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <Header variant="app" />
 
       {/* Conteúdo principal */}
       <div className="container mx-auto px-4 py-8 md:py-12">
@@ -151,10 +129,10 @@ export default function Login() {
           {/* Título */}
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Bem-vindo de volta
+              Acesse sua conta URE
             </h1>
             <p className="text-muted-foreground">
-              Entre na sua conta de estudante
+              Continue economizando em cultura e entretenimento.
             </p>
           </div>
 
