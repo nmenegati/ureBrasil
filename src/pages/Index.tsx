@@ -236,8 +236,7 @@ const Index = () => {
                   className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto shadow-xl hover:scale-105 transition-transform"
                   onClick={() => navigate('/signup')}
                 >
-                  <Rocket className="mr-2 h-5 w-5" />
-                  Emitir Agora
+                  Solicitar Carteirinha
                 </Button>
                 
                 {/* Microtext below CTA */}
@@ -335,7 +334,7 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua Carteirinha em minutos</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua meia-entrada em minutos</h2>
             <p className="text-xl text-muted-foreground">Sem complicação.</p>
           </div>
 
@@ -397,7 +396,7 @@ const Index = () => {
             {/* Linha decorativa amarela */}
             <div className="w-24 h-1 bg-ure-yellow mx-auto mb-6"></div>
 
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">Economize de Verdade</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">Use sua meia-entrada no dia a dia</h2>
           </div>
 
           {/* Cards de Benefícios */}
@@ -450,25 +449,19 @@ const Index = () => {
           {/* Banner de Economia Total */}
           <div className="mt-12 text-center">
             <div className="inline-block bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 p-8 rounded-2xl max-w-3xl">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <span className="text-4xl">💰</span>
-                <p className="text-2xl md:text-3xl font-bold text-green-800 dark:text-green-200">
-                  Ela se paga rapidamente
-                </p>
-              </div>
+              <h3 className="text-2xl md:text-3xl font-bold text-green-800 dark:text-green-200 mb-4">
+                Cinema, shows, teatro e eventos culturais com meia-entrada.
+              </h3>
               <p className="text-muted-foreground dark:text-gray-300 text-lg mb-6">
-                Com poucos usos ao longo do ano, o valor da carteirinha já se transforma em economia.
-                <br />
-                <span className="text-sm italic mt-2 block">Estimativa baseada em uso recorrente de meia-entrada em atividades culturais.</span>
+                Um benefício simples que gera economia ao longo do ano, no uso do dia a dia.
               </p>
               <Button
                 variant="brand-primary"
                 size="lg"
                 className="text-lg px-8 py-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
-                onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => navigate('/signup')}
               >
-                <Rocket className="mr-2 h-5 w-5" />
-                Quero Economizar!
+                Solicitar Carteirinha
               </Button>
             </div>
           </div>
@@ -488,7 +481,7 @@ const Index = () => {
 
               {/* Title */}
               <div className="space-y-2 max-w-3xl">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">LexPraxis — Para Quem Leva a Carreira Jurídica a Sério</h2>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">LexPraxis — A Carteira Estudantil para Quem Escolheu o Direito</h2>
               </div>
 
               {/* Description */}
@@ -504,8 +497,8 @@ const Index = () => {
                     <Scale className="w-6 h-6 text-[#1A1A2E]" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold mb-1">Benefícios Educacionais</h3>
-                    <p className="text-white/80 text-sm">Acesso a vantagens e condições especiais em cursos e eventos jurídicos.</p>
+                    <h3 className="text-lg font-bold mb-1">Benefícios Acadêmicos</h3>
+                    <p className="text-white/80 text-sm">Acesso a condições especiais em cursos, eventos e atividades da área jurídica.</p>
                   </div>
                 </div>
 
@@ -515,8 +508,8 @@ const Index = () => {
                     <BookOpen className="w-6 h-6 text-[#1A1A2E]" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold mb-1">Ambiente Profissional</h3>
-                    <p className="text-white/80 text-sm">Uma carteirinha alinhada à sua formação e ao seu futuro profissional.</p>
+                    <h3 className="text-lg font-bold mb-1">Apresentação Profissional</h3>
+                    <p className="text-white/80 text-sm">Identificação alinhada ao ambiente jurídico, desde a formação até o início da carreira.</p>
                   </div>
                 </div>
               </div>
@@ -529,7 +522,7 @@ const Index = () => {
                   className="text-lg px-8 py-6 h-auto font-bold w-full sm:w-auto shadow-xl hover:scale-105 transition-transform"
                   onClick={() => navigate('/signup')}
                 >
-                  Garantir Minha LexPraxis ⚖️
+                  Solicitar LexPraxis
                 </Button>
               </div>
             </div>
