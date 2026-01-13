@@ -140,7 +140,9 @@ export function Header({ variant = 'app' }: HeaderProps) {
               variant="ghost" 
               size="icon" 
               onClick={toggleDarkMode} 
-              className="text-muted-foreground hover:text-foreground hover:bg-muted"
+              className={scrolled
+                ? 'text-secondary-foreground hover:text-primary hover:bg-secondary/20'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'}
             >
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
@@ -223,7 +225,11 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 <Button 
                   asChild 
                   variant="header-outline" 
-                  className="hidden sm:inline-flex"
+                  className={`hidden sm:inline-flex ${
+                    scrolled
+                      ? 'text-secondary-foreground hover:text-secondary-foreground hover:bg-secondary/20'
+                      : 'text-foreground hover:text-foreground hover:bg-muted'
+                  }`}
                 >
                   <Link to="/login">Entrar</Link>
                 </Button>
@@ -278,7 +284,15 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 </Button>
               ) : (
                 <>
-                  <Button asChild variant="header-outline" className="w-full">
+                  <Button
+                    asChild
+                    variant="header-outline"
+                    className={`w-full ${
+                      scrolled
+                        ? 'text-secondary-foreground hover:text-secondary-foreground hover:bg-secondary/20'
+                        : 'text-foreground hover:text-foreground hover:bg-muted'
+                    }`}
+                  >
                     <Link to="/login">Entrar</Link>
                   </Button>
                   <Button asChild variant="brand-primary" className="w-full">
