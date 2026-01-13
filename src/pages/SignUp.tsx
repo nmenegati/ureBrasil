@@ -405,12 +405,13 @@ export default function SignUp() {
                     id="birthdate"
                     type="text"
                     inputMode="numeric"
-                    pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}$"
+                    pattern="(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}"
                     placeholder="DD/MM/AAAA"
                     value={birthDateText}
                     onChange={(e) => setBirthDateText(formatBirthDateBR(e.target.value))}
                     maxLength={10}
                     autoComplete="bday"
+                    title="Use o formato DD/MM/AAAA (ex.: 08/09/1970)"
                     className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11"
                     required
                   />
