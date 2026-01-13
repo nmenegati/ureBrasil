@@ -312,12 +312,12 @@ const Index = () => {
               <Check className="w-4 h-4 text-ure-green" />
               Documento estudantil digital
             </span>
-            <span className="hidden md:block text-gray-300 dark:text-gray-700">•</span>
+            <span className="hidden md:block text-gray-300 dark:text-gray-500">•</span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-ure-green" />
               Processo seguro
             </span>
-            <span className="hidden md:block text-gray-300 dark:text-gray-700">•</span>
+            <span className="hidden md:block text-gray-300 dark:text-gray-500">•</span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-ure-green" />
               Verificação de autenticidade
@@ -646,7 +646,7 @@ const Index = () => {
       {/* Pricing Grid - 2 Digital Plans */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {/* Plan 1 - Carteira Digital (Geral) */}
-        <Card className="group relative bg-gray-100 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-blue hover:ring-2 hover:ring-ure-blue/30">
+        <Card className="group relative bg-gray-100 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent dark:border-ure-blue/30 hover:border-ure-blue hover:ring-2 hover:ring-ure-blue/30">
           <BorderTrail
             className="bg-ure-blue/50 blur-[2px]"
             size={160}
@@ -699,7 +699,7 @@ const Index = () => {
             </Card>
 
         {/* Plan 2 - Digital Direito */}
-        <Card className="group relative bg-gray-100 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-yellow hover:ring-2 hover:ring-ure-yellow/30">
+        <Card className="group relative bg-gray-100 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent dark:border-ure-yellow/30 hover:border-ure-yellow hover:ring-2 hover:ring-ure-yellow/30">
           <BorderTrail
             className="bg-ure-yellow/60 blur-[2px]"
             size={170}
@@ -904,7 +904,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8">
         {/* Pulsing Badge */}
         <div className="inline-block">
-          <Badge className="bg-[hsl(var(--primary-foreground)/0.2)] text-white border-[hsl(var(--primary-foreground)/0.3)] backdrop-blur-sm px-6 py-3 text-base font-bold animate-pulse">
+          <Badge className="bg-[hsl(var(--primary-foreground)/0.2)] dark:bg-white/10 text-white border-[hsl(var(--primary-foreground)/0.3)] dark:border-white/20 backdrop-blur-sm px-6 py-3 text-base font-bold animate-pulse">
             ⏰ Oferta por tempo limitado
           </Badge>
         </div>
