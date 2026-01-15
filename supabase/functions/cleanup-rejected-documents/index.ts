@@ -87,9 +87,9 @@ serve(async (req) => {
             results.deleted_records++
         }
 
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(`Unexpected error processing ${doc.id}:`, err)
-        results.errors.push(`Error processing ${doc.id}: ${err.message}`)
+        results.errors.push(`Error processing ${doc.id}: ${err instanceof Error ? err.message : 'Unknown error'}`)
       }
     }
 
@@ -111,9 +111,9 @@ serve(async (req) => {
       status: 200,
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500
     })

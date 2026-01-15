@@ -1,16 +1,17 @@
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Mail, Loader2 } from 'lucide-react'
-import { useState } from 'react'
-import ureBrasilLogo from '@/assets/ure-brasil-logo.png'
+import { useState, useEffect } from 'react'
+import { Header } from '@/components/Header'
 
 export default function VerificarEmail() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const email = searchParams.get('email') || ''
   const [resending, setResending] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
 
   const handleResend = async () => {
     if (!email) {
@@ -27,40 +28,25 @@ export default function VerificarEmail() {
       
       if (error) throw error
       toast.success('Email reenviado!')
-    } catch (error: any) {
+      setCooldown(60)
+    } catch (error: unknown) {
       toast.error('Erro ao reenviar email')
     } finally {
       setResending(false)
     }
   }
 
+  useEffect(() => {
+    if (cooldown > 0) {
+      const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
+      return () => clearTimeout(t)
+    }
+  }, [cooldown])
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-14 sm:h-[72px]">
-          <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            <img src={ureBrasilLogo} alt="URE Brasil" className="h-9 sm:h-11 w-auto object-contain" />
-            <div className="hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer">
-              <span className="text-[10px] font-medium tracking-wide uppercase">
-                UNIÃO REPRESENTATIVA
-              </span>
-              <span className="text-[10px] font-bold tracking-wide uppercase">
-                DOS ESTUDANTES DO BRASIL
-              </span>
-            </div>
-          </Link>
-          
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="flex items-center">
-              <span className="text-muted-foreground text-sm">Já confirmou?</span>
-              <span className="text-primary font-medium ml-1">Entrar</span>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <Header variant="app" />
 
-      {/* Content */}
       <div className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
@@ -96,20 +82,29 @@ export default function VerificarEmail() {
               {email && (
                 <Button
                   onClick={handleResend}
-                  disabled={resending}
+                  disabled={resending || cooldown > 0}
                   variant="outline"
                   className="w-full"
                 >
                   {resending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Reenviar Email
+                  {cooldown > 0 ? `Reenviar em ${cooldown}s` : 'Reenviar Email'}
                 </Button>
               )}
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant="secondary" className="w-full">
+                  <a href="https://mail.google.com" target="_blank" rel="noopener noreferrer">Abrir Gmail</a>
+                </Button>
+                <Button asChild variant="secondary" className="w-full">
+                  <a href="https://outlook.live.com/mail" target="_blank" rel="noopener noreferrer">Abrir Outlook</a>
+                </Button>
+              </div>
 
               <Button
                 onClick={() => navigate('/complete-profile')}
                 className="w-full"
               >
-                Completar meu Perfil
+                Continuar após confirmar
               </Button>
             </div>
 

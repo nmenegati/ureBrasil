@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Camera, User, MapPin, GraduationCap, Shield, History, Save, Mail, Lock, Trash2, FileText, CreditCard, CheckCircle2, Clock, XCircle, AlertTriangle, Eye, EyeOff, Info } from 'lucide-react';
+import { Loader2, User, MapPin, GraduationCap, Shield, History, Save, Mail, Lock, Trash2, FileText, CreditCard, CheckCircle2, Clock, XCircle, AlertTriangle, Eye, EyeOff, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
@@ -97,9 +97,8 @@ const periodOptions = [
 export default function Perfil() {
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { updateAvatar, refreshProfile } = useProfile();
+  const { refreshProfile } = useProfile();
   const { fetchAddress, loading: cepLoading, error: cepError } = useViaCep();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -107,6 +106,7 @@ export default function Perfil() {
   const [card, setCard] = useState<StudentCard | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profilePhotoSignedUrl, setProfilePhotoSignedUrl] = useState<string | null>(null);
   
   // Form states
   const [personalForm, setPersonalForm] = useState({ full_name: '', phone: '' });
@@ -122,17 +122,12 @@ export default function Perfil() {
   const [changingEmail, setChangingEmail] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  
-  // Avatar preview
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
   // Password visibility toggles
   const [showCurrentPasswordEmail, setShowCurrentPasswordEmail] = useState(false);
   const [showCurrentPasswordChange, setShowCurrentPasswordChange] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -146,7 +141,25 @@ export default function Perfil() {
     }
   }, [user]);
 
-  const loadAllData = async () => {
+  useEffect(() => {
+    const genSigned = async () => {
+      if (profile?.profile_photo_url) {
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(profile.profile_photo_url, 300);
+        if (!error && data?.signedUrl) {
+          setProfilePhotoSignedUrl(data.signedUrl);
+        } else {
+          setProfilePhotoSignedUrl(null);
+        }
+      } else {
+        setProfilePhotoSignedUrl(null);
+      }
+    };
+    genSigned();
+  }, [profile?.profile_photo_url]);
+
+  const loadAllData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     
@@ -222,109 +235,7 @@ export default function Perfil() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      toast.error('Formato inválido. Use JPG, PNG ou WebP.');
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Imagem muito grande. Máximo 2MB.');
-      return;
-    }
-
-    setSelectedFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const resizeImage = (file: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 500;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Failed to resize image'));
-        }, 'image/jpeg', 0.85);
-      };
-      img.onerror = reject;
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
-  const handleAvatarUpload = async () => {
-    if (!selectedFile || !user || !profile) return;
-    
-    setUploadingAvatar(true);
-    try {
-      const resizedBlob = await resizeImage(selectedFile);
-      const timestamp = Date.now();
-      const filePath = `${user.id}/${timestamp}.jpg`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, resizedBlob, { contentType: 'image/jpeg', upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('student_profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
-
-      setProfile({ ...profile, avatar_url: publicUrl });
-      updateAvatar(publicUrl);
-      setAvatarPreview(null);
-      setSelectedFile(null);
-      toast.success('Foto atualizada!');
-    } catch (error) {
-      toast.error('Erro ao atualizar foto');
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const cancelAvatarUpload = () => {
-    setAvatarPreview(null);
-    setSelectedFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
+  }, [user]);
 
   const handleCepChange = async (cep: string) => {
     const formattedCep = formatCEP(cep);
@@ -486,7 +397,7 @@ export default function Perfil() {
 
       toast.success('Email de confirmação enviado! Verifique sua caixa de entrada.', { duration: 6000 });
       setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: '', newEmail: '' }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Erro ao trocar email');
       console.error(error);
     } finally {
@@ -537,8 +448,9 @@ export default function Perfil() {
 
       toast.success('Senha alterada com sucesso!');
       setSecurityForm(prev => ({ ...prev, currentPasswordForPassword: '', newPassword: '', confirmPassword: '' }));
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao alterar senha');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erro ao alterar senha';
+      toast.error(message);
     } finally {
       setChangingPassword(false);
     }
@@ -568,14 +480,14 @@ export default function Perfil() {
 
   if (authLoading || loading) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859]">
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
@@ -584,38 +496,22 @@ export default function Perfil() {
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative">
-                <Avatar className="h-32 w-32 border-4 border-primary">
-                  <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} />
+                <Avatar className={`h-32 w-32 border-4 ${profile?.profile_photo_url ? 'border-primary' : 'border-muted'}`}>
+                  <AvatarImage src={profilePhotoSignedUrl || undefined} />
                   <AvatarFallback className="text-3xl bg-primary/20 text-primary">{initials}</AvatarFallback>
                 </Avatar>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleAvatarSelect}
-                  className="hidden"
-                />
+                {profile?.profile_photo_url && (
+                  <Badge className="absolute -bottom-2 -right-2 text-[10px] px-2 py-0.5">
+                    Aprovada
+                  </Badge>
+                )}
               </div>
               <div className="flex flex-col items-center sm:items-start gap-2">
                 <h2 className="text-2xl font-bold text-foreground">{profile?.full_name}</h2>
                 <p className="text-muted-foreground">{user?.email}</p>
-                
-                {avatarPreview ? (
-                  <div className="flex gap-2 mt-2">
-                    <Button onClick={handleAvatarUpload} disabled={uploadingAvatar} size="sm">
-                      {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                      Salvar Foto
-                    </Button>
-                    <Button variant="outline" onClick={cancelAvatarUpload} size="sm">
-                      Cancelar
-                    </Button>
-                  </div>
-                ) : (
-                  <Button variant="outline" onClick={() => fileInputRef.current?.click()} size="sm" className="mt-2">
-                    <Camera className="h-4 w-4 mr-2" />
-                    Trocar Foto
-                  </Button>
-                )}
+                <p className="text-xs text-muted-foreground/80 mt-1 max-w-sm text-center sm:text-left">
+                  Foto atualizada automaticamente da Foto 3x4 aprovada.
+                </p>
               </div>
             </div>
           </CardContent>
@@ -1091,7 +987,7 @@ export default function Perfil() {
             {/* History Tab */}
             <TabsContent value="history" className="p-6 space-y-6">
               {/* Card Status */}
-              <Card>
+              <Card className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-lg shadow-black/5">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
@@ -1125,7 +1021,7 @@ export default function Perfil() {
               </Card>
 
               {/* Documents */}
-              <Card>
+              <Card className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-lg shadow-black/5">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <FileText className="h-5 w-5" />
@@ -1157,7 +1053,7 @@ export default function Perfil() {
               </Card>
 
               {/* Payments */}
-              <Card>
+              <Card className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-lg shadow-black/5">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />

@@ -15,6 +15,7 @@ export function ChatWrapper() {
     '/upload-documentos',
     '/escolher-plano',
     '/pagamento',
+    '/perfil',
     '/status-validacao',
     '/checkout'
   ];

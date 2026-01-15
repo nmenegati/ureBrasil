@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { formatCEP } from '@/lib/validators';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Info, AlertTriangle } from 'lucide-react';
-import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
+import { Header } from '@/components/Header';
 
 const periods = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º'];
 
@@ -38,6 +38,31 @@ export default function CompleteProfile() {
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    const prefill = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('student_profiles')
+        .select('cep, street, number, complement, neighborhood, city, state, institution, course, period, enrollment_number')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setCep(data.cep ? formatCEP(data.cep) : '');
+        setStreet(data.street || '');
+        setNumber(data.number || '');
+        setComplement(data.complement || '');
+        setNeighborhood(data.neighborhood || '');
+        setCity(data.city || '');
+        setState(data.state || '');
+        setInstitution(data.institution || '');
+        setCourse(data.course || '');
+        setPeriod(data.period || '');
+        setEnrollmentNumber(data.enrollment_number || '');
+      }
+    };
+    prefill();
+  }, [user]);
 
   // Mostrar loading enquanto verifica autenticação
   if (authLoading) {
@@ -152,23 +177,7 @@ export default function CompleteProfile() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/">
-            <img src={ureBrasilLogo} alt="URE Brasil" className="h-8 sm:h-9 w-auto object-contain" />
-          </Link>
-          
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Já tem conta?{' '}
-              <Link to="/login" className="text-primary font-semibold hover:underline">
-                Entrar
-              </Link>
-            </span>
-          </div>
-        </div>
-      </header>
+      <Header variant="app" />
 
       {/* Content */}
       <div className="flex items-center justify-center p-4 py-8">
@@ -182,9 +191,9 @@ export default function CompleteProfile() {
                 <p className="text-muted-foreground">Precisamos de mais algumas informações</p>
                 <div className="flex items-center gap-2 mt-4">
                   <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary w-2/3"></div>
+                    <div className="h-full bg-primary w-1/3"></div>
                   </div>
-                  <span className="text-sm text-muted-foreground">Etapa 2 de 3</span>
+                  <span className="text-sm text-muted-foreground">Etapa 1 de 3</span>
                 </div>
               </div>
 
@@ -306,8 +315,8 @@ export default function CompleteProfile() {
                         type="text"
                         placeholder="Preenchido pelo CEP"
                         value={city}
-                        disabled
-                        className="bg-muted text-muted-foreground border-input h-11 text-base"
+                        readOnly
+                        className="bg-background text-foreground border-input h-11 text-base"
                       />
                     </div>
                     <div className="space-y-2">
@@ -317,8 +326,8 @@ export default function CompleteProfile() {
                         type="text"
                         placeholder="UF"
                         value={state}
-                        disabled
-                        className="bg-muted text-muted-foreground border-input h-11 text-base"
+                        readOnly
+                        className="bg-background text-foreground border-input h-11 text-base"
                       />
                     </div>
                   </div>
@@ -366,18 +375,16 @@ export default function CompleteProfile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="period" className="text-foreground">Período/Semestre</Label>
-                      <Select value={period} onValueChange={setPeriod} required>
-                        <SelectTrigger className="bg-background text-foreground border-input focus:border-primary focus:ring-primary/20 h-11">
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {periods.map((p) => (
-                            <SelectItem key={p} value={p}>
-                              {p}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        id="period"
+                        type="text"
+                        placeholder="Ex: 1º semestre, 3º ano, Pré II, etc."
+                        value={period}
+                        onChange={(e) => setPeriod(e.target.value)}
+                        maxLength={30}
+                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                        required
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="enrollmentNumber" className="text-foreground">Nº de matrícula</Label>

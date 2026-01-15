@@ -45,7 +45,7 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
       setMessages([initialMessage]);
       setHasUnread(true);
     }
-  }, [rejectedDocs]);
+  }, [rejectedDocs, messages.length]);
 
   // Auto-scroll to bottom
   useEffect(() => {

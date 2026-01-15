@@ -12,6 +12,42 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
+// FAQ híbrido: tenta responder pelo banco primeiro (rápido/sem custo), senão usa LLM
+async function getFaqAnswer(supabaseClient: any, message: string) {
+  try {
+    const { data: faqs, error } = await supabaseClient
+      .from('chat_faq')
+      .select('*')
+      .eq('active', true)
+      .order('priority', { ascending: false })
+    if (error) {
+      console.error('FAQ query error:', error)
+      return null
+    }
+    if (!faqs || faqs.length === 0) return null
+    
+    const lower = message.toLowerCase()
+    const matched = faqs.find((faq: any) =>
+      Array.isArray(faq.keywords) &&
+      faq.keywords.some((kw: string) => lower.includes(String(kw).toLowerCase()))
+    )
+    
+    if (matched) {
+      await supabaseClient
+        .from('chat_faq')
+        .update({ usage_count: (matched.usage_count || 0) + 1 })
+        .eq('id', matched.id)
+        .select()
+        .catch((e: unknown) => console.warn('FAQ usage_count update warn:', e))
+      return matched.answer as string
+    }
+    return null
+  } catch (e) {
+    console.error('getFaqAnswer error:', e)
+    return null
+  }
+}
+
 const SYSTEM_PROMPT = `Você é o assistente virtual da URE Brasil, sistema de emissão de carteirinhas estudantis.
 REGRA DE OURO: NUNCA invente informações. Se não souber, diga "Deixe-me verificar isso com nossa equipe" e escale.
 PERSONALIDADE:
@@ -183,15 +219,29 @@ serve(async (req) => {
   }
 
   try {
-    const { message, history = [], context = {} } = await req.json()
+    const raw = (await req.json()) as unknown
+    if (typeof raw !== 'object' || raw === null) {
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+    const { message, history = [], context = {} } = raw as {
+      message: string
+      history?: Array<{ role: 'system'|'user'|'assistant'; content: string }>
+      context?: Record<string, unknown>
+    }
 
     // Enrich system prompt with specific context if available
     let currentSystemPrompt = SYSTEM_PROMPT
     if (context.student_name) {
       currentSystemPrompt += `\nO nome do estudante é: ${context.student_name}`
     }
-    if (context.rejected_docs && context.rejected_docs.length > 0) {
-      currentSystemPrompt += `\nATENÇÃO: O estudante teve os seguintes documentos rejeitados:\n${context.rejected_docs.map((d: any) => `- ${d.type}: ${d.reason}`).join('\n')}\nExplique como corrigir esses erros específicos.`
+    const rejectedDocs = Array.isArray((context as Record<string, unknown>).rejected_docs)
+      ? ((context as Record<string, unknown>).rejected_docs as Array<{ type: string; reason: string }>)
+      : []
+    if (rejectedDocs.length > 0) {
+      currentSystemPrompt += `\nATENÇÃO: O estudante teve os seguintes documentos rejeitados:\n${rejectedDocs.map((d) => `- ${d.type}: ${d.reason}`).join('\n')}\nExplique como corrigir esses erros específicos.`
     }
 
     // Prepare messages for OpenRouter
@@ -201,7 +251,21 @@ serve(async (req) => {
       { role: 'user', content: message }
     ]
 
-    // Call OpenRouter
+    // Tentar FAQ primeiro (sem custo)
+    const faqAnswer = await getFaqAnswer(supabase, message)
+    if (faqAnswer) {
+      console.log('✅ Resposta do FAQ (sem custo)')
+      return new Response(JSON.stringify({
+        reply: faqAnswer,
+        shouldEscalate: false,
+        source: 'faq'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
+    // Call OpenRouter (fallback)
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -261,9 +325,9 @@ serve(async (req) => {
       status: 200,
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in chat-support:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
-type DocumentType = 'rg' | 'matricula' | 'selfie';
+type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
 interface DocumentConfig {
   type: DocumentType;
@@ -76,7 +76,7 @@ const documentConfigs: DocumentConfig[] = [
     description: 'Fundo branco ou azul, sem óculos',
     icon: Camera,
     acceptedTypes: ['image/jpeg', 'image/png'],
-    maxSizeMB: 2
+    maxSizeMB: 5
   },
   {
     type: 'selfie',
@@ -84,7 +84,7 @@ const documentConfigs: DocumentConfig[] = [
     description: 'Tire uma selfie segurando o documento ao lado do rosto. Isso protege você contra uso indevido.',
     icon: UserCircle,
     acceptedTypes: ['image/jpeg', 'image/png'],
-    maxSizeMB: 2
+    maxSizeMB: 5
   }
 ];
 
@@ -147,7 +147,7 @@ export default function UploadDocumentos() {
     checkTerms();
   }, [profile]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!user) return;
     
     const { data, error } = await supabase
@@ -164,9 +164,9 @@ export default function UploadDocumentos() {
     
     setProfile(data);
     setLoadingProfile(false);
-  };
+  }, [user]);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     if (!profile) return;
     
     const { data, error } = await supabase
@@ -199,12 +199,27 @@ export default function UploadDocumentos() {
     
     setDocuments(docsMap);
     setPreviews(newPreviews);
-  };
+  }, [profile]);
 
   const handleUpload = async (file: File, type: DocumentType) => {
     if (!profile?.id || !user?.id) {
       toast.error('Perfil não carregado. Recarregue a página.');
       return;
+    }
+    
+    // BLOQUEIO: Foto 3x4 não pode ser alterada se carteirinha ativa
+    if (type === 'foto') {
+      const { data: card } = await supabase
+        .from('student_cards')
+        .select('status')
+        .eq('student_id', profile.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      
+      if (card?.status === 'active') {
+        toast.error('Foto não pode ser alterada após emissão da carteirinha. Entre em contato com suporte.');
+        return;
+      }
     }
     
     const config = documentConfigs.find(d => d.type === type);
@@ -256,7 +271,7 @@ export default function UploadDocumentos() {
         .from('documents')
         .select('id')
         .eq('student_id', profile.id)
-        .eq('type', type as any)
+        .eq('type', type)
         .maybeSingle();
       
       if (existingDoc) {
@@ -285,7 +300,7 @@ export default function UploadDocumentos() {
           .from('documents')
           .insert({
             student_id: profile.id,
-            type: type as any,
+            type: type,
             file_url: filePath,
             file_name: file.name,
             file_size: file.size,
@@ -304,8 +319,9 @@ export default function UploadDocumentos() {
       toast.success(`${config.label} enviado com sucesso!`, { id: toastId });
       await fetchDocuments();
       
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao enviar documento', { id: toastId });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erro ao enviar documento';
+      toast.error(message, { id: toastId });
     } finally {
       setUploading(prev => ({ ...prev, [type]: false }));
       setTimeout(() => {
@@ -591,6 +607,22 @@ export default function UploadDocumentos() {
     );
   }
 
+  useEffect(() => {
+    const checkIfLocked = async () => {
+      if (!profile?.id) return;
+      const { data: card } = await supabase
+        .from('student_cards')
+        .select('status')
+        .eq('student_id', profile.id)
+        .maybeSingle();
+      if (card?.status === 'active') {
+        toast.error('Documentos não podem ser alterados com carteirinha ativa. Entre em contato com suporte.');
+        navigate('/carteirinha');
+      }
+    };
+    checkIfLocked();
+  }, [profile?.id, navigate]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
       {/* Decorative elements */}
@@ -623,12 +655,14 @@ export default function UploadDocumentos() {
           ))}
         </div>
 
-        {/* Texto de segurança */}
-        <div className="mb-8 text-center">
-          <p className="text-white/80 text-sm bg-white/10 inline-block px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10">
-            <Shield className="w-4 h-4 inline mr-2 text-emerald-400" />
-            Se algum arquivo não estiver legível, avisaremos você rapidamente para corrigir.
-          </p>
+        {/* Texto de segurança (tema verde) */}
+        <div className="mb-8">
+          <div className="max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
+            <p className="text-sm md:text-base text-green-900 dark:text-green-200 text-center">
+              <Shield className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
+              Se algum arquivo não estiver legível, avisaremos você para corrigir.
+            </p>
+          </div>
         </div>
         
         {/* Contador de progresso */}
@@ -645,11 +679,11 @@ export default function UploadDocumentos() {
         {/* Termo de Veracidade - Só mostra se ainda NÃO aceitou */}
         {allDocsUploaded && !termsAlreadyAccepted && (
           <div className="mb-6">
-            {/* Card expandível */}
-            <div className="border border-white/20 rounded-xl overflow-hidden mb-4 shadow-lg shadow-black/5">
+            {/* Card expandível (neutro com contraste) */}
+            <div className="border border-white/20 rounded-xl overflow-hidden mb-4 shadow-lg shadow-black/10 bg-white/95 dark:bg-slate-800/95">
               <button
                 onClick={() => setShowFullTerms(!showFullTerms)}
-                className="w-full p-4 flex items-center justify-between bg-white/95 dark:bg-slate-800/95 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                className="w-full p-4 flex items-center justify-between hover:bg-white dark:hover:bg-slate-800 transition-colors"
               >
                 <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   📄 Termo de Responsabilidade por Veracidade dos Documentos
@@ -661,7 +695,7 @@ export default function UploadDocumentos() {
               </button>
               
               {showFullTerms && (
-                <div className="p-4 bg-white/80 dark:bg-slate-800/80 text-sm text-slate-600 dark:text-slate-300 space-y-3 border-t border-white/20">
+                <div className="p-4 text-sm text-slate-600 dark:text-slate-300 space-y-3 border-t border-white/20">
                   <p>
                     Eu, <strong className="text-slate-900 dark:text-white">{profile?.full_name}</strong>, portador(a) do CPF nº
                     <strong className="text-slate-900 dark:text-white"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
@@ -698,13 +732,13 @@ export default function UploadDocumentos() {
               )}
             </div>
             
-            {/* Checkbox de aceitação */}
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+            {/* Checkbox de aceitação (contraste elevado) */}
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/10">
               <label className="flex items-start gap-3 cursor-pointer">
                 <Checkbox
                   checked={termsAccepted}
                   onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                  className="mt-0.5 border-yellow-500/50 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                  className="mt-0.5 border-yellow-500 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-300">
                   Declaro que li e concordo com o <strong className="text-yellow-600 dark:text-yellow-400">Termo de Responsabilidade</strong> acima. 
@@ -718,16 +752,15 @@ export default function UploadDocumentos() {
 
         {/* Mensagem de termo já aceito */}
         {allDocsUploaded && termsAlreadyAccepted && (
-          <Alert className="mb-6 bg-green-500/10 border-green-500/30">
-            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <AlertDescription className="text-green-600 dark:text-green-300">
+          <div className="mb-6 max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
+            <p className="text-sm text-green-900 dark:text-green-200">
               ✅ Você já aceitou o Termo de Responsabilidade
               <br />
-              <span className="text-xs text-green-600/70 dark:text-green-400/70">
+              <span className="text-xs text-green-800/80 dark:text-green-300/80">
                 Data: {termsAcceptedDate ? new Date(termsAcceptedDate).toLocaleString('pt-BR') : 'N/A'} • Versão: {termsVersion || '1.0'}
               </span>
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
         
         {/* Botão continuar */}

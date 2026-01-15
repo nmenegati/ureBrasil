@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import {
   UserPlus,
   CreditCard,
   FileCheck,
+  Loader2,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
@@ -50,9 +52,16 @@ import iconeCinema from "@/assets/icone-cinema.png";
 import iconeShow from "@/assets/icone-show.png";
 import iconeTeatro from "@/assets/icone-teatro.png";
 import iconeEsporte from "@/assets/icone-esporte.png";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { setTheme } = useTheme();
+  const { user } = useAuth();
+  const [hasActiveCard, setHasActiveCard] = useState(false);
+  const [checkingCard, setCheckingCard] = useState(false);
+  const [ctaLoading, setCtaLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [currentHumanSlide, setCurrentHumanSlide] = useState(0);
@@ -86,6 +95,47 @@ const Index = () => {
     return () => clearInterval(timer);
   }, [humanImages.length]);
 
+  useEffect(() => {
+    setTheme('light');
+  }, [setTheme]);
+  useEffect(() => {
+    const checkActiveCard = async () => {
+      if (!user?.id) {
+        setHasActiveCard(false);
+        return;
+      }
+      setCheckingCard(true);
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+      if (profile?.id) {
+        const { data: card } = await supabase
+          .from('student_cards')
+          .select('status')
+          .eq('student_id', profile.id)
+          .single();
+        setHasActiveCard(card?.status === 'active');
+      } else {
+        setHasActiveCard(false);
+      }
+      setCheckingCard(false);
+    };
+    checkActiveCard();
+  }, [user?.id]);
+
+  const handleCTA = () => {
+    if (ctaLoading) return;
+    setCtaLoading(true);
+    if (user && hasActiveCard) {
+      navigate('/carteirinha');
+    } else if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/signup');
+    }
+  };
   // Testimonial Rotation Logic
   const [currentTestimonialGroup, setCurrentTestimonialGroup] = useState(0);
   const [isTestimonialHovered, setIsTestimonialHovered] = useState(false);
@@ -233,10 +283,22 @@ const Index = () => {
                 <Button
                   variant="brand-primary"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto shadow-xl hover:scale-105 transition-transform"
-                  onClick={() => navigate('/signup')}
+                  className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto shadow-xl hover:scale-105 transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={handleCTA}
+                  disabled={checkingCard || ctaLoading}
                 >
-                  Solicitar Carteirinha
+                  {(checkingCard || ctaLoading) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  {user && hasActiveCard ? (
+                    <>
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Ver Minha Carteirinha
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="mr-2 h-5 w-5" />
+                      Solicitar Carteirinha
+                    </>
+                  )}
                 </Button>
                 
                 {/* Microtext below CTA */}
@@ -458,10 +520,22 @@ const Index = () => {
               <Button
                 variant="brand-primary"
                 size="lg"
-                className="text-lg px-8 py-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
-                onClick={() => navigate('/signup')}
+                className="text-lg px-8 py-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={handleCTA}
+                disabled={checkingCard || ctaLoading}
               >
-                Solicitar Carteirinha
+                {(checkingCard || ctaLoading) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                {user && hasActiveCard ? (
+                  <>
+                    <CreditCard className="mr-2 h-5 w-5" />
+                    Ver Minha Carteirinha
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="mr-2 h-5 w-5" />
+                    Solicitar Carteirinha
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -519,10 +593,22 @@ const Index = () => {
                 <Button
                   variant="brand-primary"
                   size="lg"
-                  className="text-lg px-8 py-6 h-auto font-bold w-full sm:w-auto shadow-xl hover:scale-105 transition-transform"
-                  onClick={() => navigate('/signup')}
+                  className="text-lg px-8 py-6 h-auto font-bold w-full sm:w-auto shadow-xl hover:scale-105 transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={handleCTA}
+                  disabled={checkingCard || ctaLoading}
                 >
-                  Solicitar LexPraxis
+                  {(checkingCard || ctaLoading) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  {user && hasActiveCard ? (
+                    <>
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Ver Minha Carteirinha
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="mr-2 h-5 w-5" />
+                      Solicitar LexPraxis
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -692,8 +778,19 @@ const Index = () => {
                   </div>
                 </div>
 
-                <Button variant="brand-primary" className="w-full font-bold" onClick={() => navigate('/signup')}>
-                  Solicitar Agora
+                <Button variant="brand-primary" className="w-full font-bold disabled:opacity-60 disabled:cursor-not-allowed" onClick={handleCTA} disabled={checkingCard || ctaLoading}>
+                  {(checkingCard || ctaLoading) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  {user && hasActiveCard ? (
+                    <>
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Ver Minha Carteirinha
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="mr-2 h-5 w-5" />
+                      Solicitar Agora
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -756,8 +853,19 @@ const Index = () => {
                   </div>
                 </div>
 
-                <Button variant="brand-primary" className="w-full" onClick={() => navigate('/signup')}>
-                  Solicitar LexPraxis
+                <Button variant="brand-primary" className="w-full disabled:opacity-60 disabled:cursor-not-allowed" onClick={handleCTA} disabled={checkingCard || ctaLoading}>
+                  {(checkingCard || ctaLoading) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  {user && hasActiveCard ? (
+                    <>
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Ver Minha Carteirinha
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="mr-2 h-5 w-5" />
+                      Solicitar LexPraxis
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -893,7 +1001,7 @@ const Index = () => {
       </section>
 
       {/* CTA FINAL */}
-      <section className="py-20 lg:py-24 bg-gradient-to-br from-[#FF6B35] to-[#FF5722] text-white relative overflow-hidden">
+      <section className="py-16 lg:py-20 bg-[#0D7DBF] text-white relative overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 right-10 w-96 h-96 bg-[hsl(var(--primary-foreground)/0.92)] rounded-full blur-3xl"></div>
@@ -910,49 +1018,35 @@ const Index = () => {
         </div>
 
             {/* Heading */}
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white">Comece a Economizar Agora!</h2>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white">Comece a Economizar Hoje!</h2>
 
             {/* Subtitle */}
             <p className="text-xl lg:text-2xl text-white/90 font-medium">
-              Sua carteirinha estudantil válida em todo Brasil em poucos minutos.
+              Sua carteirinha estudantil válida em todo Brasil. Aprovação rápida, uso imediato.
             </p>
 
-        {/* Counters */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 py-8">
-          {/* Counter 1 */}
-          <div className="bg-[hsl(var(--primary-foreground)/0.12)] backdrop-blur-md border border-[hsl(var(--primary-foreground)/0.22)] rounded-2xl p-6 hover:bg-[hsl(var(--primary-foreground)/0.2)] transition-all duration-300">
-            <div className="text-4xl lg:text-5xl font-black text-white mb-2">2 horas</div>
-            <div className="text-sm lg:text-base text-white/80 font-medium">Tempo médio de emissão</div>
-          </div>
+        {/* Counters removed */}
 
-          {/* Counter 2 */}
-          <div className="bg-[hsl(var(--primary-foreground)/0.12)] backdrop-blur-md border border-[hsl(var(--primary-foreground)/0.22)] rounded-2xl p-6 hover:bg-[hsl(var(--primary-foreground)/0.2)] transition-all duration-300">
-            <div className="text-4xl lg:text-5xl font-black text-white mb-2">R$ 29</div>
-            <div className="text-sm lg:text-base text-white/80 font-medium">Preço a partir de</div>
-          </div>
-
-          {/* Counter 3 */}
-          <div className="bg-[hsl(var(--primary-foreground)/0.12)] backdrop-blur-md border border-[hsl(var(--primary-foreground)/0.22)] rounded-2xl p-6 hover:bg-[hsl(var(--primary-foreground)/0.2)] transition-all duration-300">
-            <div className="text-4xl lg:text-5xl font-black text-white mb-2">31/03/26</div>
-            <div className="text-sm lg:text-base text-white/80 font-medium">Validade até</div>
-          </div>
-        </div>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-          <Button
-            size="lg"
-            className="bg-[hsl(var(--primary-foreground))] text-ure-orange hover:bg-[hsl(var(--primary-foreground)/0.9)] font-bold text-lg px-8 py-6 h-auto shadow-2xl hover:scale-105 transition-all duration-300"
-            onClick={() => navigate('/signup')}
-          >
-            🚀 Solicitar Agora
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="border-2 border-[hsl(var(--primary-foreground))] bg-transparent text-white hover:bg-[hsl(var(--primary-foreground)/0.1)] font-semibold text-lg px-8 py-6 h-auto"
-          >
-            📱 Falar no WhatsApp
+        {/* CTA Button (único, padronizado com Hero) */}
+        <div className="flex justify-center pt-4">
+          <Button 
+            size="lg" 
+            className="bg-ure-yellow text-ure-dark hover:bg-ure-yellow/90 text-lg px-8 py-6 h-auto font-bold shadow-xl hover:scale-105 transition-transform disabled:opacity-60 disabled:cursor-not-allowed" 
+            onClick={handleCTA}
+            disabled={checkingCard || ctaLoading}
+          > 
+            {(checkingCard || ctaLoading) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />} 
+            {user && hasActiveCard ? (
+              <>
+                <CreditCard className="mr-2 h-5 w-5" />
+                Ver Minha Carteirinha
+              </>
+            ) : (
+              <>
+                <Rocket className="mr-2 h-5 w-5" />
+                Emitir Carteirinha Agora
+              </>
+            )}
           </Button>
         </div>
 

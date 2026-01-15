@@ -12,8 +12,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, Sun, Moon, User, LogOut, Home, CreditCard } from 'lucide-react';
+import { Menu, X, Sun, Moon, User, LogOut, Home, CreditCard, Bell, Package } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HeaderProps {
   variant?: 'landing' | 'app';
@@ -27,6 +29,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const resolvedTheme = (typeof theme === 'string' ? theme : 'light');
   const [scrolled, setScrolled] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isPhysicalCard, setIsPhysicalCard] = useState(false);
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -34,9 +38,9 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const isLandingPage = location.pathname === '/';
   
   useEffect(() => {
-    const checkPWA = 
+    const checkPWA =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
+      ((navigator as Navigator & { standalone?: boolean }).standalone === true);
     setIsPWA(checkPWA);
   }, []);
   useEffect(() => {
@@ -46,9 +50,45 @@ export function Header({ variant = 'app' }: HeaderProps) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   
-  const toggleDarkMode = () => {
+  const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user) {
+        setNotificationCount(0);
+        return;
+      }
+      setNotificationCount(0);
+    };
+    fetchNotifications();
+  }, [user]);
+  
+  useEffect(() => {
+    const checkPhysical = async () => {
+      if (!user) {
+        setIsPhysicalCard(false);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (profile?.id) {
+        const { data: card } = await supabase
+          .from('student_cards')
+          .select('is_physical')
+          .eq('student_id', profile.id)
+          .maybeSingle();
+        setIsPhysicalCard(!!card?.is_physical);
+      } else {
+        setIsPhysicalCard(false);
+      }
+    };
+    checkPhysical();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -139,29 +179,21 @@ export function Header({ variant = 'app' }: HeaderProps) {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={toggleDarkMode} 
-              className={scrolled
-                ? 'text-secondary-foreground hover:text-primary hover:bg-secondary/20'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'}
+              className={`relative ${scrolled ? 'text-secondary-foreground hover:text-primary hover:bg-secondary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+              onClick={() => navigate('/notificacoes')}
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-0">
+                  {notificationCount}
+                </Badge>
+              )}
             </Button>
 
             {/* Auth Section */}
             {user ? (
               <>
-                {/* Início Button - Only when logged in, not PWA, and not on dashboard */}
-                {!isPWA && user && location.pathname !== '/dashboard' && (
-                  <Button
-                    type="button"
-                    onClick={() => navigate('/dashboard')}
-                    variant="brand-primary"
-                    className="gap-2"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    Minha Carteirinha
-                  </Button>
-                )}
+                {/* Removido botão principal Minha Carteirinha - destaque no dropdown */}
                 
                 {/* Avatar with Dropdown */}
                 <DropdownMenu>
@@ -179,42 +211,57 @@ export function Header({ variant = 'app' }: HeaderProps) {
                     </button>
                   </DropdownMenuTrigger>
                   
-                  <DropdownMenuContent align="end" className="w-48 bg-popover border border-border">
-                    {/* Página Inicial - só aparece se NÃO estiver na landing */}
-                    {location.pathname !== '/' && (
-                      <DropdownMenuItem 
-                        onClick={() => navigate('/')}
-                        className="cursor-pointer"
-                      >
-                        <Home className="w-4 h-4 mr-2" />
-                        Página Inicial
-                      </DropdownMenuItem>
-                    )}
-                    
-                    {/* Minha Carteirinha - só aparece se NÃO estiver no dashboard */}
-                    {location.pathname !== '/dashboard' && (
-                      <DropdownMenuItem 
-                        onClick={() => navigate('/dashboard')}
-                        className="cursor-pointer"
-                      >
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Minha Carteirinha
-                      </DropdownMenuItem>
-                    )}
-                    
-                    <DropdownMenuItem 
+                  <DropdownMenuContent align="end" className="w-56 bg-popover border border-border">
+                    <DropdownMenuItem
+                      onClick={() => navigate('/carteirinha')}
+                      className="bg-ure-yellow text-ure-dark hover:bg-ure-yellow/90 font-bold py-3 cursor-pointer"
+                    >
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Minha Carteirinha
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
                       onClick={() => navigate('/perfil')}
                       className="cursor-pointer"
                     >
-                      <User className="w-4 h-4 mr-2" />
+                      <User className="mr-2 h-4 w-4" />
                       Meu Perfil
                     </DropdownMenuItem>
+                    {!isPhysicalCard && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => navigate('/adquirir-fisica')}
+                          className="text-ure-blue font-medium cursor-pointer"
+                        >
+                          <Package className="mr-2 h-4 w-4" />
+                          Adquirir Carteirinha Física - R$ 19
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={handleSignOut}
-                      className="cursor-pointer text-destructive"
+                    <DropdownMenuItem
+                      onClick={toggleTheme}
+                      className="cursor-pointer"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      {theme === 'dark' ? (
+                        <>
+                          <Sun className="mr-2 h-4 w-4" />
+                          Modo Claro
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="mr-2 h-4 w-4" />
+                          Modo Escuro
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
                       Sair
                     </DropdownMenuItem>
                   </DropdownMenuContent>

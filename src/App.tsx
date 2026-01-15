@@ -22,6 +22,7 @@ import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import Perfil from "./pages/Perfil";
 import Checkout from "./pages/Checkout";
 import Carteirinha from "./pages/Carteirinha";
+import AdquirirFisica from "./pages/AdquirirFisica";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { ChatWrapper } from "./components/ChatWrapper";
@@ -35,7 +36,12 @@ const App = () => (
         <ProfileProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <BrowserRouter 
+            future={{ 
+              v7_startTransition: true, 
+              v7_relativeSplatPath: true 
+            }}
+          >
           <ChatWrapper />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -73,6 +79,11 @@ const App = () => (
             <Route path="/pagamento" element={
               <ProtectedRoute>
                 <Pagamento />
+              </ProtectedRoute>
+            } />
+            <Route path="/adquirir-fisica" element={
+              <ProtectedRoute>
+                <AdquirirFisica />
               </ProtectedRoute>
             } />
             <Route path="/pagamento/sucesso" element={

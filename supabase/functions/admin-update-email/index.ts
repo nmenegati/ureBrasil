@@ -69,10 +69,17 @@ Deno.serve(async (req) => {
 
     console.log('✅ User is admin')
 
-    // Ler dados da requisição
-    const { targetUserId, newEmail } = await req.json()
+    // Ler dados da requisição com validação de tipos
+    const body = (await req.json()) as unknown
+    if (typeof body !== 'object' || body === null) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const { targetUserId, newEmail } = body as Record<string, unknown>
 
-    if (!targetUserId || !newEmail) {
+    if (typeof targetUserId !== 'string' || typeof newEmail !== 'string') {
       return new Response(
         JSON.stringify({ error: 'targetUserId and newEmail are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -134,10 +141,10 @@ Deno.serve(async (req) => {
       }
     )
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('💥 Exception in admin-update-email:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
@@ -54,6 +54,7 @@ const maskCvv = (value: string) => {
 
 export default function Pagamento() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,9 +157,17 @@ export default function Pagamento() {
     setProcessing(true);
 
     try {
+      const { isPhysicalUpsell, amount } = (location.state as { isPhysicalUpsell?: boolean; amount?: number } | null) || {};
+      const paymentAmount = isPhysicalUpsell ? amount : plan.price;
+      const metadata = {
+        is_physical_upsell: !!isPhysicalUpsell,
+      };
+
       const payload: Record<string, unknown> = {
-        plan_id: plan.id,
+        plan_id: isPhysicalUpsell ? null : plan.id,
         payment_method: paymentMethod === "card" ? cardType === "credit" ? "credit_card" : "debit_card" : "pix",
+        amount: paymentAmount,
+        metadata,
       };
 
       if (paymentMethod === "card") {
@@ -185,7 +194,7 @@ export default function Pagamento() {
         navigate("/pagamento/sucesso", {
           state: {
             planName: plan.name,
-            amount: plan.price,
+            amount: paymentAmount,
             paymentId: data?.payment_id,
             cardType: plan.is_direito ? "direito" : "geral",
             paymentMethod: paymentMethod === "card" ? cardType : "pix",

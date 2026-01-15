@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ interface StudentProfile {
   institution: string | null;
   course: string | null;
   period: string | null;
-  avatar_url: string | null;
+  profile_photo_url: string | null;
 }
 
 interface CardData {
@@ -75,7 +75,7 @@ export default function Carteirinha() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -120,39 +120,11 @@ export default function Carteirinha() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, toast]);
 
-  // Effect separado para gerar card quando dados e canvas estiverem prontos
-  useEffect(() => {
-    if (profile && cardData && canvasRef.current && !generatedFront) {
-      console.log('🔄 Triggering card generation via useEffect');
-      generateCard();
-    }
-  }, [profile, cardData, generatedFront]);
+  // Effect e função de geração movidos para baixo, após declaração de generateFrontCard
 
-  const generateCard = async () => {
-    if (!profile || !cardData) return;
-    
-    setGenerating(true);
-    try {
-      console.log('🔄 Gerando QR Code...');
-      const qrData = cardData.qr_code || cardData.card_number;
-      const qrUrl = await QRCode.toDataURL(qrData, {
-        width: 256,
-        margin: 0,
-        color: { dark: '#000000', light: '#ffffff' }
-      });
-      console.log('✅ QR Code gerado');
-      
-      await generateFrontCard(profile, cardData, qrUrl);
-    } catch (error) {
-      console.error('❌ Erro ao gerar card:', error);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const generateFrontCard = async (
+  const generateFrontCard = useCallback(async (
     profileData: StudentProfile, 
     card: CardData, 
     qrUrl: string
@@ -273,10 +245,15 @@ export default function Carteirinha() {
     const fotoW = 200;
     const fotoH = 250;
 
-    if (profileData.avatar_url) {
-      console.log('📸 Carregando foto:', profileData.avatar_url);
+    if (profileData.profile_photo_url) {
+      console.log('📸 Carregando foto (profile_photo_url):', profileData.profile_photo_url);
       try {
-        const foto = await loadImage(profileData.avatar_url);
+        const { data: signed } = await supabase
+          .storage
+          .from('documents')
+          .createSignedUrl(profileData.profile_photo_url, 300);
+        const photoUrl = signed?.signedUrl || profileData.profile_photo_url;
+        const foto = await loadImage(photoUrl);
         console.log('✅ Foto carregada');
         ctx.drawImage(foto, fotoX, fotoY, fotoW, fotoH);
         console.log('✅ Foto desenhada');
@@ -325,7 +302,37 @@ export default function Carteirinha() {
     console.log('✅ Data URL gerado, tamanho:', dataUrl.length, 'bytes');
     setGeneratedFront(dataUrl);
     console.log('🎉 Geração concluída! Estado atualizado.');
-  };
+  }, []);
+
+  const generateCard = useCallback(async () => {
+    if (!profile || !cardData) return;
+    
+    setGenerating(true);
+    try {
+      console.log('🔄 Gerando QR Code...');
+      const qrData = cardData.qr_code || cardData.card_number;
+      const qrUrl = await QRCode.toDataURL(qrData, {
+        width: 256,
+        margin: 0,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
+      console.log('✅ QR Code gerado');
+      
+      await generateFrontCard(profile, cardData, qrUrl);
+    } catch (error) {
+      console.error('❌ Erro ao gerar card:', error);
+    } finally {
+      setGenerating(false);
+    }
+  }, [profile, cardData, generateFrontCard]);
+
+  // Effect separado para gerar card quando dados e canvas estiverem prontos
+  useEffect(() => {
+    if (profile && cardData && canvasRef.current && !generatedFront) {
+      console.log('🔄 Triggering card generation via useEffect');
+      generateCard();
+    }
+  }, [profile, cardData, generatedFront, generateCard]);
 
   const regenerateCard = async () => {
     console.log('🧪 REGENERAÇÃO MANUAL');

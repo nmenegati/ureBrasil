@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -18,9 +18,17 @@ serve(async (req) => {
   try {
     console.log('[INIT] Validação iniciada')
     
-    // 1. Receber webhook
-    const webhook = await req.json()
-    const { id, type, file_url, student_id } = webhook.record
+    // 1. Receber corpo da requisição (webhook ou chamada direta do trigger)
+    const body = await req.json()
+    let id: string, type: string, file_url: string, student_id: string
+    if (body && typeof body === 'object' && 'record' in body && body.record) {
+      ({ id, type, file_url, student_id } = body.record)
+    } else {
+      ({ document_id: id, type, file_url, student_id } = body)
+    }
+    if (!id || !student_id || !type || !file_url) {
+      throw new Error('Campos obrigatórios faltando: document_id, student_id, type, file_url')
+    }
     
     if (!id || !file_url) {
       throw new Error('Dados incompletos no webhook')
@@ -59,6 +67,21 @@ serve(async (req) => {
     // 6. Atualizar status no banco
     await updateDocumentStatus(supabase, id, validation)
     
+    // 6.1. Se for foto 3x4 aprovada, atualizar foto de perfil
+    if (type === 'foto' && validation.recommendation === 'approved') {
+      console.log('[PROFILE PHOTO] Atualizando profile_photo_url com file_url da foto 3x4 aprovada')
+      const { error: photoError } = await supabase
+        .from('student_profiles')
+        .update({ profile_photo_url: file_url })
+        .eq('id', student_id)
+      
+      if (photoError) {
+        console.error('[PROFILE PHOTO] Erro ao atualizar profile_photo_url:', photoError)
+      } else {
+        console.log('[PROFILE PHOTO] profile_photo_url atualizado com sucesso')
+      }
+    }
+    
     // 7. Registrar audit log
     await logAudit(supabase, student_id, id, type, validation)
     
@@ -66,10 +89,10 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[ERROR]', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
@@ -211,23 +234,31 @@ async function validateWithClaude(base64: string, mimeType: string, prompt: stri
   return parseResponse(text)
 }
 
-function parseResponse(raw: string) {
+interface ValidationResult {
+  valid: boolean
+  confidence: number
+  recommendation: 'approved' | 'rejected' | 'review'
+  reason: string
+  issues: string[]
+}
+
+function parseResponse(raw: string): ValidationResult {
   try {
     let clean = raw.replace(/```json\n?/g, '').replace(/```/g, '').trim()
     const match = clean.match(/\{[\s\S]*\}/)
     if (match) clean = match[0]
     
-    const result = JSON.parse(clean)
+    const result = JSON.parse(clean) as Partial<ValidationResult>
     
     // Validar campos
-    result.valid = result.valid ?? false
-    result.confidence = Math.max(0, Math.min(100, Number(result.confidence) || 0))
-    result.recommendation = ['approved','rejected','review'].includes(result.recommendation)
+    const valid = result.valid ?? false
+    const confidence = Math.max(0, Math.min(100, Number(result.confidence) || 0))
+    const recommendation = (result.recommendation && ['approved','rejected','review'].includes(result.recommendation))
       ? result.recommendation : 'review'
-    result.reason = result.reason || 'Resposta inválida'
-    result.issues = Array.isArray(result.issues) ? result.issues : []
+    const reason = result.reason || 'Resposta inválida'
+    const issues = Array.isArray(result.issues) ? result.issues : []
     
-    return result
+    return { valid, confidence, recommendation, reason, issues }
   } catch {
     return {
       valid: false,
@@ -239,7 +270,7 @@ function parseResponse(raw: string) {
   }
 }
 
-async function updateDocumentStatus(supabase: any, docId: string, validation: any) {
+async function updateDocumentStatus(supabase: SupabaseClient, docId: string, validation: ValidationResult) {
   const statusMap: Record<string, string> = {
     approved: 'approved',
     rejected: 'rejected',
@@ -268,7 +299,7 @@ async function updateDocumentStatus(supabase: any, docId: string, validation: an
   }
 }
 
-async function logAudit(supabase: any, studentId: string, docId: string, docType: string, validation: any) {
+async function logAudit(supabase: SupabaseClient, studentId: string, docId: string, docType: string, validation: ValidationResult) {
   const { error } = await supabase.from('audit_logs').insert({
     action: 'document_validation',
     resource_type: 'document',

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { RekognitionClient, CompareFacesCommand } from "https://esm.sh/@aws-sdk/client-rekognition@3.451.0"
 
 const corsHeaders = {
@@ -13,7 +14,8 @@ serve(async (req) => {
   }
 
   try {
-    const { student_id } = await req.json()
+    const body = (await req.json()) as unknown
+    const { student_id } = (typeof body === 'object' && body !== null ? body as Record<string, unknown> : {})
     if (!student_id) throw new Error('student_id is required')
 
     console.log(`[INIT] Comparação facial para student_id: ${student_id}`)
@@ -43,8 +45,9 @@ serve(async (req) => {
     if (docsError) throw docsError
     
     // Group by type to get latest
-    const latestDocs: any = {}
-    docs.forEach((d: any) => {
+    type DocumentRow = { id: string; type: string; file_url: string }
+    const latestDocs: Record<string, DocumentRow> = {}
+    ;((docs ?? []) as DocumentRow[]).forEach((d) => {
         if (!latestDocs[d.type]) {
             latestDocs[d.type] = d
         }
@@ -140,27 +143,66 @@ serve(async (req) => {
       status: 200
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500
     })
   }
 })
 
-async function downloadFile(supabase: any, path: string) {
-  // Handle cases where path might be full URL or just path
-  // Usually storage path is "folder/filename"
-  const cleanPath = path.split('/documents/').pop() || path // rough cleanup if needed, but supabase storage download needs relative path usually
-  
-  // Try downloading directly with the path provided
-  const { data, error } = await supabase.storage.from('documents').download(path)
-  if (error) {
-      console.error(`Error downloading ${path}:`, error)
-      throw error
+async function compressImage(bytes: Uint8Array, maxSizeKB: number = 1024): Promise<Uint8Array> {
+  try {
+    if (bytes.length < maxSizeKB * 1024) {
+      return bytes
+    }
+    console.log(`Imagem grande (${Math.round(bytes.length/1024)}KB), comprimindo...`)
+
+    const tempInput = await Deno.makeTempFile({ suffix: '.jpg' })
+    const tempOutput = await Deno.makeTempFile({ suffix: '.jpg' })
+
+    try {
+      await Deno.writeFile(tempInput, bytes)
+
+      // Comprimir com ImageMagick (convert)
+      const process = Deno.run({
+        cmd: ['convert', tempInput, '-resize', '800x800>', '-quality', '85', tempOutput],
+        stdout: 'null',
+        stderr: 'null'
+      })
+
+      await process.status()
+      process.close?.()
+
+      const compressed = await Deno.readFile(tempOutput)
+      console.log(`Comprimido: ${Math.round(bytes.length/1024)}KB → ${Math.round(compressed.length/1024)}KB`)
+      return compressed
+    } finally {
+      await Deno.remove(tempInput).catch(() => {})
+      await Deno.remove(tempOutput).catch(() => {})
+    }
+  } catch (e) {
+    console.warn('Compressão falhou, usando bytes originais:', e)
+    return bytes
   }
-  return new Uint8Array(await data.arrayBuffer())
+}
+
+async function downloadFile(supabase: SupabaseClient, path: string): Promise<Uint8Array> {
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from('documents')
+    .createSignedUrl(path, 60)
+  if (signedError || !signedData?.signedUrl) {
+    throw new Error(`Erro ao gerar signed URL: ${signedError?.message}`)
+  }
+  const response = await fetch(signedData.signedUrl)
+  if (!response.ok) {
+    throw new Error(`Erro ao baixar arquivo: ${response.status}`)
+  }
+  const arrayBuffer = await response.arrayBuffer()
+  const bytes = new Uint8Array(arrayBuffer)
+  // Comprimir antes de retornar (máx 800KB)
+  return await compressImage(bytes, 800)
 }
 
 async function compareTwoFaces(client: RekognitionClient, source: Uint8Array, target: Uint8Array) {
@@ -175,17 +217,19 @@ async function compareTwoFaces(client: RekognitionClient, source: Uint8Array, ta
         const match = (response.FaceMatches?.length || 0) > 0
         const similarity = match ? response.FaceMatches![0].Similarity : 0
         return { match, similarity: similarity || 0 }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Rekognition Error:', e)
         // If no faces found in source or target, it throws InvalidParameterException
-        if (e.name === 'InvalidParameterException') {
+        const name = (typeof e === 'object' && e && 'name' in e) ? (e as { name: string }).name : ''
+        const message = e instanceof Error ? e.message : 'Unknown error'
+        if (name === 'InvalidParameterException') {
             return { match: false, similarity: 0, error: 'Face not detected in one of the images' }
         }
-        return { match: false, similarity: 0, error: e.message }
+        return { match: false, similarity: 0, error: message }
     }
 }
 
-async function logAudit(supabase: any, studentId: string, result: string, details: any) {
+async function logAudit(supabase: SupabaseClient, studentId: string, result: string, details: Record<string, unknown>) {
     try {
         await supabase.from('audit_logs').insert({
             action: 'face_comparison',

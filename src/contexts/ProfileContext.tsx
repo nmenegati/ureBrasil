@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,7 +16,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user) {
       setAvatarUrl(null);
       setFullName(null);
@@ -25,19 +25,26 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     
     const { data } = await supabase
       .from('student_profiles')
-      .select('avatar_url, full_name')
+      .select('avatar_url, full_name, profile_photo_url')
       .eq('user_id', user.id)
       .maybeSingle();
     
     if (data) {
-      setAvatarUrl(data.avatar_url);
+      if (data.profile_photo_url) {
+        const { data: signedUrl, error } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(data.profile_photo_url, 300);
+        setAvatarUrl(!error && signedUrl?.signedUrl ? signedUrl.signedUrl : data.avatar_url);
+      } else {
+        setAvatarUrl(data.avatar_url);
+      }
       setFullName(data.full_name);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadProfile();
-  }, [user]);
+  }, [user, loadProfile]);
 
   const updateAvatar = (url: string) => {
     setAvatarUrl(url);

@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { CheckCircle, Loader2, CreditCard, Truck, Shield, X } from "lucide-react";
+import { CheckCircle, Loader2, CreditCard, Truck, Shield, X, Info } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const PaymentSuccessPage = () => {
   const navigate = useNavigate();
@@ -23,11 +24,11 @@ const PaymentSuccessPage = () => {
       checkIfPhysicalCard(id);
     } else {
       // Sem paymentId, redirecionar direto
-      navigate('/complete-profile', { replace: true });
+      navigate('/upload-documentos', { replace: true });
     }
   }, [location.state, navigate]);
 
-  const checkIfPhysicalCard = async (paymentId: string) => {
+  const checkIfPhysicalCard = useCallback(async (paymentId: string) => {
     try {
       // Buscar carteirinha associada ao pagamento
       const { data: card } = await supabase
@@ -40,7 +41,7 @@ const PaymentSuccessPage = () => {
         // Já é física, redirecionar direto
         setIsPhysicalCard(true);
         setTimeout(() => {
-          navigate('/complete-profile', { replace: true });
+          navigate('/upload-documentos', { replace: true });
         }, 2000);
       } else {
         // É digital, mostrar upsell após 2 segundos
@@ -57,7 +58,7 @@ const PaymentSuccessPage = () => {
         setShowUpsellModal(true);
       }, 2000);
     }
-  };
+  }, [navigate]);
 
   const handleAcceptUpsell = () => {
     setLoading(true);
@@ -75,7 +76,7 @@ const PaymentSuccessPage = () => {
   const handleDeclineUpsell = () => {
     setShowUpsellModal(false);
     localStorage.removeItem('recent_payment_id');
-    navigate('/complete-profile', { replace: true });
+    navigate('/upload-documentos', { replace: true });
   };
 
   return (
@@ -100,7 +101,7 @@ const PaymentSuccessPage = () => {
             Pagamento Aprovado!
           </h1>
           <p className="text-white/80 text-sm mb-8">
-            Agora complete seu cadastro para emitir a carteirinha...
+            Agora envie seus documentos para validar sua carteirinha...
           </p>
           
           {/* Loader de redirecionamento */}
@@ -110,7 +111,7 @@ const PaymentSuccessPage = () => {
               <span className="text-sm">
                 {isPhysicalCard === null 
                   ? 'Processando...' 
-                  : 'Redirecionando para completar perfil...'}
+                  : 'Redirecionando para envio de documentos...'}
               </span>
             </div>
           )}
@@ -140,50 +141,32 @@ const PaymentSuccessPage = () => {
             </p>
           </div>
 
-          {/* Conteúdo */}
+          {/* Conteúdo (oferta especial com economia) */}
           <div className="p-6 space-y-5">
-            {/* Preço */}
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <span className="text-gray-500 line-through text-lg">R$ 25,00</span>
-                <Badge variant="destructive" className="text-xs">-40%</Badge>
-              </div>
-              <div className="text-4xl font-bold text-green-600">
-                R$ 15,00
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Pagamento único • Sem mensalidade
+            <div className="text-center space-y-3">
+              <h3 className="text-2xl font-bold">🎉 Oferta Especial!</h3>
+              <p className="text-lg">
+                Adicione a <span className="font-bold">Carteirinha Física</span> por apenas
               </p>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-2xl text-muted-foreground line-through">R$ 19,00</span>
+                <span className="text-4xl font-bold text-ure-green">R$ 15,00</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Economize R$ 4,00 na compra conjunta!
+              </p>
+              <Alert className="text-left">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  A carteirinha física <strong>não é obrigatória</strong>. Sua carteirinha digital já é 100% válida e aceita em todo Brasil.
+                </AlertDescription>
+              </Alert>
             </div>
-
-            {/* Benefícios */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Truck className="w-4 h-4 text-blue-600" />
-                </div>
-                <span className="text-gray-700">Entrega em todo Brasil via Correios</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CreditCard className="w-4 h-4 text-blue-600" />
-                </div>
-                <span className="text-gray-700">Material premium com QR Code integrado</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-4 h-4 text-blue-600" />
-                </div>
-                <span className="text-gray-700">Aceita em cinemas, teatros e eventos</span>
-              </div>
-            </div>
-
-            {/* Botões */}
-            <div className="space-y-3 pt-2">
-              <Button 
+            <div className="flex gap-4">
+              <Button
                 onClick={handleAcceptUpsell}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-6 text-base"
+                className="flex-1 bg-ure-green hover:bg-ure-green/90"
               >
                 {loading ? (
                   <>
@@ -191,16 +174,16 @@ const PaymentSuccessPage = () => {
                     Processando...
                   </>
                 ) : (
-                  'Quero a Carteirinha Física - R$ 15'
+                  'Sim, quero por R$ 15! 🎁'
                 )}
               </Button>
-              
-              <button
+              <Button
                 onClick={handleDeclineUpsell}
-                className="w-full text-gray-500 text-sm hover:text-gray-700 transition-colors py-2"
+                variant="outline"
+                className="flex-1"
               >
-                Continuar apenas com a digital
-              </button>
+                Não, obrigado
+              </Button>
             </div>
           </div>
         </DialogContent>

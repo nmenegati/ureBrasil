@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -140,6 +141,6 @@ export default {
 		}
   	}
   },
-  // @ts-ignore
-  plugins: [require("tailwindcss-animate")],
+  // @ts-expect-error Plugin type may be inferred differently in Tailwind's config context
+  plugins: [animate],
 } satisfies Config;

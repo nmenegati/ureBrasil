@@ -82,12 +82,12 @@ export default function AdminEditEmail() {
       });
       setNewEmail(user.email || '');
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error searching student:', err);
       toast({
         variant: 'destructive',
         title: 'Erro',
-        description: err.message,
+        description: err instanceof Error ? err.message : 'Ocorreu um erro ao buscar o aluno.',
       });
     } finally {
       setSearching(false);
@@ -141,12 +141,12 @@ export default function AdminEditEmail() {
         email_confirmed_at: null, // Email foi resetado
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating email:', err);
       toast({
         variant: 'destructive',
         title: 'Erro ao atualizar email',
-        description: err.message || 'Não foi possível atualizar o email.',
+        description: err instanceof Error ? err.message : 'Não foi possível atualizar o email.',
       });
     } finally {
       setUpdating(false);

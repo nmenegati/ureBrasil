@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +63,7 @@ export default function Dashboard() {
   // Estados para modal de upsell
   const [showUpsellModal, setShowUpsellModal] = useState(false);
   const [recentPaymentId, setRecentPaymentId] = useState<string | null>(null);
+  const [cardStatus, setCardStatus] = useState<string | null>(null);
 
   // Redirecionar se não autenticado
   useEffect(() => {
@@ -128,7 +129,7 @@ export default function Dashboard() {
     }
   }, [user, loading, loadingData, profile]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     
     setLoadingData(true);
@@ -196,6 +197,7 @@ export default function Dashboard() {
       console.log('📦 is_physical:', cardData?.is_physical, '| tipo:', typeof cardData?.is_physical);
 
       setCard(cardData);
+      setCardStatus(cardData?.status || null);
       
       // 5. Calcular progresso
       const newProgress = {
@@ -212,7 +214,7 @@ export default function Dashboard() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [user]);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -246,18 +248,20 @@ export default function Dashboard() {
     return new Date(date).toLocaleDateString('pt-BR');
   };
 
-  // Calcula porcentagem
   const getPercentage = () => {
-    return Object.values(progress).filter(Boolean).length * 25;
+    if (!progress.profile) return 0;
+    if (progress.profile && !progress.payment) return 33;
+    if (progress.profile && progress.payment && !progress.documents) return 67;
+    if (progress.profile && progress.payment && progress.documents) return 100;
+    return 0;
   };
 
   // Mensagem dinâmica de boas-vindas
   const getWelcomeMessage = () => {
     const pct = getPercentage();
     if (pct === 0) return "Complete as etapas abaixo para obter sua carteirinha.";
-    if (pct === 25) return "Bom começo! Continue completando as etapas.";
-    if (pct === 50) return "Você está na metade do caminho!";
-    if (pct === 75) return "Quase lá! Só mais um passo.";
+    if (pct === 33) return "Bom começo! Continue completando as etapas.";
+    if (pct === 67) return "Quase lá! Só mais um passo.";
     return "Parabéns! Sua carteirinha está pronta!";
   };
 
@@ -307,38 +311,46 @@ export default function Dashboard() {
   };
 
   // Cards de progresso clicáveis - NOVA ORDEM: Perfil → Pagamento → Docs
-  const progressSteps = [
-    {
-      id: 'perfil',
-      label: 'Perfil',
-      status: progress.profile ? 'Concluído' : 'Pendente',
-      icon: User,
-      enabled: true, // Sempre habilitado
-      route: '/complete-profile',
-      completed: progress.profile
-    },
-    {
-      id: 'pagamento',
-      label: 'Pagamento',
-      status: (() => {
-        console.log('📋 Card Pagamento - progress.payment:', progress.payment);
-        return progress.payment ? 'Aprovado' : 'Pendente';
-      })(),
-      icon: CreditCard,
-      enabled: progress.profile, // Só após perfil
-      route: isLawStudent ? '/escolher-plano' : '/pagamento',
-      completed: progress.payment
-    },
-    {
-      id: 'documentos',
-      label: 'Documentos',
-      status: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4`,
-      icon: FileText,
-      enabled: progress.payment, // Só após pagamento
-      route: '/upload-documentos',
-      completed: progress.documents
-    },
-  ];
+  const shouldShowProgressPages = () => {
+    return !cardStatus || ['pending_docs', 'pending_payment', 'processing', 'cancelled', 'expired'].includes(cardStatus!);
+  };
+
+  const baseProfileStep = {
+    id: 'perfil' as const,
+    label: 'Perfil',
+    status: progress.profile ? 'Concluído' : 'Pendente',
+    icon: User,
+    enabled: true,
+    route: progress.profile ? '/perfil' : '/complete-profile',
+    completed: progress.profile
+  };
+
+  const paymentStep = {
+    id: 'pagamento' as const,
+    label: 'Pagamento',
+    status: (() => {
+      console.log('📋 Card Pagamento - progress.payment:', progress.payment);
+      return progress.payment ? 'Aprovado' : 'Pendente';
+    })(),
+    icon: CreditCard,
+    enabled: progress.profile,
+    route: isLawStudent ? '/escolher-plano' : '/pagamento',
+    completed: progress.payment
+  };
+
+  const documentsStep = {
+    id: 'documentos' as const,
+    label: 'Documentos',
+    status: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4`,
+    icon: FileText,
+    enabled: progress.payment,
+    route: '/upload-documentos',
+    completed: progress.documents
+  };
+
+  const progressSteps = shouldShowProgressPages()
+    ? [baseProfileStep, paymentStep, documentsStep]
+    : [baseProfileStep];
   
   // Card data alias para o card simplificado
   const cardData = card;

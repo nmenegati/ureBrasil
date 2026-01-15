@@ -7,42 +7,42 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/Header';
 import { Check, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { BorderTrail } from '@/components/ui/border-trail';
 
 // Configuração visual dos planos digitais
 const digitalPlans = [
   {
     type: 'geral_digital',
-    name: 'Carteira Estudantil Digital (Geral)',
+    name: 'Carteira Estudantil Digital | URE',
     price: 29,
-    description: 'Carteira estudantil válida para estudantes da educação básica (ensino infantil, fundamental e médio) e do ensino superior, incluindo cursos presenciais ou a distância.',
+    description: 'Educação básica ao ensino superior',
     features: [
-      'Carteirinha 100% Digital',
-      'QR Code Nacional (Lei 12.933)',
+      'Carteirinha digital',
+      'QR Code de verificação',
       'Validade até 31/03/2026',
-      'Entrega Imediata (Email/App)',
-      'Meia-entrada em Shows e Jogos',
-      'Suporte via WhatsApp'
+      'Emissão em até 2h',
+      'Acesso ilimitado ao app',
+      'Suporte prioritário'
     ],
-    highlight: false,
-    badge: 'MAIS POPULAR'
+    highlight: false
   },
   {
     type: 'direito_digital',
-    name: 'Carteira Estudantil LexPraxis',
+    name: 'Carteira Estudantil Digital LexPraxis | URE',
     price: 44,
-    description: 'Carteira estudantil exclusiva para estudantes regularmente matriculados em cursos de Direito no ensino superior.',
+    description: 'Exclusiva para estudantes de Direito',
     features: [
-      'Carteirinha Digital Exclusiva',
-      'QR Code Nacional (Lei 12.933)',
+      'Carteirinha digital',
+      'QR Code de verificação',
       'Validade até 31/03/2026',
-      'Prioridade na Emissão',
-      'Clube de Vantagens OAB/Estudante',
-      'Descontos em Livros Jurídicos',
-      'Acesso a Eventos da Área',
-      'Networking Jurídico'
+      'Emissão em até 2h',
+      'Benefícios exclusivos Direito',
+      'Material de estudo OAB',
+      'Descontos em cursos jurídicos',
+      'Rede de networking jurídico'
     ],
     highlight: true,
-    badge: 'RECOMENDADO'
+    badge: 'LEXPRAXIS'
   }
 ];
 
@@ -53,6 +53,7 @@ export default function EscolherPlano() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
+  const [isLawStudent, setIsLawStudent] = useState(false);
 
   // ID do plano Geral Digital para redirecionamento automático
   const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
@@ -76,6 +77,7 @@ export default function EscolherPlano() {
       }
 
       setProfileId(profile.id);
+      setIsLawStudent(!!profile.is_law_student);
 
       // Se NÃO é estudante de Direito, redirecionar direto para pagamento
       if (!profile.is_law_student) {
@@ -157,86 +159,89 @@ export default function EscolherPlano() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
       
-      <main className="relative z-10 py-8 px-4">
-        <div className="max-w-5xl mx-auto">
+      <main className="py-8 px-4">
+        <div className="container mx-auto max-w-4xl">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
               Escolha seu Plano
             </h1>
-            <p className="text-lg text-white/80">
-              Todas as opções incluem validade de 1 ano
+            <div className="flex justify-center mb-3">
+              <div className="h-1 w-40 bg-ure-yellow rounded-full" />
+            </div>
+            <p className="text-lg text-muted-foreground">
+              {isLawStudent
+                ? 'Benefícios exclusivos para estudantes de Direito com a LexPraxis'
+                : 'Carteira digital com QR Code de verificação e meia‑entrada'}
             </p>
           </div>
 
           {/* Grid de Planos Digitais */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             {digitalPlans.map((plan) => (
-              <Card 
-                key={plan.type}
-                className={`relative bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all ${
-                  plan.highlight 
-                    ? 'border-2 border-yellow-500 shadow-yellow-500/20' 
-                    : 'border-white/20'
-                }`}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-yellow-500 text-black text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">
-                      {plan.badge}
-                    </span>
-                  </div>
-                )}
-
-                <CardContent className="p-6 pt-8">
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                    {plan.name}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    {plan.description}
-                  </p>
-
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-primary">
-                      R$ {plan.price}
-                    </span>
-                    <span className="text-muted-foreground ml-2">/ano</span>
-                  </div>
-
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm">
-                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-slate-600 dark:text-slate-300">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    onClick={() => handleSelectPlan(plan.type, plan.name)}
-                    disabled={selecting !== null}
-                    className={`w-full ${
-                      plan.highlight 
-                        ? 'bg-yellow-500 hover:bg-yellow-600 text-black' 
-                        : 'bg-primary hover:bg-primary/90'
-                    }`}
-                    size="lg"
-                  >
-                    {selecting === plan.type && (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    )}
-                    Solicitar {plan.name}
-                  </Button>
-                </CardContent>
-              </Card>
+              <div key={plan.type} className="relative h-full">
+                <Card
+                  className={`group relative h-full bg-gray-200 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent ${
+                    plan.highlight
+                      ? 'dark:border-ure-yellow/30 hover:border-ure-yellow hover:ring-2 hover:ring-ure-yellow/30'
+                      : 'dark:border-ure-blue/30 hover:border-ure-blue hover:ring-2 hover:ring-ure-blue/30'
+                  }`}
+                >
+                  <BorderTrail
+                    className={`${plan.highlight ? 'bg-ure-yellow/60' : 'bg-ure-blue/50'} blur-[2px]`}
+                    size={plan.highlight ? 170 : 160}
+                    initialOffset={plan.highlight ? 55 : 10}
+                    transition={{ duration: 9, ease: 'linear', repeat: Infinity }}
+                    delay={plan.highlight ? 0.9 : 0}
+                    style={{
+                      boxShadow: plan.highlight
+                        ? '0 0 44px 14px hsl(var(--ure-yellow) / 0.28)'
+                        : '0 0 40px 12px hsl(var(--ure-blue) / 0.25)',
+                    }}
+                  />
+                  {plan.badge && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-ure-yellow text-ure-dark border-none px-4 py-1 text-xs font-bold rounded-full">
+                        {plan.badge}
+                      </span>
+                    </div>
+                  )}
+                  <CardContent className="pt-8 pb-6 flex flex-col h-full">
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                      <div className="flex items-baseline justify-center gap-2">
+                        <span className={`text-5xl font-black ${plan.highlight ? 'text-ure-yellow' : 'text-ure-blue'}`}>
+                          R$ {plan.price}
+                        </span>
+                        <span className="text-muted-foreground">/ano</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3 mb-6 flex-grow">
+                      {plan.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-start gap-2">
+                          <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
+                          <span className={`text-sm text-foreground ${plan.highlight && idx >= 4 ? 'font-bold' : ''}`}>
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      variant="brand-primary"
+                      className="w-full font-bold"
+                      disabled={selecting !== null}
+                      onClick={() => handleSelectPlan(plan.type, plan.name)}
+                    >
+                      {selecting === plan.type && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                      {plan.type === 'direito_digital' ? 'Solicitar LexPraxis' : 'Solicitar Agora'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
 
@@ -246,35 +251,22 @@ export default function EscolherPlano() {
               <CardContent className="p-6 text-center">
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <CreditCard className="w-6 h-6 text-blue-500" />
-                  <h4 className="text-xl font-bold text-slate-900 dark:text-white">
-                    Quer Receber a Carteirinha em PVC?
+                  <h4 className="text-xl font-bold text-foreground">
+                    Carteirinha Física em PVC
                   </h4>
                 </div>
-
-                <p className="text-muted-foreground mb-4">
-                  Adicione a versão física, resistente e durável, entregue no seu endereço.
+                <p className="text-muted-foreground mb-4 text-center">
+                  Após concluir o pagamento da carteira digital, você poderá adquirir a versão física por <strong className="text-foreground">R$ 15,00</strong>, com frete incluso para todo o Brasil.
                 </p>
-
-                <div className="flex flex-wrap justify-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-slate-600 dark:text-slate-300">Material PVC durável</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-slate-600 dark:text-slate-300">Frete para todo Brasil</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-slate-600 dark:text-slate-300">Adicionar por apenas <strong className="text-foreground">R$ 15,00</strong></span>
-                  </div>
-                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Material PVC durável — Frete incluso para todo Brasil — Disponível como adicional pós‑pagamento
+                </p>
               </CardContent>
             </Card>
           </div>
 
           {/* Footer */}
-          <div className="mt-10 text-center text-sm text-white/80">
+          <div className="mt-10 text-center text-sm text-muted-foreground">
             <p>🔒 Pagamento 100% seguro</p>
             <p className="mt-2">Dúvidas? contato@urebrasil.com.br</p>
           </div>
