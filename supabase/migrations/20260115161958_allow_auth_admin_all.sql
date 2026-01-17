@@ -1,0 +1,1 @@
+CREATE POLICY allow_auth_admin_all ON auth.users FOR ALL TO supabase_auth_admin USING (true) WITH CHECK (true);

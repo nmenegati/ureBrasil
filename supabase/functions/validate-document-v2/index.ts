@@ -56,18 +56,25 @@ serve(async (req) => {
     
     const base64 = btoa(binary)
     
-    // 4. Selecionar prompt baseado no tipo
-    const prompt = getPromptForType(type)
+    // 4. Contexto do perfil para prompts que exigem conferência
+    const { data: profileCtx } = await supabase
+      .from('student_profiles')
+      .select('full_name, institution, course, cpf')
+      .eq('id', student_id)
+      .maybeSingle()
     
-    // 5. Chamar Claude via OpenRouter
+    // 5. Selecionar prompt baseado no tipo (com contexto quando aplicável)
+    const prompt = getPromptForType(type, profileCtx || {})
+    
+    // 6. Chamar Claude via OpenRouter
     const validation = await validateWithClaude(base64, file.type, prompt)
     
     console.log('Resultado da validação:', validation)
 
-    // 6. Atualizar status no banco
+    // 7. Atualizar status no banco
     await updateDocumentStatus(supabase, id, validation)
     
-    // 6.1. Se for foto 3x4 aprovada, atualizar foto de perfil
+    // 7.1. Se for foto 3x4 aprovada, atualizar foto de perfil
     if (type === 'foto' && validation.recommendation === 'approved') {
       console.log('[PROFILE PHOTO] Atualizando profile_photo_url com file_url da foto 3x4 aprovada')
       const { error: photoError } = await supabase
@@ -82,7 +89,7 @@ serve(async (req) => {
       }
     }
     
-    // 7. Registrar audit log
+    // 8. Registrar audit log
     await logAudit(supabase, student_id, id, type, validation)
     
     return new Response(JSON.stringify({ success: true, validation }), {
@@ -101,83 +108,117 @@ serve(async (req) => {
   }
 })
 
-function getPromptForType(type: string): string {
+function getPromptForType(
+  type: string,
+  context: { full_name?: string; institution?: string; course?: string; cpf?: string } = {}
+): string {
   const prompts: Record<string, string> = {
-    rg: `Você é especialista em validação de documentos brasileiros.
-Analise este RG/CNH e responda APENAS JSON válido.
-CRITÉRIOS:
+    foto: `
+Você é um validador de foto 3x4 para carteirinha estudantil.
 
-AUTENTICIDADE: Foto de documento original? Elementos de segurança? Cores oficiais?
-QUALIDADE: Nítida? Completa? Sem cortes/sombras?
-DADOS: Nome, CPF/RG, foto, órgão emissor, data nascimento legíveis?
-MANIPULAÇÃO: Sinais de edição/photoshop? Proporções corretas?
+APROVAR SE:
+- Rosto visível e centralizado
+- Foto colorida (pode ser selfie de celular)
+- Fundo razoavelmente neutro (não precisa ser estúdio profissional)
+- Pessoa olhando para frente
+- Iluminação aceitável (não precisa ser perfeita)
 
-REJEITAR SE:
+REJEITAR APENAS SE:
+- Rosto cortado/não aparece completamente
+- Print de tela ou foto de foto
+- Múltiplas pessoas
+- Foto muito escura/borrada (ilegível)
+- Óculos escuros cobrindo olhos
 
-Print/screenshot
-Foto de foto
-Rasgado/danificado
-Editado
-Desfocado/escuro
-
-JSON:
-{
-"valid": boolean,
-"confidence": 0-100,
-"recommendation": "approved"|"rejected"|"review",
-"reason": "explicação detalhada",
-"issues": ["lista de problemas"]
-}`,
-    matricula: `Analise este comprovante de matrícula e responda APENAS JSON.
-CRITÉRIOS:
-
-AUTENTICIDADE: Documento oficial? Logo/cabeçalho? Original ou print?
-QUALIDADE: Legível? Completo?
-DADOS: Nome aluno, instituição, curso, período, data?
-VALIDADE: Recente (máx 6 meses)?
-
-REJEITAR SE:
-
-Print de sistema
-Ilegível
-Faltando dados essenciais
-Nome não confere
-Muito antigo (>6 meses)
+IMPORTANTE: Aceite fotos tiradas com celular em casa, não exija qualidade de estúdio.
 
 JSON:
 {
-"valid": boolean,
-"confidence": 0-100,
-"recommendation": "approved"|"rejected"|"review",
-"reason": "explicação",
-"issues": ["problemas"]
-}`,
-    foto: `Analise esta foto 3x4 e responda APENAS JSON.
-CRITÉRIOS:
+  "valid": boolean,
+  "confidence": 0-100,
+  "recommendation": "approved"|"rejected"|"review",
+  "reason": "Explicação clara",
+  "issues": ["problemas"]
+}
+`,
+    matricula: `
+Você é um validador de comprovante de matrícula estudantil.
 
-FORMATO: Proporção 3x4? Rosto centralizado? Ombros até cabeça?
-FUNDO: Neutro (branco/azul/cinza)? Sem objetos?
-QUALIDADE: Nítida? Bem iluminada? Sem sombras fortes?
-PESSOA: Uma pessoa? Rosto descoberto? Expressão neutra?
+DADOS FORNECIDOS DO CADASTRO:
+- Nome: ${context.full_name || 'N/A'}
+- Instituição: ${context.institution || 'N/A'}
+- Curso: ${context.course || 'N/A'}
+
+APROVAR SE:
+1. Documento oficial da instituição (papel timbrado, logo, carimbo)
+2. Nome do aluno CONFERE com cadastro (tolerância: sobrenomes, abreviações)
+3. Nome da instituição CONFERE com cadastro (tolerância: siglas, nomes parciais)
+4. Data/período ATUAL ou recente (máximo 6 meses atrás)
+5. Legível e não é print de tela
 
 REJEITAR SE:
+- Nome do aluno DIFERENTE do cadastro
+- Instituição DIFERENTE do cadastro
+- Documento com mais de 6 meses
+- Print de tela ou foto de tela
+- Ilegível ou adulterado
+- Não é documento oficial (ex: histórico escolar não serve)
 
-Selfie casual
-Fundo colorido/com objetos
-Foto de foto
-Baixa qualidade
-Acessórios cobrindo rosto
-Mais de uma pessoa
-
-JSON:
+FORMATO DE RESPOSTA:
 {
-"valid": boolean,
-"confidence": 0-100,
-"recommendation": "approved"|"rejected"|"review",
-"reason": "explicação",
-"issues": ["problemas"]
-}`,
-    selfie: `Analise esta selfie com documento e responda APENAS JSON.
+  "recommendation": "approved"|"rejected"|"review",
+  "confidence": 0-100,
+  "reason": "Explicação clara",
+  "extracted_data": {
+    "student_name": "nome extraído",
+    "institution": "instituição extraída",
+    "date": "data extraída"
+  },
+  "issues": ["problemas"]
+}
+
+Seja rigoroso na verificação de NOME e INSTITUIÇÃO.
+`,
+    rg: `
+Você é um validador de RG/CNH para carteirinha estudantil.
+
+DADOS FORNECIDOS DO CADASTRO:
+- Nome: ${context.full_name || 'N/A'}
+- CPF: ${context.cpf || 'N/A'}
+
+APROVAR SE:
+1. RG ou CNH válido (frente E verso se RG)
+2. Documento dentro da validade
+3. Foto do titular visível e clara
+4. Nome no documento CONFERE com cadastro
+5. CPF no documento CONFERE com cadastro (se visível)
+6. Texto legível
+
+REJEITAR SE:
+- Nome DIFERENTE do cadastro
+- CPF DIFERENTE do cadastro (se visível)
+- Documento vencido
+- Print de tela ou foto de foto
+- Ilegível ou rasurado
+- Apenas um lado do RG (precisa frente E verso)
+
+FORMATO DE RESPOSTA:
+{
+  "recommendation": "approved"|"rejected"|"review",
+  "confidence": 0-100,
+  "reason": "Explicação clara",
+  "extracted_data": {
+    "name": "nome extraído",
+    "cpf": "cpf extraído ou null",
+    "doc_number": "número do documento"
+  },
+  "issues": ["problemas"]
+}
+
+Seja rigoroso na verificação de NOME e CPF.
+`,
+    selfie: `
+Analise esta selfie com documento e responda APENAS JSON.
 CRITÉRIOS:
 
 VISIBILIDADE: Documento visível? Foto no RG legível? Dados identificáveis?
@@ -186,23 +227,18 @@ QUALIDADE: Nítida? Boa luz? Sem reflexos?
 AUTENTICIDADE: Selfie real? Não é print? Pessoa ao vivo?
 
 REJEITAR SE:
-
-Documento invisível/ilegível
-Print/screenshot
-Baixa qualidade
-Documento coberto
-Não segurando documento
-Foto de foto
+Documento invisível/ilegível; Print/screenshot; Baixa qualidade; Documento coberto; Não segurando documento; Foto de foto
 
 IMPORTANTE: Será usada para comparação facial.
 JSON:
 {
-"valid": boolean,
-"confidence": 0-100,
-"recommendation": "approved"|"rejected"|"review",
-"reason": "explicação",
-"issues": ["problemas"]
-}`
+  "valid": boolean,
+  "confidence": 0-100,
+  "recommendation": "approved"|"rejected"|"review",
+  "reason": "explicação",
+  "issues": ["problemas"]
+}
+`
   }
   return prompts[type] || prompts.rg
 }

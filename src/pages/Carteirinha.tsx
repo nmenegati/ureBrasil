@@ -16,6 +16,7 @@ interface StudentProfile {
   course: string | null;
   period: string | null;
   profile_photo_url: string | null;
+  plan_id?: string | null;
 }
 
 interface CardData {
@@ -152,8 +153,12 @@ export default function Carteirinha() {
     canvas.height = 644;
     console.log('📐 Canvas configurado: 1010x644');
 
-    // Tentar carregar template
-    const templatePath = '/templates/frente-template.png';
+    // Tentar carregar template por plano
+    const isLawStudent = profileData.plan_id === 'lexpraxis';
+    const frontTemplate = isLawStudent
+      ? '/templates/frente-template-direito.png'
+      : '/templates/frente-template.png';
+    const templatePath = frontTemplate;
     console.log('📸 Tentando carregar template:', templatePath);
     
     try {
@@ -353,7 +358,11 @@ export default function Carteirinha() {
         link.click();
       }
     } else {
-      link.href = '/templates/verso-template.png';
+      const isLawStudent = profile?.plan_id === 'lexpraxis';
+      const backTemplate = isLawStudent
+        ? '/templates/verso-template-direito.png'
+        : '/templates/verso-template.png';
+      link.href = backTemplate;
       link.click();
     }
 

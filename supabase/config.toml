@@ -1,4 +1,4 @@
-project_id = "nwszukpenvkctthbsocw"
+project_id = "zyfbxzjfpncxfawthsht"
 
 [functions.admin-update-email]
 verify_jwt = true
@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.pagbank-payment-card]
 verify_jwt = true
+
+[functions.delete-user-data]
+verify_jwt = false

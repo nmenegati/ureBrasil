@@ -1138,7 +1138,7 @@ const Index = () => {
               <ul className="space-y-2">
                 <li>
                   <a
-                    href="#"
+                    href="/termos"
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
                     Termos de Uso
@@ -1146,7 +1146,7 @@ const Index = () => {
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="/privacidade"
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
                     Política de Privacidade

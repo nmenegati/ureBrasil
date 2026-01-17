@@ -463,13 +463,39 @@ export default function Perfil() {
     }
     setDeletingAccount(true);
     try {
-      // Note: Full account deletion requires admin privileges or edge function
-      // This will sign out and the cascade delete should handle the rest
-      await signOut();
-      toast.success('Conta excluída');
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('DEBUG deleteAccount - sessão:', {
+        exists: !!session,
+        token: session?.access_token ? session.access_token.substring(0, 20) + '...' : null,
+        expires: session?.expires_at,
+      });
+
+      if (!session?.access_token) {
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
+      const { data, error } = await supabase.functions.invoke('delete-user-data', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      console.log('DEBUG deleteAccount - resposta função:', { data, error });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data && typeof (data as { error?: string }).error === 'string') {
+        throw new Error((data as { error: string }).error);
+      }
+
+      toast.success('Dados apagados com sucesso');
+      await supabase.auth.signOut();
       navigate('/');
-    } catch (error) {
-      toast.error('Erro ao excluir conta. Contate o suporte.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erro ao apagar dados';
+      toast.error(`Erro ao apagar dados: ${message}`);
     } finally {
       setDeletingAccount(false);
     }

@@ -23,6 +23,8 @@ import Perfil from "./pages/Perfil";
 import Checkout from "./pages/Checkout";
 import Carteirinha from "./pages/Carteirinha";
 import AdquirirFisica from "./pages/AdquirirFisica";
+import Privacidade from "./pages/Privacidade";
+import Termos from "./pages/Termos";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { ChatWrapper } from "./components/ChatWrapper";
@@ -47,6 +49,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/termos" element={<Termos />} />
+            <Route path="/privacidade" element={<Privacidade />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/verificar-email" element={<VerificarEmail />} />
             <Route path="/recuperar-senha" element={<RecuperarSenha />} />

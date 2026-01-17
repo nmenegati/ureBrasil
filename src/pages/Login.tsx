@@ -98,7 +98,19 @@ export default function Login() {
         return;
       }
 
-      // 5. Verificar documentos aprovados
+      // 5. Verificar carteirinha ativa
+      const { data: card } = await supabase
+        .from('student_cards')
+        .select('status')
+        .eq('student_id', profile.id)
+        .maybeSingle();
+      
+      if (card?.status === 'active') {
+        navigate('/carteirinha');
+        return;
+      }
+
+      // 6. Verificar documentos aprovados
       const { count: docsApproved } = await supabase
         .from('documents')
         .select('id', { count: 'exact', head: true })
@@ -110,7 +122,7 @@ export default function Login() {
         return;
       }
 
-      // 6. Tudo OK - ir para dashboard
+      // 7. Tudo OK - ir para dashboard
       window.location.href = '/dashboard';
       return;
     }

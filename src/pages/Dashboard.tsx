@@ -8,10 +8,11 @@ import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { 
   CheckCircle, Clock, FileText, CreditCard, 
   HelpCircle, ChevronRight, User,
-  AlertCircle, Download, QrCode, Truck
+  AlertCircle, Download, QrCode, Truck, Lock
 } from 'lucide-react';
 interface StudentProfile {
   id: string;
@@ -63,7 +64,6 @@ export default function Dashboard() {
   // Estados para modal de upsell
   const [showUpsellModal, setShowUpsellModal] = useState(false);
   const [recentPaymentId, setRecentPaymentId] = useState<string | null>(null);
-  const [cardStatus, setCardStatus] = useState<string | null>(null);
 
   // Redirecionar se não autenticado
   useEffect(() => {
@@ -197,7 +197,6 @@ export default function Dashboard() {
       console.log('📦 is_physical:', cardData?.is_physical, '| tipo:', typeof cardData?.is_physical);
 
       setCard(cardData);
-      setCardStatus(cardData?.status || null);
       
       // 5. Calcular progresso
       const newProgress = {
@@ -310,47 +309,29 @@ export default function Dashboard() {
     return null; // Tudo completo, não mostra
   };
 
-  // Cards de progresso clicáveis - NOVA ORDEM: Perfil → Pagamento → Docs
-  const shouldShowProgressPages = () => {
-    return !cardStatus || ['pending_docs', 'pending_payment', 'processing', 'cancelled', 'expired'].includes(cardStatus!);
-  };
-
-  const baseProfileStep = {
-    id: 'perfil' as const,
-    label: 'Perfil',
-    status: progress.profile ? 'Concluído' : 'Pendente',
-    icon: User,
-    enabled: true,
-    route: progress.profile ? '/perfil' : '/complete-profile',
-    completed: progress.profile
-  };
-
-  const paymentStep = {
-    id: 'pagamento' as const,
-    label: 'Pagamento',
-    status: (() => {
-      console.log('📋 Card Pagamento - progress.payment:', progress.payment);
-      return progress.payment ? 'Aprovado' : 'Pendente';
-    })(),
-    icon: CreditCard,
-    enabled: progress.profile,
-    route: isLawStudent ? '/escolher-plano' : '/pagamento',
-    completed: progress.payment
-  };
-
-  const documentsStep = {
-    id: 'documentos' as const,
-    label: 'Documentos',
-    status: progress.documents ? '4/4 aprovados' : `${documentsApproved}/4`,
-    icon: FileText,
-    enabled: progress.payment,
-    route: '/upload-documentos',
-    completed: progress.documents
-  };
-
-  const progressSteps = shouldShowProgressPages()
-    ? [baseProfileStep, paymentStep, documentsStep]
-    : [baseProfileStep];
+  const progressCards = [
+    {
+      title: 'Perfil',
+      icon: User,
+      completed: progress.profile,
+      enabled: true,
+      route: progress.profile ? '/perfil' : '/complete-profile'
+    },
+    {
+      title: 'Pagamento',
+      icon: CreditCard,
+      completed: progress.payment,
+      enabled: progress.profile,
+      route: '/escolher-plano'
+    },
+    {
+      title: 'Documentos',
+      icon: FileText,
+      completed: progress.documents,
+      enabled: progress.payment,
+      route: '/upload-documentos'
+    }
+  ];
   
   // Card data alias para o card simplificado
   const cardData = card;
@@ -397,25 +378,19 @@ export default function Dashboard() {
     );
   }
 
-  const nextStep = getNextStep();
   const percentage = getPercentage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D7DBF] to-[#00A859] relative">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
 
-      <main className="relative z-10 max-w-3xl mx-auto px-4 py-6 space-y-4">
+      <main className="container mx-auto px-4 py-8 max-w-3xl space-y-4">
         {/* Saudação compacta */}
-        <div className="text-white">
+        <div className="text-foreground">
           <h1 className="text-xl sm:text-2xl font-bold">
             Olá, {profile.full_name.split(' ')[0]}! 👋
           </h1>
-          <p className="text-white/80 text-sm">{getWelcomeMessage()}</p>
+          <p className="text-sm text-muted-foreground">{getWelcomeMessage()}</p>
         </div>
 
         {/* Progresso (barra + cards clicáveis) */}
@@ -433,70 +408,93 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Cards clicáveis - agora 3 cards (sem Carteirinha) */}
-          <div className="grid grid-cols-3 gap-3">
-            {progressSteps.map((step) => (
-              <button
-                key={step.id}
-                onClick={() => step.enabled && navigate(step.route)}
-                disabled={!step.enabled}
-                className={`
-                  group p-4 rounded-xl border-2 text-left transition-all duration-300 ease-out
-                  ${step.enabled 
-                    ? step.completed
-                      ? 'bg-primary/10 border-primary/30 hover:bg-primary/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/20 cursor-pointer' 
-                      : 'bg-white dark:bg-slate-700/50 border-primary/20 hover:border-primary hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/15 hover:-translate-y-0.5 cursor-pointer'
-                    : 'bg-slate-100 dark:bg-slate-700/30 border-slate-200 dark:border-slate-600 cursor-not-allowed opacity-50'
-                  }
-                `}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {progressCards.map((card) => (
+              <Card
+                key={card.title}
+                className={cn(
+                  "cursor-pointer transition-all",
+                  card.enabled
+                    ? "hover:shadow-lg hover:-translate-y-1"
+                    : "opacity-50 cursor-not-allowed"
+                )}
+                onClick={() => card.enabled && navigate(card.route)}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  {step.completed ? (
-                    <CheckCircle className="h-5 w-5 text-green-500 group-hover:scale-110 transition-transform duration-300" />
-                  ) : step.enabled ? (
-                    <step.icon className="h-5 w-5 text-primary group-hover:scale-110 group-hover:text-primary transition-all duration-300" />
-                  ) : (
-                    <Clock className="h-5 w-5 text-slate-400" />
-                  )}
-                </div>
-                <span className={`font-semibold text-sm block transition-colors duration-300 ${
-                  step.enabled ? 'text-slate-900 dark:text-white group-hover:text-primary' : 'text-slate-400'
-                }`}>
-                  {step.label}
-                </span>
-                <span className={`text-xs transition-colors duration-300 ${
-                  step.completed ? 'text-green-600' : step.enabled ? 'text-muted-foreground group-hover:text-primary/70' : 'text-slate-400'
-                }`}>
-                  {step.status}
-                </span>
-              </button>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={cn(
+                        "p-3 rounded-full",
+                        card.completed
+                          ? "bg-green-100 text-green-600"
+                          : card.enabled
+                          ? "bg-blue-100 text-blue-600"
+                          : "bg-gray-100 text-gray-400"
+                      )}
+                    >
+                      <card.icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{card.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {card.completed
+                          ? "Concluído"
+                          : card.enabled
+                          ? "Clique para completar"
+                          : "Aguardando etapa anterior"}
+                      </p>
+                    </div>
+                    {card.completed && (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    )}
+                    {!card.enabled && (
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
 
-        {/* Card Carteirinha - VERSÃO SIMPLIFICADA (fora do grid) */}
+        {/* Card Carteirinha - segue padrão de estados (habilitado/desabilitado) */}
         <Card 
-          className="cursor-pointer hover:border-primary transition-colors relative overflow-visible bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-xl shadow-black/10"
-          onClick={() => navigate('/carteirinha')}
+          className={cn(
+            "transition-colors relative overflow-visible bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-xl shadow-black/10",
+            cardData ? "cursor-pointer hover:border-primary" : "opacity-60 cursor-not-allowed"
+          )}
+          onClick={() => cardData && navigate('/carteirinha')}
         >
           <CardContent className="p-6">
             <div className="space-y-4">
-              {/* Header */}
               <div className="flex items-center gap-3">
-                {cardData?.status === 'active' ? (
-                  <CheckCircle className="w-8 h-8 text-green-500" />
+                {cardData ? (
+                  cardData.status === 'active' ? (
+                    <CheckCircle className="w-8 h-8 text-green-500" />
+                  ) : (
+                    <Clock className="w-8 h-8 text-yellow-500" />
+                  )
                 ) : (
-                  <Clock className="w-8 h-8 text-yellow-500" />
+                  <Clock className="w-8 h-8 text-slate-400" />
                 )}
                 <div>
                   <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Carteirinha</h3>
-                  <p className={cardData?.status === 'active' ? 'text-green-500 text-sm font-medium' : 'text-yellow-500 text-sm'}>
-                    {cardData?.status === 'active' ? 'Ativa' : 'Aguardando'}
+                  <p className={
+                    !cardData
+                      ? 'text-slate-500 text-sm'
+                      : cardData.status === 'active'
+                      ? 'text-green-500 text-sm font-medium'
+                      : 'text-yellow-500 text-sm'
+                  }>
+                    {!cardData
+                      ? 'Ainda não emitida'
+                      : cardData.status === 'active'
+                      ? 'Ativa'
+                      : 'Aguardando emissão'}
                   </p>
                 </div>
               </div>
               
-              {/* Badges - FORA DO FLEX PRINCIPAL */}
               {cardData?.is_physical && (
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
                   <div className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-full">
@@ -512,31 +510,6 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Próximo Passo (só se houver) */}
-        {nextStep && (
-          <div className="bg-[#ff6b35] rounded-xl p-4 shadow-lg">
-            <div className="flex items-start gap-3">
-              {nextStep.buttonText ? (
-                <AlertCircle className="h-5 w-5 text-white mt-0.5 flex-shrink-0" />
-              ) : (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mt-0.5 flex-shrink-0" />
-              )}
-              <div className="flex-1">
-                <h3 className="font-semibold text-white">{nextStep.title}</h3>
-                <p className="text-sm text-white/80 mb-3">{nextStep.description}</p>
-                {nextStep.buttonText && nextStep.route && (
-                  <Button 
-                    onClick={() => navigate(nextStep.route!)} 
-                    className="w-full bg-white hover:bg-white/90 text-[#ff6b35] font-semibold"
-                  >
-                    {nextStep.buttonText}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Carteirinha Digital (só se ativa) */}
         {progress.card && card && (

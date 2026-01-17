@@ -13,7 +13,37 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Info, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/Header';
 
-const periods = ['1º', '2º', '3º', '4º', '5º', '6º', '7º', '8º', '9º', '10º'];
+const periodSuggestions = [
+  '1º semestre',
+  '1º período',
+  '1º ano',
+  '2º semestre',
+  '2º período',
+  '2º ano',
+  '3º semestre',
+  '3º período',
+  '3º ano',
+  '4º semestre',
+  '4º período',
+  '4º ano',
+  '5º semestre',
+  '5º período',
+  '5º ano',
+  '6º semestre',
+  '6º período',
+  '6º ano',
+  'Ensino médio 1º ano',
+  'Ensino médio 2º ano',
+  'Ensino médio 3º ano',
+  'Pré I',
+  'Pré II',
+  'Fundamental I',
+  'Fundamental II',
+  'Técnico',
+  'EJA',
+  'Mestrado',
+  'Doutorado',
+];
 
 export default function CompleteProfile() {
   const { user, loading: authLoading } = useAuth();
@@ -32,6 +62,8 @@ export default function CompleteProfile() {
   const [period, setPeriod] = useState('');
   const [enrollmentNumber, setEnrollmentNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [periodOptions, setPeriodOptions] = useState<string[]>([]);
+  const [isCepResolved, setIsCepResolved] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -89,7 +121,12 @@ export default function CompleteProfile() {
         setCity(address.city);
         setState(address.state);
         toast.success('Endereço encontrado!');
+        setIsCepResolved(true);
+      } else {
+        setIsCepResolved(false);
       }
+    } else {
+      setIsCepResolved(false);
     }
   };
 
@@ -208,7 +245,7 @@ export default function CompleteProfile() {
                   {/* CEP com mensagem informativa ao lado */}
                   <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4">
                     <div className="w-full sm:w-36">
-                      <Label htmlFor="cep" className="text-foreground">CEP (preenchimento automático do endereço)</Label>
+                      <Label htmlFor="cep" className="text-foreground">CEP</Label>
                       <div className="relative">
                         <Input
                           id="cep"
@@ -306,7 +343,7 @@ export default function CompleteProfile() {
                     </div>
                   </div>
 
-                  {/* Cidade e Estado - somente leitura (determinados pelo CEP) */}
+                  {/* Cidade e Estado - determinados pelo CEP quando disponível */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city" className="text-foreground">Cidade</Label>
@@ -315,20 +352,61 @@ export default function CompleteProfile() {
                         type="text"
                         placeholder="Preenchido pelo CEP"
                         value={city}
-                        readOnly
-                        className="bg-background text-foreground border-input h-11 text-base"
+                        onChange={(e) => setCity(e.target.value)}
+                        readOnly={isCepResolved}
+                        className="border-input h-11 text-base bg-background text-foreground"
                       />
+                      <span className="text-xs text-muted-foreground">
+                        {isCepResolved
+                          ? 'Preenchido automaticamente pelo CEP.'
+                          : 'Preencha manualmente se necessário.'}
+                      </span>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state" className="text-foreground">Estado</Label>
-                      <Input
-                        id="state"
-                        type="text"
-                        placeholder="UF"
+                      <Select
                         value={state}
-                        readOnly
-                        className="bg-background text-foreground border-input h-11 text-base"
-                      />
+                        onValueChange={(value) => setState(value)}
+                        disabled={isCepResolved}
+                      >
+                        <SelectTrigger className="bg-background text-foreground border-input h-11 text-base">
+                          <SelectValue placeholder="UF" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AC">AC</SelectItem>
+                          <SelectItem value="AL">AL</SelectItem>
+                          <SelectItem value="AP">AP</SelectItem>
+                          <SelectItem value="AM">AM</SelectItem>
+                          <SelectItem value="BA">BA</SelectItem>
+                          <SelectItem value="CE">CE</SelectItem>
+                          <SelectItem value="DF">DF</SelectItem>
+                          <SelectItem value="ES">ES</SelectItem>
+                          <SelectItem value="GO">GO</SelectItem>
+                          <SelectItem value="MA">MA</SelectItem>
+                          <SelectItem value="MT">MT</SelectItem>
+                          <SelectItem value="MS">MS</SelectItem>
+                          <SelectItem value="MG">MG</SelectItem>
+                          <SelectItem value="PA">PA</SelectItem>
+                          <SelectItem value="PB">PB</SelectItem>
+                          <SelectItem value="PR">PR</SelectItem>
+                          <SelectItem value="PE">PE</SelectItem>
+                          <SelectItem value="PI">PI</SelectItem>
+                          <SelectItem value="RJ">RJ</SelectItem>
+                          <SelectItem value="RN">RN</SelectItem>
+                          <SelectItem value="RS">RS</SelectItem>
+                          <SelectItem value="RO">RO</SelectItem>
+                          <SelectItem value="RR">RR</SelectItem>
+                          <SelectItem value="SC">SC</SelectItem>
+                          <SelectItem value="SP">SP</SelectItem>
+                          <SelectItem value="SE">SE</SelectItem>
+                          <SelectItem value="TO">TO</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span className="text-xs text-muted-foreground">
+                        {isCepResolved
+                          ? 'Preenchido automaticamente pelo CEP.'
+                          : 'Selecione a UF.'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -375,16 +453,47 @@ export default function CompleteProfile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="period" className="text-foreground">Período/Semestre</Label>
-                      <Input
-                        id="period"
-                        type="text"
-                        placeholder="Ex: 1º semestre, 3º ano, Pré II, etc."
-                        value={period}
-                        onChange={(e) => setPeriod(e.target.value)}
-                        maxLength={30}
-                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          id="period"
+                          type="text"
+                          placeholder="Ex: 1º semestre, 3º ano, Pré II, etc."
+                          value={period}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setPeriod(value);
+                            if (!value) {
+                              setPeriodOptions([]);
+                              return;
+                            }
+                            const lower = value.toLowerCase();
+                            const filtered = periodSuggestions.filter((option) =>
+                              option.toLowerCase().includes(lower)
+                            ).slice(0, 6);
+                            setPeriodOptions(filtered);
+                          }}
+                          maxLength={30}
+                          className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                          required
+                        />
+                        {periodOptions.length > 0 && (
+                          <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-popover text-popover-foreground shadow-md text-sm">
+                            {periodOptions.map((option) => (
+                              <button
+                                key={option}
+                                type="button"
+                                className="w-full px-3 py-1.5 text-left hover:bg-accent hover:text-accent-foreground"
+                                onClick={() => {
+                                  setPeriod(option);
+                                  setPeriodOptions([]);
+                                }}
+                              >
+                                {option}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="enrollmentNumber" className="text-foreground">Nº de matrícula</Label>

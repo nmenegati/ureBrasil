@@ -30,7 +30,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const resolvedTheme = (typeof theme === 'string' ? theme : 'light');
   const [scrolled, setScrolled] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
-  const [isPhysicalCard, setIsPhysicalCard] = useState(false);
+  const [showPhysicalOption, setShowPhysicalOption] = useState(false);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -66,28 +67,33 @@ export function Header({ variant = 'app' }: HeaderProps) {
   }, [user]);
   
   useEffect(() => {
-    const checkPhysical = async () => {
+    const checkPhysicalCard = async () => {
       if (!user) {
-        setIsPhysicalCard(false);
+        setShowPhysicalOption(false);
+        setIsProfileComplete(false);
         return;
       }
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('id')
+        .select('id, profile_completed')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (profile?.id) {
-        const { data: card } = await supabase
-          .from('student_cards')
-          .select('is_physical')
-          .eq('student_id', profile.id)
-          .maybeSingle();
-        setIsPhysicalCard(!!card?.is_physical);
-      } else {
-        setIsPhysicalCard(false);
+      if (!profile?.id) {
+        setShowPhysicalOption(false);
+        setIsProfileComplete(false);
+        return;
       }
+      setIsProfileComplete(!!profile.profile_completed);
+      const { data: card } = await supabase
+        .from('student_cards')
+        .select('status, is_physical')
+        .eq('student_id', profile.id)
+        .maybeSingle();
+      const shouldShow =
+        !!card && card.status === 'active' && card.is_physical === false;
+      setShowPhysicalOption(shouldShow);
     };
-    checkPhysical();
+    checkPhysicalCard();
   }, [user]);
 
   const handleSignOut = async () => {
@@ -101,6 +107,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                     'Usuário';
   
   const initials = firstName.substring(0, 2).toUpperCase();
+  const profileLink = isProfileComplete ? '/perfil' : '/complete-profile';
   
   const scrollToSection = (sectionName: string) => {
     const sectionIds: Record<string, string> = {
@@ -213,7 +220,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   
                   <DropdownMenuContent align="end" className="w-56 bg-popover border border-border">
                     <DropdownMenuItem
-                      onClick={() => navigate('/carteirinha')}
+                      onClick={() => navigate('/dashboard')}
                       className="bg-ure-yellow text-ure-dark hover:bg-ure-yellow/90 font-bold py-3 cursor-pointer"
                     >
                       <CreditCard className="mr-2 h-5 w-5" />
@@ -221,13 +228,13 @@ export function Header({ variant = 'app' }: HeaderProps) {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => navigate('/perfil')}
+                      onClick={() => navigate(profileLink)}
                       className="cursor-pointer"
                     >
                       <User className="mr-2 h-4 w-4" />
                       Meu Perfil
                     </DropdownMenuItem>
-                    {!isPhysicalCard && (
+                    {showPhysicalOption && (
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
