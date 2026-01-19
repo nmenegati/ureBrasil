@@ -25,8 +25,12 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { QrCode, CreditCard, Loader2, Check, IdCard, Shield, Lock, CheckCircle, Package } from "lucide-react";
+import { QrCode, CreditCard, Loader2, Check, Shield, Lock, CheckCircle } from "lucide-react";
 import pagseguroLogo from "@/assets/pagseguro-logo.png";
+import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.jpg";
+import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
+import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
+import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
 
 interface Plan {
   id: string;
@@ -55,6 +59,14 @@ const maskExpiry = (v: string) => {
 
 const maskCvv = (v: string) => {
   return v.replace(/\D/g, "").slice(0, 4);
+};
+
+const getValidityDate = () => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const validityYear = currentMonth < 3 ? currentYear : currentYear + 1;
+  return `31/03/${validityYear}`;
 };
 
 export default function Checkout() {
@@ -362,122 +374,107 @@ export default function Checkout() {
 
   if (!plan) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header variant="app" />
-        <div className="container mx-auto px-4 py-6 text-center">
-          <p className="text-muted-foreground">Plano não encontrado</p>
-          <Button onClick={() => navigate("/escolher-plano")} className="mt-4">
-            Escolher Plano
-          </Button>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <p className="text-muted-foreground mb-4">Plano não encontrado</p>
+        <Button onClick={() => navigate("/escolher-plano")}>Escolher Plano</Button>
       </div>
     );
   }
 
+  const isDireitoPlan =
+    plan.is_direito ||
+    plan.name.toLowerCase().includes("direito") ||
+    plan.name.toLowerCase().includes("lexpraxis");
+
+  const direitoImages = [carteirinhaDireitoImg1, carteirinhaDireitoImg2];
+  const geralImages = [carteirinhaGeralImg1, carteirinhaGeralImg2];
+  const images = isDireitoPlan ? direitoImages : geralImages;
+
+  let imagemCarteirinha = images[0];
+  if (plan.id) {
+    const hash =
+      plan.id.charCodeAt(0) + plan.id.charCodeAt(plan.id.length - 1);
+    imagemCarteirinha = images[hash % images.length];
+  }
+
+  const displayAmount = isUpsell ? upsellAmount : plan.price;
+
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
-
-      <div className="container mx-auto px-4 py-6 max-w-md">
-        {/* 1. Mensagem Motivacional */}
-        <div className="bg-primary/10 text-primary p-4 rounded-lg text-center mb-6">
-          <p className="font-medium">
-            {isUpsell 
-              ? '📦 Complete seu pedido - Receba em casa!'
-              : '🎫 Finalize agora e use sua carteirinha ainda hoje.'
-            }
-          </p>
-        </div>
-
-        {/* 2. Barra de Progresso */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <Check className="w-4 h-4 text-primary-foreground" />
+      <main className="py-8 px-4">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="p-6 space-y-5">
+            <div className="flex items-center gap-1.5 mb-1 text-green-600">
+              <Shield className="h-4 w-4" />
+              <span className="text-xs font-medium tracking-wide">
+                COMPRA 100% SEGURA
+              </span>
             </div>
-            <span className="text-xs text-muted-foreground">Plano</span>
-          </div>
-          <div className="w-8 h-px bg-primary" />
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">2</span>
-            </div>
-            <span className="text-xs font-medium">Pagamento</span>
-          </div>
-          <div className="w-8 h-px bg-muted" />
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-sm text-muted-foreground">3</span>
-            </div>
-            <span className="text-xs text-muted-foreground">Pronto</span>
-          </div>
-        </div>
 
-        {/* 3. Card do Plano com Accordion */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            {isUpsell && (
-              <Badge className="bg-green-500 text-white text-xs font-bold mb-3">
-                ⚡ ADICIONAL - Entrega em casa
-              </Badge>
-            )}
-            <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                {isUpsell ? (
-                  <Package className="w-5 h-5 text-primary" />
-                ) : (
-                  <IdCard className="w-5 h-5 text-primary" />
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold">{plan.name}</h3>
-                  {!isUpsell && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-500/10 text-green-600 text-xs"
-                    >
-                      Selecionado
-                    </Badge>
-                  )}
-                </div>
+            <div className="flex items-start gap-4 md:gap-5 mt-3">
+              <div className="order-1 md:order-2 flex-1 pl-2 md:pl-4">
+                <h2 className="text-xl md:text-2xl font-bold mb-2 text-foreground">
+                  {plan.name}
+                </h2>
                 {plan.description && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm md:text-base text-muted-foreground mb-4">
                     {plan.description}
                   </p>
                 )}
+
+                <div className="mt-4">
+                  <div className="text-3xl md:text-4xl font-bold text-primary">
+                    {formatPrice(displayAmount)}
+                  </div>
+                  <p className="text-sm md:text-base text-muted-foreground mt-1">
+                    {isUpsell
+                      ? "Adicional • Entrega em 7-10 dias úteis"
+                      : `Pagamento único • Válida até ${getValidityDate()}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 order-2 md:order-1 flex justify-end md:justify-start">
+                <img
+                  src={imagemCarteirinha}
+                  alt="Carteirinha"
+                  className="rounded-lg shadow-lg w-24 md:w-28 h-auto object-cover"
+                />
               </div>
             </div>
 
-            <Accordion type="single" collapsible className="border-t pt-2">
-              <AccordionItem value="benefits" className="border-b-0">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="benefits" className="border-none">
                 <AccordionTrigger className="py-2 text-sm hover:no-underline">
-                  Ver o que está incluso
+                  Benefícios inclusos
                 </AccordionTrigger>
-                <AccordionContent>
+                <AccordionContent className="pt-2">
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-green-500" />
-                      100% digital
+                      <span>Carteirinha digital com QR Code de verificação</span>
                     </li>
                     {plan.is_direito && (
                       <li className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-green-500" />
-                        Acesso OAB e Tribunais
+                        <span>Acesso a benefícios exclusivos para estudantes de Direito</span>
                       </li>
                     )}
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-green-500" />
-                      Descontos em estabelecimentos
+                      <span>Descontos em estabelecimentos parceiros</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-500" />
-                      Validade nacional
-                    </li>
-                    {plan.is_physical && (
+                    {!isUpsell && (
                       <li className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-green-500" />
-                        Carteirinha física inclusa
+                        <span>Validade nacional até {getValidityDate()}</span>
+                      </li>
+                    )}
+                    {isUpsell && (
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span>Carteirinha física em PVC inclusa</span>
                       </li>
                     )}
                   </ul>
@@ -485,218 +482,221 @@ export default function Checkout() {
               </AccordionItem>
             </Accordion>
 
-            <div className="border-t pt-3 mt-2">
-              <div className="text-2xl font-bold text-center">
-                {formatPrice(plan.price)}
+            <div className="border-t pt-6 space-y-4">
+              <div>
+                <h3 className="font-semibold mb-4 text-foreground">
+                  Escolha a forma de pagamento
+                </h3>
+
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("pix")}
+                    className={`border-2 rounded-lg p-4 transition w-full text-center ${
+                      paymentMethod === "pix"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary"
+                    }`}
+                  >
+                    <QrCode className="h-8 w-8 mx-auto mb-2" />
+                    <div className="font-semibold">PIX</div>
+                    <div className="text-xs text-green-600 mb-2">
+                      Aprovação instantânea
+                    </div>
+                    <div className="text-lg font-bold">
+                      {formatPrice(displayAmount)}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={`border-2 rounded-lg p-4 transition w-full text-center ${
+                      paymentMethod === "card"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary"
+                    }`}
+                  >
+                    <CreditCard className="h-8 w-8 mx-auto mb-2" />
+                    <div className="font-semibold">Cartão</div>
+                    <div className="text-xs text-blue-600 mb-2">
+                      Débito ou Crédito
+                    </div>
+                    <div className="text-lg font-bold">
+                      {formatPrice(displayAmount)}
+                    </div>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <span>Pagamento processado com</span>
+                  <img src={pagseguroLogo} alt="PagSeguro" className="h-6 w-auto" />
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-1">
-                {isUpsell 
-                  ? 'Adicional • Entrega em 7-10 dias úteis'
-                  : 'Pagamento único • Validade de 1 ano'
-                }
+
+              {paymentMethod === "pix" && (
+                <div className="rounded-lg border border-dashed border-border p-4 text-center">
+                  <h3 className="font-semibold text-foreground mb-1">
+                    Pagamento via PIX
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Ao clicar em "Gerar QR Code PIX", vamos criar um código para
+                    você pagar com seu app do banco.
+                  </p>
+                </div>
+              )}
+
+              {paymentMethod === "card" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">
+                      Tipo de cartão
+                    </Label>
+                    <RadioGroup
+                      value={cardType}
+                      onValueChange={(value) =>
+                        setCardType(value as "credit" | "debit")
+                      }
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="credit" id="credit" />
+                        <Label htmlFor="credit" className="cursor-pointer">
+                          Crédito
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="debit" id="debit" />
+                        <Label htmlFor="debit" className="cursor-pointer">
+                          Débito
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {cardType === "credit" && (
+                    <div>
+                      <Label htmlFor="installments">Parcelamento</Label>
+                      <Select value={installments} onValueChange={setInstallments}>
+                        <SelectTrigger id="installments">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getInstallmentOptions().map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div>
+                    <Label htmlFor="cardNumber">Número do cartão</Label>
+                    <Input
+                      id="cardNumber"
+                      placeholder="0000 0000 0000 0000"
+                      value={cardNumber}
+                      onChange={(e) =>
+                        setCardNumber(maskCardNumber(e.target.value))
+                      }
+                      maxLength={19}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="cardName">Nome no cartão</Label>
+                    <Input
+                      id="cardName"
+                      placeholder="Como está impresso no cartão"
+                      value={cardName}
+                      onChange={(e) =>
+                        setCardName(e.target.value.toUpperCase())
+                      }
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="cardExpiry">Validade</Label>
+                      <Input
+                        id="cardExpiry"
+                        placeholder="MM/AA"
+                        value={cardExpiry}
+                        onChange={(e) =>
+                          setCardExpiry(maskExpiry(e.target.value))
+                        }
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cardCvv">CVV</Label>
+                      <Input
+                        id="cardCvv"
+                        placeholder="123"
+                        value={cardCvv}
+                        onChange={(e) =>
+                          setCardCvv(maskCvv(e.target.value))
+                        }
+                        maxLength={4}
+                        type="password"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {paymentMethod && (
+                <div>
+                  <Button
+                    className="w-full py-6 text-lg"
+                    onClick={handleSubmit}
+                    disabled={processing || pagbankLoading || !isFormValid()}
+                  >
+                    {processing ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processando...
+                      </>
+                    ) : paymentMethod === "pix" ? (
+                      "Gerar QR Code PIX"
+                    ) : isUpsell ? (
+                      `Confirmar Adicional ${formatPrice(displayAmount)}`
+                    ) : (
+                      "Finalizar Pagamento"
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t mt-6 pt-4 space-y-3">
+              <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Lock className="h-3 w-3" />
+                  Pagamento seguro
+                </span>
+                <span className="flex items-center gap-1">
+                  <Shield className="h-3 w-3" />
+                  Dados protegidos
+                </span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  Sem taxas extras
+                </span>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Ao continuar você concorda com nossos{" "}
+                <Link to="/termos" className="underline hover:text-foreground transition-colors">
+                  Termos de Uso
+                </Link>
               </p>
             </div>
           </CardContent>
         </Card>
-
-        {/* 4. Métodos de Pagamento */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-4">Forma de pagamento</h3>
-
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <Button
-                type="button"
-                variant={paymentMethod === "pix" ? "default" : "outline"}
-                className="h-auto flex flex-col items-center gap-2 p-4"
-                onClick={() => setPaymentMethod("pix")}
-              >
-                <QrCode className="w-8 h-8" />
-                <span className="font-medium">PIX</span>
-                <span className="text-xs opacity-80">⚡ Aprovação instantânea</span>
-                <span className="font-bold">{formatPrice(plan.price)}</span>
-              </Button>
-
-              <Button
-                type="button"
-                variant={paymentMethod === "card" ? "default" : "outline"}
-                className="h-auto flex flex-col items-center gap-2 p-4"
-                onClick={() => setPaymentMethod("card")}
-              >
-                <CreditCard className="w-8 h-8" />
-                <span className="font-medium">Cartão</span>
-                <span className="text-xs opacity-80">💳 Débito ou Crédito</span>
-                <span className="font-bold">{formatPrice(plan.price)}</span>
-              </Button>
-            </div>
-
-            {/* 5. Formulário Dinâmico */}
-            {paymentMethod === "pix" && (
-              <div className="animate-fade-in bg-muted/50 rounded-lg p-4 text-center">
-                <QrCode className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  Ao clicar em "Gerar QR Code PIX", você receberá um código para
-                  pagamento instantâneo.
-                </p>
-              </div>
-            )}
-
-            {paymentMethod === "card" && (
-              <div className="animate-fade-in space-y-4">
-                <RadioGroup
-                  value={cardType}
-                  onValueChange={(v) => setCardType(v as "credit" | "debit")}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="debit" id="debit" />
-                    <Label htmlFor="debit" className="cursor-pointer">
-                      Débito
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="credit" id="credit" />
-                    <Label htmlFor="credit" className="cursor-pointer">
-                      Crédito
-                    </Label>
-                  </div>
-                </RadioGroup>
-
-                {cardType === "credit" && (
-                  <div>
-                    <Label htmlFor="installments">Parcelamento</Label>
-                    <Select value={installments} onValueChange={setInstallments}>
-                      <SelectTrigger id="installments" className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getInstallmentOptions().map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div>
-                  <Label htmlFor="cardNumber">Número do cartão</Label>
-                  <Input
-                    id="cardNumber"
-                    placeholder="0000 0000 0000 0000"
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(maskCardNumber(e.target.value))}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="cardName">Nome no cartão</Label>
-                  <Input
-                    id="cardName"
-                    placeholder="Como está impresso no cartão"
-                    value={cardName}
-                    onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="cardExpiry">Validade</Label>
-                    <Input
-                      id="cardExpiry"
-                      placeholder="MM/AA"
-                      value={cardExpiry}
-                      onChange={(e) => setCardExpiry(maskExpiry(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cardCvv">CVV</Label>
-                    <Input
-                      id="cardCvv"
-                      placeholder="123"
-                      value={cardCvv}
-                      onChange={(e) => setCardCvv(maskCvv(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* 6. Trust Section - Card Unificado */}
-        <Card className="bg-muted/30 border-none p-4 space-y-3 mb-4">
-          {/* Logo PagSeguro */}
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground mb-2">
-              Pagamento processado pelo
-            </p>
-            <img 
-              src={pagseguroLogo} 
-              alt="PagSeguro"
-              className="h-6 mx-auto"
-            />
-          </div>
-
-          {/* Divider sutil */}
-          <Separator className="opacity-50" />
-
-          {/* Trust badges com ícones - Responsivo */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-4 h-4 text-green-500" />
-              <span>Pagamento seguro</span>
-            </div>
-            
-            <div className="hidden sm:block w-px h-4 bg-border"></div>
-            
-            <div className="flex items-center gap-1.5">
-              <Lock className="w-4 h-4 text-green-500" />
-              <span>Dados protegidos</span>
-            </div>
-            
-            <div className="hidden sm:block w-px h-4 bg-border"></div>
-            
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Sem taxas extras</span>
-            </div>
-          </div>
-        </Card>
-
-        {/* 7. Botão Integrado */}
-        <Button
-          onClick={handleSubmit}
-          disabled={processing || pagbankLoading || !isFormValid()}
-          className="w-full py-6 text-base"
-        >
-          {processing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processando...
-            </>
-          ) : paymentMethod === "pix" ? (
-            "Gerar QR Code PIX"
-          ) : isUpsell ? (
-            `Confirmar Adicional ${formatPrice(plan.price)}`
-          ) : (
-            "Finalizar Pagamento"
-          )}
-        </Button>
-
-        {/* Termos fora do card */}
-        <p className="text-center text-xs text-muted-foreground mt-3 mb-8">
-          Ao continuar você concorda com nossos{" "}
-          <Link to="/termos" className="underline hover:text-foreground transition-colors">
-            Termos de Uso
-          </Link>
-        </p>
-      </div>
+      </main>
     </div>
   );
 }

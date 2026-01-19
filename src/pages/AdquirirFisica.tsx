@@ -12,7 +12,13 @@ const AdquirirFisica = () => {
     navigate('/pagamento', {
       state: {
         isPhysicalUpsell: true,
-        amount: 19.00
+        amount: 19.00,
+        selectedPlan: {
+          name: 'Carteirinha Física',
+          price: 19.00,
+          is_physical: true,
+          is_standalone: true
+        }
       }
     });
   };

@@ -315,26 +315,40 @@ export default function Dashboard() {
       icon: User,
       completed: progress.profile,
       enabled: true,
-      route: progress.profile ? '/perfil' : '/complete-profile'
+      onClick: () => navigate(progress.profile ? '/perfil' : '/complete-profile')
     },
     {
       title: 'Pagamento',
       icon: CreditCard,
       completed: progress.payment,
       enabled: progress.profile,
-      route: '/escolher-plano'
+      onClick: () => {
+        if (progress.payment) {
+          navigate('/meus-pagamentos');
+        } else {
+          if (isLawStudent) {
+            navigate('/escolher-plano');
+          } else {
+            navigate('/pagamento');
+          }
+        }
+      }
     },
     {
       title: 'Documentos',
       icon: FileText,
       completed: progress.documents,
       enabled: progress.payment,
-      route: '/upload-documentos'
+      onClick: () => navigate('/upload-documentos')
     }
   ];
   
   // Card data alias para o card simplificado
   const cardData = card;
+  const hasCardGenerated =
+    !!cardData &&
+    !!cardData.card_number &&
+    cardData.status === 'active';
 
   if (loading || loadingData) {
     return (
@@ -418,7 +432,7 @@ export default function Dashboard() {
                     ? "hover:shadow-lg hover:-translate-y-1"
                     : "opacity-50 cursor-not-allowed"
                 )}
-                onClick={() => card.enabled && navigate(card.route)}
+                onClick={() => card.enabled && card.onClick()}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
@@ -457,30 +471,26 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Card Carteirinha - segue padrão de estados (habilitado/desabilitado) */}
+        {/* Card Carteirinha - clique liberado apenas com carteirinha gerada */}
         <Card 
           className={cn(
             "transition-colors relative overflow-visible bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-xl shadow-black/10",
-            cardData ? "cursor-pointer hover:border-primary" : "opacity-60 cursor-not-allowed"
+            hasCardGenerated ? "cursor-pointer hover:border-primary" : "opacity-50 cursor-not-allowed"
           )}
-          onClick={() => cardData && navigate('/carteirinha')}
+          onClick={hasCardGenerated ? () => navigate('/carteirinha') : undefined}
         >
           <CardContent className="p-6">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                {cardData ? (
-                  cardData.status === 'active' ? (
-                    <CheckCircle className="w-8 h-8 text-green-500" />
-                  ) : (
-                    <Clock className="w-8 h-8 text-yellow-500" />
-                  )
+                {hasCardGenerated ? (
+                  <CheckCircle className="w-8 h-8 text-green-500" />
                 ) : (
                   <Clock className="w-8 h-8 text-slate-400" />
                 )}
                 <div>
                   <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Carteirinha</h3>
                   <p className={
-                    !cardData
+                    !hasCardGenerated
                       ? 'text-slate-500 text-sm'
                       : cardData.status === 'active'
                       ? 'text-green-500 text-sm font-medium'

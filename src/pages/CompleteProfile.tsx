@@ -14,35 +14,16 @@ import { Loader2, Info, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/Header';
 
 const periodSuggestions = [
-  '1º semestre',
-  '1º período',
-  '1º ano',
-  '2º semestre',
-  '2º período',
-  '2º ano',
-  '3º semestre',
-  '3º período',
-  '3º ano',
-  '4º semestre',
-  '4º período',
-  '4º ano',
-  '5º semestre',
-  '5º período',
-  '5º ano',
-  '6º semestre',
-  '6º período',
-  '6º ano',
-  'Ensino médio 1º ano',
-  'Ensino médio 2º ano',
-  'Ensino médio 3º ano',
-  'Pré I',
-  'Pré II',
-  'Fundamental I',
-  'Fundamental II',
-  'Técnico',
-  'EJA',
-  'Mestrado',
-  'Doutorado',
+  '1º semestre', '1º período', '1º ano',
+  '2º semestre', '2º período', '2º ano',
+  '3º semestre', '3º período', '3º ano',
+  '4º semestre', '4º período', '4º ano',
+  '5º semestre', '5º período', '5º ano',
+  '6º semestre', '6º período', '6º ano',
+  '7º semestre', '7º período', '7º ano',
+  '8º semestre', '8º período', '8º ano',
+  '9º semestre', '9º período', '9º ano',
+  '10º semestre', '10º período',
 ];
 
 export default function CompleteProfile() {
@@ -114,18 +95,34 @@ export default function CompleteProfile() {
 
     const cleanCep = value.replace(/\D/g, '');
     if (cleanCep.length === 8) {
-      const address = await fetchAddress(cleanCep);
-      if (address) {
-        setStreet(address.street);
-        setNeighborhood(address.neighborhood);
-        setCity(address.city);
-        setState(address.state);
-        toast.success('Endereço encontrado!');
-        setIsCepResolved(true);
-      } else {
+      try {
+        const address = await fetchAddress(cleanCep);
+        if (address) {
+          setStreet(address.street);
+          setNeighborhood(address.neighborhood);
+          setCity(address.city);
+          setState(address.state);
+          toast.success('Endereço encontrado!');
+          setIsCepResolved(true);
+        } else {
+          setStreet('');
+          setNeighborhood('');
+          setCity('');
+          setState('');
+          setIsCepResolved(false);
+        }
+      } catch {
+        setStreet('');
+        setNeighborhood('');
+        setCity('');
+        setState('');
         setIsCepResolved(false);
       }
     } else {
+      setStreet('');
+      setNeighborhood('');
+      setCity('');
+      setState('');
       setIsCepResolved(false);
     }
   };
@@ -158,6 +155,8 @@ export default function CompleteProfile() {
     const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
 
     // APENAS UPDATE - perfil SEMPRE existe graças à trigger do banco
+    console.log('Salvando período:', period);
+
     const { error } = await supabase
       .from('student_profiles')
       .update({
@@ -343,9 +342,8 @@ export default function CompleteProfile() {
                     </div>
                   </div>
 
-                  {/* Cidade e Estado - determinados pelo CEP quando disponível */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="space-y-2 col-span-3">
                       <Label htmlFor="city" className="text-foreground">Cidade</Label>
                       <Input
                         id="city"
@@ -353,23 +351,21 @@ export default function CompleteProfile() {
                         placeholder="Preenchido pelo CEP"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        readOnly={isCepResolved}
-                        className="border-input h-11 text-base bg-background text-foreground"
+                        disabled={isCepResolved}
+                        className={isCepResolved ? "border-input h-11 text-base bg-muted text-foreground" : "border-input h-11 text-base bg-background text-foreground"}
                       />
                       <span className="text-xs text-muted-foreground">
-                        {isCepResolved
-                          ? 'Preenchido automaticamente pelo CEP.'
-                          : 'Preencha manualmente se necessário.'}
+                        {isCepResolved ? 'Preenchido pelo CEP.' : 'Preencha manualmente.'}
                       </span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 col-span-1">
                       <Label htmlFor="state" className="text-foreground">Estado</Label>
                       <Select
                         value={state}
                         onValueChange={(value) => setState(value)}
                         disabled={isCepResolved}
                       >
-                        <SelectTrigger className="bg-background text-foreground border-input h-11 text-base">
+                        <SelectTrigger className={isCepResolved ? "border-input h-11 text-base bg-muted text-foreground" : "border-input h-11 text-base bg-background text-foreground"}>
                           <SelectValue placeholder="UF" />
                         </SelectTrigger>
                         <SelectContent>
@@ -404,7 +400,7 @@ export default function CompleteProfile() {
                       </Select>
                       <span className="text-xs text-muted-foreground">
                         {isCepResolved
-                          ? 'Preenchido automaticamente pelo CEP.'
+                          ? 'Preenchido pelo CEP.'
                           : 'Selecione a UF.'}
                       </span>
                     </div>

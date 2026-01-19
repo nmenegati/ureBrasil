@@ -218,6 +218,8 @@ export default function SignUp() {
   const [birthDateText, setBirthDateText] = useState<string>('');
   const [dateError, setDateError] = useState<string>('');
   const [email, setEmail] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState('');
+  const [confirmEmailError, setConfirmEmailError] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState<string>('');
@@ -240,6 +242,19 @@ export default function SignUp() {
 
   // Constantes para os dropdowns de data
   const currentYear = new Date().getFullYear();
+
+  const validateConfirmEmailMatch = (emailValue: string, confirmValue: string) => {
+    if (!confirmValue) {
+      setConfirmEmailError('');
+      return;
+    }
+
+    if (emailValue && confirmValue && emailValue !== confirmValue) {
+      setConfirmEmailError('Os emails não coincidem');
+    } else {
+      setConfirmEmailError('');
+    }
+  };
 
   // Verificar se CPF já existe no banco (usando RPC que ignora RLS)
   const checkCpfExists = async (cpfValue: string): Promise<boolean> => {
@@ -326,6 +341,10 @@ export default function SignUp() {
     // Bloquear domínios temporários
     if (value && isDisposableEmailDomain(value)) {
       setEmailError('Email temporário não permitido');
+    }
+
+    if (confirmEmail) {
+      validateConfirmEmailMatch(value, confirmEmail);
     }
   };
 
@@ -578,6 +597,11 @@ export default function SignUp() {
       return;
     }
 
+    if (email !== confirmEmail) {
+      toast.error('Os emails não coincidem');
+      return;
+    }
+
     setLoading(true);
     setEmailError('');
 
@@ -628,9 +652,10 @@ export default function SignUp() {
 
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem('ure_signup_draft');
+        window.localStorage.setItem('pending_email', email);
       }
 
-      navigate('/verificar-email');
+      navigate(`/verificar-email?email=${encodeURIComponent(email)}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro desconhecido';
       console.error('Signup error:', msg);
@@ -878,7 +903,7 @@ export default function SignUp() {
                     </>
                   )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-foreground font-medium">Email *</Label>
                   <Input
@@ -892,6 +917,7 @@ export default function SignUp() {
                       "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11",
                       emailError && "border-destructive focus:border-destructive focus:ring-destructive/20"
                     )}
+                    autoComplete="email"
                     required
                   />
                   {emailError ? (
@@ -906,6 +932,29 @@ export default function SignUp() {
                   ) : (
                     <span className="text-xs text-muted-foreground block text-right">{email.length}/100</span>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmEmail" className="text-foreground font-medium">Confirme seu Email</Label>
+                  <Input
+                    id="confirmEmail"
+                    type="email"
+                    placeholder="Digite o email novamente"
+                    value={confirmEmail}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setConfirmEmail(value);
+                      validateConfirmEmailMatch(email, value);
+                    }}
+                    maxLength={100}
+                    autoComplete="off"
+                    className={cn(
+                      "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11",
+                      confirmEmailError && "border-destructive focus:border-destructive focus:ring-destructive/20"
+                    )}
+                    required
+                  />
+                  <span className="text-xs text-muted-foreground block text-right">{confirmEmail.length}/100</span>
                 </div>
 
                 <div className="space-y-2">
@@ -938,9 +987,7 @@ export default function SignUp() {
                     <span className="text-xs text-muted-foreground block text-right">{phone.length}/15</span>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-foreground font-medium">Senha *</Label>
                   <div className="relative">

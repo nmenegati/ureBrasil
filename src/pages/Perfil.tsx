@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
@@ -40,6 +41,7 @@ interface StudentProfile {
   period: string | null;
   enrollment_number: string | null;
   plan_id: string | null;
+  is_law_student?: boolean | null;
 }
 
 interface Document {
@@ -48,6 +50,9 @@ interface Document {
   status: string;
   created_at: string;
   rejection_reason: string | null;
+  file_url?: string;
+  mime_type?: string;
+  validated_at?: string | null;
 }
 
 interface Payment {
@@ -56,6 +61,7 @@ interface Payment {
   status: string;
   payment_method: string;
   created_at: string;
+  metadata?: any;
 }
 
 interface StudentCard {
@@ -64,6 +70,7 @@ interface StudentCard {
   status: string;
   valid_until: string;
   card_type: string;
+  issued_at?: string;
 }
 
 interface Plan {
@@ -81,6 +88,15 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
+const getPaymentVariantLabel = (payment: Payment, profile: StudentProfile | null) => {
+  const isLaw = !!profile?.is_law_student;
+  const meta = payment.metadata || {};
+  const isPhysicalUpsell = !!(meta.is_physical_upsell || meta.is_upsell);
+  const brand = isLaw ? 'LexPraxis' : 'URE';
+  const modality = isPhysicalUpsell ? 'Física' : 'Digital';
+  return `${modality} ${brand}`;
+};
+
 const documentTypeLabels: Record<string, string> = {
   rg: 'RG / CNH',
   matricula: 'Comprovante de Matrícula',
@@ -89,8 +105,16 @@ const documentTypeLabels: Record<string, string> = {
 };
 
 const periodOptions = [
-  '1º Período', '2º Período', '3º Período', '4º Período', '5º Período',
-  '6º Período', '7º Período', '8º Período', '9º Período', '10º Período',
+  '1º semestre', '1º período', '1º ano',
+  '2º semestre', '2º período', '2º ano',
+  '3º semestre', '3º período', '3º ano',
+  '4º semestre', '4º período', '4º ano',
+  '5º semestre', '5º período', '5º ano',
+  '6º semestre', '6º período', '6º ano',
+  '7º semestre', '7º período', '7º ano',
+  '8º semestre', '8º período', '8º ano',
+  '9º semestre', '9º período', '9º ano',
+  '10º semestre', '10º período',
   'Pós-Graduação', 'Mestrado', 'Doutorado'
 ];
 
@@ -107,6 +131,8 @@ export default function Perfil() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(true);
   const [profilePhotoSignedUrl, setProfilePhotoSignedUrl] = useState<string | null>(null);
+  const [docPreview, setDocPreview] = useState<{ url: string; title: string } | null>(null);
+  const [docThumbnails, setDocThumbnails] = useState<Record<string, string>>({});
   
   // Form states
   const [personalForm, setPersonalForm] = useState({ full_name: '', phone: '' });
@@ -197,7 +223,21 @@ export default function Perfil() {
           .eq('student_id', profileData.id)
           .order('created_at', { ascending: false });
         
-        if (docsData) setDocuments(docsData);
+        if (docsData) {
+          setDocuments(docsData);
+          const thumbs: Record<string, string> = {};
+          for (const d of docsData) {
+            if (d.mime_type?.startsWith('image/') && d.file_url) {
+              const { data: signed, error: signedError } = await supabase.storage
+                .from('documents')
+                .createSignedUrl(d.file_url, 600);
+              if (!signedError && signed?.signedUrl) {
+                thumbs[d.id] = signed.signedUrl;
+              }
+            }
+          }
+          setDocThumbnails(thumbs);
+        }
 
         // Load payments
         const { data: paymentsData } = await supabase
@@ -254,6 +294,23 @@ export default function Perfil() {
           state: address.state
         }));
       }
+    }
+  };
+
+  const openDocumentPreview = async (doc: Document) => {
+    if (!doc.file_url) return;
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(doc.file_url, 600);
+      if (error || !data?.signedUrl) {
+        toast.error('Erro ao carregar documento');
+        return;
+      }
+      const title = documentTypeLabels[doc.type] || doc.type;
+      setDocPreview({ url: data.signedUrl, title });
+    } catch {
+      toast.error('Erro ao carregar documento');
     }
   };
 
@@ -520,8 +577,8 @@ export default function Perfil() {
         {/* Avatar Section */}
         <Card className="mb-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20">
           <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="relative">
+            <div className="flex flex-row items-center gap-6">
+              <div className="relative flex-shrink-0">
                 <Avatar className={`h-32 w-32 border-4 ${profile?.profile_photo_url ? 'border-primary' : 'border-muted'}`}>
                   <AvatarImage src={profilePhotoSignedUrl || undefined} />
                   <AvatarFallback className="text-3xl bg-primary/20 text-primary">{initials}</AvatarFallback>
@@ -532,11 +589,13 @@ export default function Perfil() {
                   </Badge>
                 )}
               </div>
-              <div className="flex flex-col items-center sm:items-start gap-2">
-                <h2 className="text-2xl font-bold text-foreground">{profile?.full_name}</h2>
-                <p className="text-muted-foreground">{user?.email}</p>
-                <p className="text-xs text-muted-foreground/80 mt-1 max-w-sm text-center sm:text-left">
-                  Foto atualizada automaticamente da Foto 3x4 aprovada.
+              <div className="flex-1 flex flex-col gap-1">
+                <h2 className="text-xl md:text-2xl font-bold text-foreground break-words">
+                  {profile?.full_name}
+                </h2>
+                <p className="text-sm text-muted-foreground break-all">{user?.email}</p>
+                <p className="text-xs text-muted-foreground/80 mt-1">
+                  Foto atualizada conforme Foto 3x4 aprovada.
                 </p>
               </div>
             </div>
@@ -580,18 +639,15 @@ export default function Perfil() {
                       id="full_name"
                       value={personalForm.full_name}
                       onChange={(e) => setPersonalForm(prev => ({ ...prev, full_name: e.target.value }))}
-                      disabled={isCardActive}
+                      disabled
+                      className="bg-muted"
                       maxLength={60}
                     />
                     <div className="flex justify-between items-center mt-1">
-                      {isCardActive ? (
-                        <p className="text-xs text-amber-600 flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          Contate suporte para alterar.
-                        </p>
-                      ) : (
-                        <span />
-                      )}
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Conforme CPF. Contate suporte para alterações.
+                      </p>
                       <span className="text-xs text-muted-foreground">{personalForm.full_name.length}/60</span>
                     </div>
                   </div>
@@ -617,6 +673,9 @@ export default function Perfil() {
                   <div>
                     <Label>Data de Nascimento</Label>
                     <Input value={profile?.birth_date ? formatDate(profile.birth_date) : ''} disabled className="bg-muted" />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Conforme CPF. Contate suporte para alterações.
+                    </p>
                   </div>
                 </div>
 
@@ -1024,9 +1083,17 @@ export default function Perfil() {
                   {card ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant={card.status === 'active' ? 'default' : 'secondary'} className={card.status === 'active' ? 'bg-green-500' : 'bg-amber-500'}>
+                        <Badge
+                          variant={card.status === 'active' ? 'default' : 'secondary'}
+                          className={card.status === 'active' ? 'bg-green-500' : 'bg-amber-500'}
+                        >
                           {card.status === 'active' ? 'Ativa' : 'Pendente'}
                         </Badge>
+                        {card.status === 'active' && card.issued_at && (
+                          <span className="text-xs text-muted-foreground">
+                            ativada em {formatDate(card.issued_at)}
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         <strong>Número:</strong> {card.card_number}
@@ -1057,20 +1124,52 @@ export default function Perfil() {
                 <CardContent>
                   {documents.length > 0 ? (
                     <div className="space-y-3">
-                      {documents.map(doc => (
-                        <div key={doc.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                          <div>
-                            <p className="text-sm font-medium">{documentTypeLabels[doc.type] || doc.type}</p>
-                            <p className="text-xs text-muted-foreground">{formatDate(doc.created_at)}</p>
+                      {documents.map(doc => {
+                        const label = documentTypeLabels[doc.type] || doc.type;
+                        const approvedDate = doc.validated_at || doc.created_at;
+                        const isImage = doc.mime_type?.startsWith('image/');
+                        const thumbUrl = docThumbnails[doc.id];
+                        return (
+                          <div
+                            key={doc.id}
+                            className="grid grid-cols-[1fr,auto] items-center gap-3 py-2 border-b border-border last:border-0"
+                          >
+                            <div>
+                              <p className="text-sm font-medium">{label}</p>
+                              {doc.status === 'approved' ? (
+                                <Badge className="mt-1 bg-blue-500 text-white text-[11px] font-medium px-2 py-0.5">
+                                  Aprovado em {formatDate(approvedDate)}
+                                </Badge>
+                              ) : (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {doc.status === 'pending'
+                                    ? `Em análise desde ${formatDate(doc.created_at)}`
+                                    : `Rejeitado em ${formatDate(doc.created_at)}`}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center">
+                              {isImage && thumbUrl ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openDocumentPreview(doc)}
+                                  className="border border-border rounded-md overflow-hidden w-16 h-16 flex items-center justify-center bg-muted/40 hover:bg-muted transition-colors"
+                                >
+                                  <img
+                                    src={thumbUrl}
+                                    alt={label}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </button>
+                              ) : (
+                                <div className="w-16 h-16 flex items-center justify-center rounded-md border border-dashed border-border text-muted-foreground">
+                                  <FileText className="h-5 w-5" />
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <Badge variant={doc.status === 'approved' ? 'default' : doc.status === 'rejected' ? 'destructive' : 'secondary'}>
-                            {doc.status === 'approved' && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                            {doc.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                            {doc.status === 'rejected' && <XCircle className="h-3 w-3 mr-1" />}
-                            {doc.status === 'approved' ? 'Aprovado' : doc.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
-                          </Badge>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">Nenhum documento enviado</p>
@@ -1092,14 +1191,36 @@ export default function Perfil() {
                       {payments.map(payment => (
                         <div key={payment.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                           <div>
-                            <p className="text-sm font-medium">{formatCurrency(payment.amount)}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(payment.created_at)} • {payment.payment_method === 'pix' ? 'PIX' : payment.payment_method === 'credit_card' ? 'Cartão de Crédito' : 'Débito'}
+                            <p className="text-sm font-medium">
+                              {formatCurrency(payment.amount)}{" "}
+                              <span className="text-xs text-muted-foreground">
+                                •{" "}
+                                {getPaymentVariantLabel(payment, profile)}{" "}
+                                •{" "}
+                                {payment.payment_method === 'pix'
+                                  ? 'PIX'
+                                  : payment.payment_method === 'credit_card'
+                                  ? 'Cartão de crédito'
+                                  : 'Cartão de débito'}
+                              </span>
                             </p>
+                            {payment.status === 'approved' ? (
+                              <Badge className="mt-1 bg-blue-500 text-white text-[11px] font-medium px-2 py-0.5">
+                                Aprovado em {formatDate(payment.created_at)}
+                              </Badge>
+                            ) : (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {payment.status === 'pending'
+                                  ? `Pendente desde ${formatDate(payment.created_at)}`
+                                  : `Rejeitado em ${formatDate(payment.created_at)}`}
+                              </p>
+                            )}
                           </div>
-                          <Badge variant={payment.status === 'approved' ? 'default' : payment.status === 'rejected' ? 'destructive' : 'secondary'}>
-                            {payment.status === 'approved' ? 'Aprovado' : payment.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
-                          </Badge>
+                          <div className="hidden sm:block">
+                            <Badge variant={payment.status === 'approved' ? 'default' : payment.status === 'rejected' ? 'destructive' : 'secondary'}>
+                              {payment.status === 'approved' ? 'Aprovado' : payment.status === 'rejected' ? 'Rejeitado' : 'Pendente'}
+                            </Badge>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1111,6 +1232,21 @@ export default function Perfil() {
             </TabsContent>
           </Tabs>
         </Card>
+
+        {docPreview && (
+          <Dialog open={!!docPreview} onOpenChange={(open) => !open && setDocPreview(null)}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold text-foreground">{docPreview.title}</h2>
+                <img
+                  src={docPreview.url}
+                  alt={docPreview.title}
+                  className="w-full h-auto rounded-lg"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </main>
     </div>
   );

@@ -70,19 +70,27 @@ serve(async (req) => {
 
     const studentId = profile.id as string;
 
-    const { data: files, error: listError } = await supabase.storage
+    const { data: docs, error: docsError } = await supabase
       .from("documents")
-      .list(user.id);
+      .select("file_url")
+      .eq("student_id", studentId);
 
-    if (listError) {
-      console.error("Erro ao listar arquivos:", listError);
+    if (docsError) {
+      console.error("Erro ao buscar documentos para remoção:", docsError);
     }
 
-    if (files && files.length > 0) {
-      const filePaths = files.map((f) => `${user.id}/${f.name}`);
-      const { error: removeError } = await supabase.storage.from("documents").remove(filePaths);
-      if (removeError) {
-        console.error("Erro ao remover arquivos:", removeError);
+    if (docs && docs.length > 0) {
+      const filePaths = docs
+        .map((d) => d.file_url as string | null)
+        .filter((p): p is string => !!p);
+
+      if (filePaths.length > 0) {
+        const { error: removeError } = await supabase.storage
+          .from("documents")
+          .remove(filePaths);
+        if (removeError) {
+          console.error("Erro ao remover arquivos do storage:", removeError);
+        }
       }
     }
 

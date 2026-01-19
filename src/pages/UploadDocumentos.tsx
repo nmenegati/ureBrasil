@@ -23,6 +23,7 @@ import {
   Shield
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
@@ -147,6 +148,22 @@ export default function UploadDocumentos() {
     checkTerms();
   }, [profile]);
 
+  useEffect(() => {
+    const checkIfLocked = async () => {
+      if (!profile?.id) return;
+      const { data: card } = await supabase
+        .from('student_cards')
+        .select('status')
+        .eq('student_id', profile.id)
+        .maybeSingle();
+      if (card?.status === 'active') {
+        toast.error('Documentos não podem ser alterados com carteirinha ativa. Entre em contato com suporte.');
+        navigate('/carteirinha');
+      }
+    };
+    checkIfLocked();
+  }, [profile?.id, navigate]);
+
   const fetchProfile = useCallback(async () => {
     if (!user) return;
     
@@ -206,6 +223,8 @@ export default function UploadDocumentos() {
       toast.error('Perfil não carregado. Recarregue a página.');
       return;
     }
+    
+    let documentIdForValidation: string | null = null;
     
     // BLOQUEIO: Foto 3x4 não pode ser alterada se carteirinha ativa
     if (type === 'foto') {
@@ -295,8 +314,10 @@ export default function UploadDocumentos() {
         if (dbError) {
           throw dbError;
         }
+        
+        documentIdForValidation = existingDoc.id;
       } else {
-        const { error: dbError } = await supabase
+        const { data: newDoc, error: dbError } = await supabase
           .from('documents')
           .insert({
             student_id: profile.id,
@@ -306,10 +327,45 @@ export default function UploadDocumentos() {
             file_size: file.size,
             mime_type: file.type,
             status: 'pending'
-          });
+          })
+          .select('id')
+          .single();
           
         if (dbError) {
           throw dbError;
+        }
+        
+        documentIdForValidation = newDoc.id;
+      }
+      
+      // Chamar validação automática
+      if (documentIdForValidation) {
+        try {
+          console.log('🔄 Iniciando validação:', {
+            documentId: documentIdForValidation,
+            studentId: profile.id,
+            type,
+            filePath
+          });
+
+          const { data, error } = await supabase.functions.invoke('validate-document-v2', {
+            body: {
+              document_id: documentIdForValidation,
+              student_id: profile.id,
+              type,
+              file_url: filePath
+            }
+          });
+
+          console.log('📦 Resposta validação:', { data, error });
+
+          if (error) {
+            console.error('❌ Erro na validação:', error);
+          } else {
+            console.log('✅ Validação iniciada com sucesso');
+          }
+        } catch (validationError) {
+          console.error('💥 Exception validação:', validationError);
         }
       }
       
@@ -607,42 +663,21 @@ export default function UploadDocumentos() {
     );
   }
 
-  useEffect(() => {
-    const checkIfLocked = async () => {
-      if (!profile?.id) return;
-      const { data: card } = await supabase
-        .from('student_cards')
-        .select('status')
-        .eq('student_id', profile.id)
-        .maybeSingle();
-      if (card?.status === 'active') {
-        toast.error('Documentos não podem ser alterados com carteirinha ativa. Entre em contato com suporte.');
-        navigate('/carteirinha');
-      }
-    };
-    checkIfLocked();
-  }, [profile?.id, navigate]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
       
-      <main className="relative z-10 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto">
+      <main className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
+        <div>
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               Validar Minha Carteirinha Estudantil
             </h1>
-            <p className="text-white/80 max-w-2xl mx-auto">
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
               Para garantir a autenticidade do documento e evitar fraudes, solicitamos o envio de alguns arquivos. O processo é rápido e seguro.
               <br />
-              <span className="text-sm font-medium text-emerald-300 flex items-center justify-center gap-1 mt-1">
+              <span className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1 mt-2">
                 <CheckCircle className="w-4 h-4" /> Seus dados estão protegidos pela LGPD
               </span>
             </p>
@@ -654,18 +689,8 @@ export default function UploadDocumentos() {
             <DocumentCard key={config.type} config={config} />
           ))}
         </div>
-
-        {/* Texto de segurança (tema verde) */}
-        <div className="mb-8">
-          <div className="max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
-            <p className="text-sm md:text-base text-green-900 dark:text-green-200 text-center">
-              <Shield className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
-              Se algum arquivo não estiver legível, avisaremos você para corrigir.
-            </p>
-          </div>
-        </div>
         
-        {/* Contador de progresso */}
+        {/* Contador de progresso - logo abaixo das imagens */}
         <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-center justify-between shadow-lg shadow-black/5 border border-white/20">
           <span className="text-slate-600 dark:text-slate-300">
             Documentos enviados: <span className="text-primary font-semibold">{uploadedCount}</span> de 4
@@ -676,31 +701,50 @@ export default function UploadDocumentos() {
           />
         </div>
         
-        {/* Termo de Veracidade - Só mostra se ainda NÃO aceitou */}
+        {/* Texto de segurança (tema verde) - abaixo do contador */}
+        <div className="mb-8">
+          <div className="max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
+            <p className="text-sm md:text-base text-green-900 dark:text-green-200 text-center">
+              <Shield className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
+              Se algum arquivo não estiver legível, avisaremos você para corrigir.
+            </p>
+          </div>
+        </div>
+        
         {allDocsUploaded && !termsAlreadyAccepted && (
           <div className="mb-6">
-            {/* Card expandível (neutro com contraste) */}
-            <div className="border border-white/20 rounded-xl overflow-hidden mb-4 shadow-lg shadow-black/10 bg-white/95 dark:bg-slate-800/95">
-              <button
-                onClick={() => setShowFullTerms(!showFullTerms)}
-                className="w-full p-4 flex items-center justify-between hover:bg-white dark:hover:bg-slate-800 transition-colors"
-              >
-                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                  📄 Termo de Responsabilidade por Veracidade dos Documentos
+            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/10">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-0.5 border-yellow-500 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
+                />
+                <span className="text-sm text-slate-600 dark:text-slate-300">
+                  Declaro que li e concordo com o{" "}
+                  <button
+                    type="button"
+                    onClick={() => setShowFullTerms(true)}
+                    className="text-yellow-600 dark:text-yellow-400 underline underline-offset-2"
+                  >
+                    Termo de Responsabilidade
+                  </button>
+                  . Estou ciente de que a falsificação de documentos é crime
+                  (Arts. 297-299 do Código Penal).
                 </span>
-                <ChevronDown className={cn(
-                  "w-5 h-5 text-slate-500 dark:text-slate-400 transition-transform duration-200",
-                  showFullTerms && "rotate-180"
-                )} />
-              </button>
-              
-              {showFullTerms && (
-                <div className="p-4 text-sm text-slate-600 dark:text-slate-300 space-y-3 border-t border-white/20">
+              </label>
+            </div>
+
+            <Dialog open={showFullTerms} onOpenChange={setShowFullTerms}>
+              <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Termo de Responsabilidade por Veracidade dos Documentos
+                  </h2>
                   <p>
                     Eu, <strong className="text-slate-900 dark:text-white">{profile?.full_name}</strong>, portador(a) do CPF nº
                     <strong className="text-slate-900 dark:text-white"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
                   </p>
-                  
                   <ol className="list-decimal list-inside space-y-2 ml-2">
                     <li>
                       Os documentos enviados (RG/CNH, comprovante de matrícula e 
@@ -724,29 +768,12 @@ export default function UploadDocumentos() {
                       e o caso será comunicado às autoridades competentes.
                     </li>
                   </ol>
-                  
                   <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400">
                     <p>Data: {new Date().toLocaleString('pt-BR')}</p>
                   </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Checkbox de aceitação (contraste elevado) */}
-            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/10">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <Checkbox
-                  checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                  className="mt-0.5 border-yellow-500 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
-                />
-                <span className="text-sm text-slate-600 dark:text-slate-300">
-                  Declaro que li e concordo com o <strong className="text-yellow-600 dark:text-yellow-400">Termo de Responsabilidade</strong> acima. 
-                  Estou ciente de que a falsificação de documentos é crime 
-                  (Arts. 297-299 do Código Penal).
-                </span>
-              </label>
-            </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
 

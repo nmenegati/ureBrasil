@@ -13,7 +13,7 @@ import { BorderTrail } from '@/components/ui/border-trail';
 const digitalPlans = [
   {
     type: 'geral_digital',
-    name: 'Carteira Estudantil Digital | URE',
+    name: 'Carteira Estudantil Digital URE',
     price: 29,
     description: 'Educação básica ao ensino superior',
     features: [

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
@@ -31,7 +31,7 @@ export function usePagBank() {
   const { toast } = useToast()
 
   // Carregar script do PagBank
-  const loadPagBankScript = () => {
+  const loadPagBankScript = useCallback(() => {
     return new Promise<void>((resolve, reject) => {
       if (window.PagSeguroDirectPayment) {
         resolve()
@@ -44,10 +44,10 @@ export function usePagBank() {
       script.onerror = () => reject(new Error('Failed to load PagBank script'))
       document.body.appendChild(script)
     })
-  }
+  }, [])
 
   // Gerar sessão
-  const generateSession = async () => {
+  const generateSession = useCallback(async () => {
     try {
       setLoading(true)
       await loadPagBankScript()
@@ -76,10 +76,10 @@ export function usePagBank() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [loadPagBankScript, toast])
 
   // Obter bandeira do cartão
-  const getCardBrand = (cardNumber: string): Promise<string> => {
+  const getCardBrand = useCallback((cardNumber: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       const cardBin = cardNumber.replace(/\s/g, '').substring(0, 6)
 
@@ -89,10 +89,10 @@ export function usePagBank() {
         error: (error) => reject(error),
       })
     })
-  }
+  }, [])
 
   // Criar token do cartão
-  const createCardToken = async (cardData: {
+  const createCardToken = useCallback(async (cardData: {
     cardNumber: string
     cardholderName: string
     expirationMonth: string
@@ -117,10 +117,10 @@ export function usePagBank() {
       console.error('Error creating card token:', error)
       throw error
     }
-  }
+  }, [getCardBrand])
 
   // Processar pagamento
-  const processCardPayment = async (paymentData: {
+  const processCardPayment = useCallback(async (paymentData: {
     cardToken: string
     cardholderName: string
     cardholderCPF: string
@@ -162,7 +162,7 @@ export function usePagBank() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   return {
     loading,

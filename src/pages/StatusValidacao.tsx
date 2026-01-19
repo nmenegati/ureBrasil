@@ -205,51 +205,43 @@ export default function StatusValidacao() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">
-      {/* Decorative elements */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-background">
       <Header variant="app" />
       
-      <main className="relative z-10 p-4 sm:p-6 lg:p-8">
-        <div className="max-w-2xl mx-auto">
-
-        {/* Título */}
+      <main className="container mx-auto px-4 py-8 max-w-2xl">
+        <div>
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             {documents.length === 4 && documents.every(d => d.status === 'approved') ? (
-              <CheckCircle className="w-8 h-8 text-green-300" />
+              <CheckCircle className="w-8 h-8 text-green-500" />
             ) : allPending ? (
-              <Loader2 className="w-8 h-8 text-white animate-spin" />
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
             ) : hasRejected ? (
-              <XCircle className="w-8 h-8 text-red-300" />
+              <XCircle className="w-8 h-8 text-red-500" />
             ) : (
-              <CheckCircle className="w-8 h-8 text-green-300" />
+              <CheckCircle className="w-8 h-8 text-green-500" />
             )}
           </div>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             {documents.length === 4 && documents.every(d => d.status === 'approved')
-              ? 'Tudo Certo! Sua Carteirinha Estudantil Está Ativa 🎓'
+              ? 'Tudo certo! Sua carteirinha está ativa 🎓'
               : hasRejected 
-                ? 'Documentos Precisam de Correção' 
-                : 'Nossa IA está analisando seus documentos'
+                ? 'Documentos precisam de correção' 
+                : 'Estamos analisando seus documentos'
             }
           </h1>
-          <p className="text-white/80 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             {documents.length === 4 && documents.every(d => d.status === 'approved')
-              ? 'Acesse agora pelo seu painel e utilize diretamente no celular.'
+              ? 'Você será redirecionado para o painel em instantes.'
               : hasRejected 
-                ? 'Alguns documentos foram rejeitados. Veja os motivos abaixo.'
+                ? 'Veja abaixo quais documentos precisam ser reenviados.'
                 : 'Normalmente esse processo leva apenas alguns minutos.'
             }
           </p>
         </div>
 
-        {/* Status Alerts */}
         {documents.length === 4 && documents.every(d => d.status === 'approved') && (
-          <Alert className="mb-6 bg-green-500/10 border-green-500/30">
+          <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-500/10 dark:border-green-500/30">
             <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
             <AlertDescription className="text-green-600 dark:text-green-300">
               Todos os documentos foram aprovados! Redirecionando para o painel...
@@ -258,7 +250,7 @@ export default function StatusValidacao() {
         )}
 
         {hasRejected && (
-          <Alert className="mb-6 bg-red-500/10 border-red-500/30">
+          <Alert className="mb-6 bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30">
             <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
             <AlertDescription className="text-red-600 dark:text-red-300">
               Alguns documentos foram rejeitados. Corrija-os e envie novamente.
@@ -275,7 +267,6 @@ export default function StatusValidacao() {
           </Alert>
         )}
 
-        {/* Cards de Documentos */}
         <div className="space-y-4 mb-8">
           {documentConfigs.map(config => {
             const doc = documents.find(d => d.type === config.type);
@@ -283,13 +274,12 @@ export default function StatusValidacao() {
           })}
         </div>
 
-        {/* Info de tempo */}
         {allPending && (
           <div className="text-center mb-6">
-            <p className="text-white/80 text-sm">
+            <p className="text-sm text-muted-foreground">
               ⏱️ Tempo estimado: 2 a 5 minutos
             </p>
-            <p className="text-white/60 text-xs mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               A página atualiza automaticamente a cada 5 segundos
             </p>
           </div>
