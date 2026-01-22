@@ -86,6 +86,11 @@ export default function Pagamento() {
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [studentProfile, setStudentProfile] = useState<{
+    cpf: string;
+    phone: string;
+    birth_date: string;
+  } | null>(null);
 
   const locationState = (location.state as {
     isPhysicalUpsell?: boolean;
@@ -113,7 +118,7 @@ export default function Pagamento() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("student_profiles")
-          .select("plan_id")
+          .select("plan_id, cpf, phone, birth_date")
           .eq("user_id", user.id)
           .single();
 
@@ -122,6 +127,12 @@ export default function Pagamento() {
           navigate("/escolher-plano");
           return;
         }
+
+        setStudentProfile({
+          cpf: profile.cpf,
+          phone: profile.phone,
+          birth_date: profile.birth_date,
+        });
 
         const { data: planData, error: planError } = await supabase
           .from("plans")
@@ -213,6 +224,14 @@ export default function Pagamento() {
       const paymentAmount =
         isUpsell && typeof amount === "number" ? amount : plan.price;
 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
       const metadata: Record<string, unknown> = {
         is_upsell: isUpsell,
         is_physical_upsell: isUpsell,
@@ -222,58 +241,107 @@ export default function Pagamento() {
         metadata.is_standalone_physical = true;
       }
 
-      const payload: Record<string, unknown> = {
-        plan_id: plan.id,
-        payment_method: paymentMethod === "card" ? cardType === "credit" ? "credit_card" : "debit_card" : "pix",
-        amount: paymentAmount,
-        metadata,
-      };
-
-      if (paymentMethod === "card") {
-        payload.card_data = {
-          number: cardNumber.replace(/\s/g, ""),
-          name: cardName,
-          expiry: cardExpiry,
-          cvv: cardCvv,
-          installments: cardType === "credit" ? parseInt(installments) : 1,
+      if (paymentMethod === "pix") {
+        const payload: Record<string, unknown> = {
+          plan_id: plan.id,
+          payment_method: "pix",
+          amount: paymentAmount,
+          metadata,
         };
-      }
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        const { data, error } = await supabase.functions.invoke(
+          "create-payment",
+          {
+            body: payload,
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }
+        );
 
-      if (!session?.access_token) {
-        throw new Error("Sessão expirada. Faça login novamente.");
-      }
+        if (error) throw error;
 
-      const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: payload,
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      if (paymentMethod === "pix" && data?.pix_code) {
-        navigate("/pagamento/pix", { state: { paymentData: data } });
+        if (data?.pix_code) {
+          navigate("/pagamento/pix", { state: { paymentData: data } });
+        } else {
+          toast.success("Pagamento processado com sucesso!");
+          navigate("/pagamento/sucesso", {
+            state: {
+              planName: plan.name,
+              amount: paymentAmount,
+              paymentId: data?.payment_id,
+              cardType: plan.is_direito ? "direito" : "geral",
+              paymentMethod: "pix",
+              isPhysicalPlan: plan.is_physical,
+            },
+          });
+        }
       } else {
-        // Redirecionar para página de sucesso com dados do pagamento
+        if (!studentProfile) {
+          toast.error("Erro ao carregar dados do perfil");
+          return;
+        }
+
+        const [month, year] = cardExpiry.split("/");
+        const expYear =
+          year && year.length === 2 ? `20${year}` : year;
+
+        const { data, error } = await supabase.functions.invoke(
+          "pagbank-payment-v2",
+          {
+            body: {
+              amount: paymentAmount,
+              installments:
+                cardType === "credit" ? parseInt(installments) : 1,
+              card: {
+                number: cardNumber.replace(/\s/g, ""),
+                exp_month: month,
+                exp_year: expYear,
+                security_code: cardCvv,
+                holder_name: cardName,
+              },
+              metadata,
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (error) throw error;
+
+        if (!data?.success) {
+          const msg =
+            (data && (data.error as string | undefined)) ||
+            "Pagamento não autorizado";
+          throw new Error(msg);
+        }
+
         toast.success("Pagamento processado com sucesso!");
         navigate("/pagamento/sucesso", {
           state: {
             planName: plan.name,
             amount: paymentAmount,
-            paymentId: data?.payment_id,
+            paymentId: data.orderId,
             cardType: plan.is_direito ? "direito" : "geral",
-            paymentMethod: paymentMethod === "card" ? cardType : "pix",
+            paymentMethod: cardType,
+            isPhysicalPlan: plan.is_physical,
           },
         });
       }
     } catch (error) {
       console.error("Erro no pagamento:", error);
-      toast.error("Erro ao processar pagamento. Tente novamente.");
+
+      const context = error?.context;
+      if (context) {
+        console.error("Contexto do erro de função Supabase:", context);
+      }
+
+      if (context?.status === 401) {
+        toast.error("Sua sessão expirou. Faça login novamente.");
+      } else {
+        toast.error("Erro ao processar pagamento. Tente novamente.");
+      }
     } finally {
       setProcessing(false);
     }

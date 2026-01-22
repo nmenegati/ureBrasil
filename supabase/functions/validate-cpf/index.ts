@@ -149,6 +149,18 @@ serve(async (req) => {
       .maybeSingle()
 
     if (cached) {
+      const nowIso = now.toISOString()
+      const newExpires = new Date(now.getTime() + 72 * 60 * 60 * 1000).toISOString()
+
+      await supabase
+        .from("cpf_validations")
+        .update({
+          validated_at: nowIso,
+          expires_at: newExpires,
+          updated_at: nowIso,
+        })
+        .eq("cpf_hash", cpfHash)
+
       return new Response(
         JSON.stringify({
           valid: true,

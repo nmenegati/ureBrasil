@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Download, ArrowLeft, RotateCw } from 'lucide-react';
 import QRCode from 'qrcode';
+import { Header } from '@/components/Header';
 
 interface StudentProfile {
   id: string;
@@ -156,7 +157,7 @@ export default function Carteirinha() {
     // Tentar carregar template por plano
     const isLawStudent = profileData.plan_id === 'lexpraxis';
     const frontTemplate = isLawStudent
-      ? '/templates/frente-template-direito.png'
+      ? '/templates/direito-frente-template.png'
       : '/templates/frente-template.png';
     const templatePath = frontTemplate;
     console.log('📸 Tentando carregar template:', templatePath);
@@ -185,70 +186,68 @@ export default function Carteirinha() {
     // ========================================
     // ÁREA DE DADOS - ALINHADO COM TÍTULO
     // ========================================
-    const xStart = 115; // Alinhado com "CARTEIRA DO ESTUDANTE"
+    const xStart = 140;
 
-    // NOME (bold, uppercase)
     console.log('✍️ Escrevendo nome:', profileData.full_name);
-    ctx.font = 'bold 28px Arial';
+    ctx.font = 'bold 24px Arial';
     ctx.fillStyle = '#000000';
-    ctx.fillText(profileData.full_name.toUpperCase(), xStart, 165);
+    ctx.fillText(profileData.full_name.toUpperCase(), 140, 145);
 
-    // INSTITUIÇÃO
-    ctx.font = '20px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.institution || 'Instituição', xStart, 200);
-
-    // CURSO
-    ctx.font = '20px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.course || 'Curso', xStart, 228);
-
-    // PERÍODO
     ctx.font = '18px Arial';
     ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.period || '1º Período', xStart, 256);
+    ctx.fillText(profileData.institution || 'Instituição', 140, 175);
 
-    // ========================================
-    // DADOS PESSOAIS - COM LABELS BOLD
-    // ========================================
-    const yStart = 290;
-
-    // CPF
-    ctx.font = 'bold 18px Arial';
-    ctx.fillStyle = '#1F2937';
-    ctx.fillText('CPF:', xStart, yStart);
     ctx.font = '18px Arial';
-    ctx.fillText(profileData.cpf, xStart + 50, yStart);
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.course || 'Curso', 140, 195);
 
-    // RG
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText('RG:', xStart, yStart + 28);
-    ctx.font = '18px Arial';
-    ctx.fillText(profileData.rg || 'Não informado', xStart + 40, yStart + 28);
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#374151';
+    ctx.fillText(profileData.period || '1º Período', 140, 215);
 
-    // DATA NASC
-    ctx.font = 'bold 18px Arial';
-    ctx.fillText('DATA NASC.:', xStart, yStart + 56);
-    ctx.font = '18px Arial';
-    ctx.fillText(new Date(profileData.birth_date).toLocaleDateString('pt-BR'), xStart + 115, yStart + 56);
-
-    // COD. USO (na área cinza, não no rodapé)
     ctx.font = 'bold 16px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText('COD. USO:', xStart, yStart + 90);
-    ctx.font = 'bold 20px monospace';
     ctx.fillStyle = '#1F2937';
-    ctx.fillText(card.usage_code || 'XXXX-XXXX', xStart, yStart + 115);
+    ctx.fillText('CPF:', 140, 240);
+    ctx.font = '16px Arial';
+    ctx.fillText(profileData.cpf, 180, 240);
+
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('RG:', 140, 260);
+    ctx.font = '16px Arial';
+    ctx.fillText(profileData.rg || 'Não informado', 170, 260);
+
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('DATA NASC.:', 140, 280);
+    ctx.font = '16px Arial';
+    ctx.fillText(
+      new Date(profileData.birth_date).toLocaleDateString('pt-BR'),
+      245,
+      280
+    );
+
+    ctx.font = 'bold 18px monospace';
+    ctx.fillStyle = '#000000';
+    ctx.fillText('COD. USO:', 30, 550);
+    ctx.font = 'bold 22px monospace';
+    ctx.fillText(card.usage_code || 'XXXX-XXXX', 30, 575);
+
+    ctx.font = 'bold 16px Arial';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('VÁLIDO ATÉ:', 30, 610);
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText(
+      new Date(card.valid_until).toLocaleDateString('pt-BR'),
+      140,
+      610
+    );
 
     console.log('✅ Textos desenhados');
 
     // ========================================
-    // FOTO 3/4 - REPOSICIONADA
-    // ========================================
-    const fotoX = 680;
-    const fotoY = 155;
-    const fotoW = 200;
-    const fotoH = 250;
+    const fotoX = 720;
+    const fotoY = 120;
+    const fotoW = 180;
+    const fotoH = 220;
 
     if (profileData.profile_photo_url) {
       console.log('📸 Carregando foto (profile_photo_url):', profileData.profile_photo_url);
@@ -283,18 +282,14 @@ export default function Carteirinha() {
       ctx.textAlign = 'left';
     }
 
-    // ========================================
-    // QR CODE - LOGO ABAIXO DA FOTO
-    // ========================================
     console.log('📱 Carregando QR Code');
     try {
       const qr = await loadImage(qrUrl);
       console.log('✅ QR Code carregado');
 
-      // QR CODE centralizado abaixo da foto
-      const qrSize = 100;
-      const qrX = fotoX + (fotoW - qrSize) / 2; // Centralizado com a foto
-      const qrY = fotoY + fotoH + 10; // 10px abaixo da foto
+      const qrSize = 90;
+      const qrX = fotoX + (fotoW - qrSize) / 2;
+      const qrY = fotoY + fotoH + 20;
       ctx.drawImage(qr, qrX, qrY, qrSize, qrSize);
 
       console.log('✅ Todos os elementos desenhados');
@@ -373,9 +368,9 @@ export default function Carteirinha() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Canvas SEMPRE montado para geração */}
-      <canvas 
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header variant="app" />
+      <canvas
         ref={canvasRef}
         width={1010}
         height={644}
@@ -388,70 +383,29 @@ export default function Carteirinha() {
           zIndex: -1
         }}
       />
-
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground">Carregando carteirinha...</p>
-          </div>
-        </div>
-      ) : !cardData || !profile ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center space-y-4">
-            <p className="text-xl text-foreground">Carteirinha não encontrada</p>
-            <p className="text-sm text-muted-foreground">
-              Complete seu cadastro e pagamento para gerar sua carteirinha.
-            </p>
-            <Button onClick={() => navigate('/dashboard')}>
-              Voltar ao Dashboard
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="py-6 px-4">
-          {/* Header */}
-          <div className="max-w-lg mx-auto mb-6">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/dashboard')}
-              className="mb-4 gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Button>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Minha Carteirinha</h1>
-                <p className="text-sm text-muted-foreground">
-                  {cardData.card_number} • Válida até {new Date(cardData.valid_until).toLocaleDateString('pt-BR')}
-                </p>
-              </div>
-
-              {/* Toggle Frente/Verso */}
-              <div className="flex gap-2">
-                <Button
-                  variant={showFront ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setShowFront(true)}
-                >
-                  Frente
-                </Button>
-                <Button
-                  variant={!showFront ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setShowFront(false)}
-                >
-                  Verso
-                </Button>
-              </div>
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Carregando carteirinha...</p>
             </div>
           </div>
-
-          {/* Preview da Carteirinha */}
-          <div className="max-w-lg mx-auto">
-            <div className="flex justify-center mb-6">
+        ) : !cardData || !profile ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center space-y-4">
+              <p className="text-xl text-foreground">Carteirinha não encontrada</p>
+              <p className="text-sm text-muted-foreground">
+                Complete seu cadastro e pagamento para gerar sua carteirinha.
+              </p>
+              <Button onClick={() => navigate('/dashboard')}>
+                Voltar ao Dashboard
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full max-w-sm mx-auto flex flex-col items-center gap-6">
+            <div className="w-full flex justify-center">
               {generating ? (
                 <div className="flex flex-col items-center gap-4 p-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -461,8 +415,7 @@ export default function Carteirinha() {
                 <img
                   src={showFront ? generatedFront : '/templates/verso-template.png'}
                   alt={showFront ? 'Frente da carteirinha' : 'Verso da carteirinha'}
-                  className="max-w-full h-auto rounded-lg shadow-xl"
-                  style={{ maxWidth: '500px' }}
+                  className="w-full h-auto rounded-xl shadow-xl"
                 />
               ) : (
                 <div className="flex flex-col items-center gap-4 p-8 text-center">
@@ -474,31 +427,23 @@ export default function Carteirinha() {
                 </div>
               )}
             </div>
-
-            {/* Botões de Download */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="inline-flex items-center justify-center gap-2">
               <Button
-                onClick={() => downloadCard('front')}
-                className="gap-2"
-                size="lg"
-                disabled={!generatedFront}
+                variant={showFront ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setShowFront(true)}
               >
-                <Download className="h-4 w-4" />
-                Baixar Frente (Alta Resolução)
+                Frente
               </Button>
               <Button
-                onClick={() => downloadCard('back')}
-                variant="outline"
-                className="gap-2"
-                size="lg"
+                variant={!showFront ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setShowFront(false)}
               >
-                <Download className="h-4 w-4" />
-                Baixar Verso
+                Verso
               </Button>
             </div>
-
-            {/* Botão de debug */}
-            <div className="flex justify-center mt-4">
+            <div className="flex justify-center">
               <Button
                 onClick={regenerateCard}
                 variant="ghost"
@@ -509,14 +454,14 @@ export default function Carteirinha() {
                 Regenerar Carteirinha
               </Button>
             </div>
-
-            {/* Dica */}
-            <p className="text-center text-xs text-muted-foreground mt-4">
-              Alterne entre frente e verso usando os botões acima
-            </p>
+            <div className="space-y-1">
+              <p className="text-center text-xs text-muted-foreground">
+                {cardData.card_number} • Válida até {new Date(cardData.valid_until).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 }

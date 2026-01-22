@@ -12,10 +12,10 @@ const AdquirirFisica = () => {
     navigate('/pagamento', {
       state: {
         isPhysicalUpsell: true,
-        amount: 19.00,
+        amount: 24.00,
         selectedPlan: {
           name: 'Carteirinha Física',
-          price: 19.00,
+          price: 24.00,
           is_physical: true,
           is_standalone: true
         }
@@ -42,10 +42,10 @@ const AdquirirFisica = () => {
               </AlertDescription>
             </Alert>
             
-            <div className="bg-muted p-6 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-lg">Carteirinha Física</span>
-                <span className="text-2xl font-bold">R$ 19,00</span>
+          <div className="bg-muted p-6 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-lg">Carteirinha Física</span>
+              <span className="text-2xl font-bold">R$ 24,00</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>✅ Frete grátis para todo Brasil</li>
@@ -57,7 +57,7 @@ const AdquirirFisica = () => {
             
             <div className="flex gap-4">
               <Button onClick={handlePurchase} className="flex-1">
-                Adquirir por R$ 19,00
+                Adquirir por R$ 24,00
               </Button>
               <Button
                 variant="outline"

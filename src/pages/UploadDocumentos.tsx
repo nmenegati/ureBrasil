@@ -586,6 +586,10 @@ export default function UploadDocumentos() {
 
   const uploadedCount = Object.keys(documents).length;
   const allDocsUploaded = uploadedCount >= 4;
+  const allDocsApproved = documentConfigs.every((config) => {
+    const doc = documents[config.type];
+    return doc && doc.status === "approved";
+  });
 
   const handleSubmit = async () => {
     if (!termsAccepted && !termsAlreadyAccepted) {
@@ -792,17 +796,23 @@ export default function UploadDocumentos() {
         
         {/* Botão continuar */}
         <Button
-          disabled={!allDocsUploaded || (!termsAccepted && !termsAlreadyAccepted)}
+          disabled={
+            !allDocsUploaded ||
+            !allDocsApproved ||
+            (!termsAccepted && !termsAlreadyAccepted)
+          }
           onClick={handleSubmit}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
         >
-          {!allDocsUploaded 
+          {!allDocsUploaded
             ? `Envie todos os ${4 - uploadedCount} documentos restantes`
-            : (!termsAccepted && !termsAlreadyAccepted)
-              ? 'Aceite o termo de responsabilidade'
-              : termsAlreadyAccepted
-                ? 'Ir para Validação'
-                : 'Enviar para Validação'
+            : !allDocsApproved
+              ? "Aguarde aprovação dos documentos"
+              : !termsAccepted && !termsAlreadyAccepted
+                ? "Aceite o termo de responsabilidade"
+                : termsAlreadyAccepted
+                  ? "Ir para Validação"
+                  : "Enviar para Validação"
           }
         </Button>
         </div>

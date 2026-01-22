@@ -30,13 +30,16 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const resolvedTheme = (typeof theme === 'string' ? theme : 'light');
   const [scrolled, setScrolled] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
-  const [showPhysicalOption, setShowPhysicalOption] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [hasActiveCard, setHasActiveCard] = useState(false);
+  const [hasPhysicalCard, setHasPhysicalCard] = useState(false);
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const isLandingPage = location.pathname === '/';
+  const isCarteirinhaPage = location.pathname === '/carteirinha';
+  const isPerfilPage = location.pathname === '/perfil';
   
   useEffect(() => {
     const checkPWA =
@@ -69,29 +72,46 @@ export function Header({ variant = 'app' }: HeaderProps) {
   useEffect(() => {
     const checkPhysicalCard = async () => {
       if (!user) {
-        setShowPhysicalOption(false);
         setIsProfileComplete(false);
+        setHasActiveCard(false);
+        setHasPhysicalCard(false);
         return;
       }
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('id, profile_completed')
+        .select('id, profile_completed, full_name, institution, course, street')
         .eq('user_id', user.id)
         .maybeSingle();
       if (!profile?.id) {
-        setShowPhysicalOption(false);
         setIsProfileComplete(false);
+        setHasActiveCard(false);
+        setHasPhysicalCard(false);
         return;
       }
-      setIsProfileComplete(!!profile.profile_completed);
+      const profileCompletedByFields =
+        !!profile.full_name &&
+        !!profile.institution &&
+        !!profile.course &&
+        !!profile.street;
+      setIsProfileComplete(!!profile.profile_completed || profileCompletedByFields);
+
       const { data: card } = await supabase
         .from('student_cards')
-        .select('status, is_physical')
+        .select('status, card_number')
         .eq('student_id', profile.id)
         .maybeSingle();
-      const shouldShow =
-        !!card && card.status === 'active' && card.is_physical === false;
-      setShowPhysicalOption(shouldShow);
+      const activeCard =
+        !!card && card.status === 'active' && !!card.card_number;
+      setHasActiveCard(activeCard);
+
+      const { data: physicalPayment } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('student_id', profile.id)
+        .eq('metadata->>is_physical_upsell', 'true')
+        .eq('status', 'approved')
+        .maybeSingle();
+      setHasPhysicalCard(!!physicalPayment);
     };
     checkPhysicalCard();
   }, [user]);
@@ -108,6 +128,66 @@ export function Header({ variant = 'app' }: HeaderProps) {
   
   const initials = firstName.substring(0, 2).toUpperCase();
   const profileLink = isProfileComplete ? '/perfil' : '/complete-profile';
+  const showPhysicalOption = hasActiveCard && !hasPhysicalCard;
+
+  const avatarMenuItems: {
+    label: string;
+    icon: typeof User;
+    onClick: () => void;
+    highlight?: boolean;
+    primary?: boolean;
+  }[] = [];
+
+  if (isCarteirinhaPage) {
+    avatarMenuItems.push({
+      label: 'Meu Perfil',
+      icon: User,
+      onClick: () => navigate(profileLink),
+    });
+  } else if (isPerfilPage) {
+    avatarMenuItems.push({
+      label: 'Minha Carteirinha',
+      icon: CreditCard,
+      onClick: () => navigate(hasActiveCard ? '/carteirinha' : '/dashboard'),
+      primary: true,
+    });
+  } else {
+    avatarMenuItems.push({
+      label: 'Minha Carteirinha',
+      icon: CreditCard,
+      onClick: () => navigate(hasActiveCard ? '/carteirinha' : '/dashboard'),
+      primary: true,
+    });
+    avatarMenuItems.push({
+      label: 'Meu Perfil',
+      icon: User,
+      onClick: () => navigate(profileLink),
+    });
+  }
+
+  if (showPhysicalOption) {
+    avatarMenuItems.push({
+      label: 'Carteira Física por R$24',
+      icon: Package,
+      highlight: true,
+      onClick: () => navigate('/adquirir-fisica'),
+    });
+  }
+
+  const themeLabel = theme === 'dark' ? 'Modo Claro' : 'Modo Escuro';
+  const themeIcon = theme === 'dark' ? Sun : Moon;
+
+  avatarMenuItems.push({
+    label: themeLabel,
+    icon: themeIcon,
+    onClick: toggleTheme,
+  });
+
+  avatarMenuItems.push({
+    label: 'Sair',
+    icon: LogOut,
+    onClick: handleSignOut,
+  });
   
   const scrollToSection = (sectionName: string) => {
     const sectionIds: Record<string, string> = {
@@ -221,58 +301,24 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   </DropdownMenuTrigger>
                   
                   <DropdownMenuContent align="end" className="w-56 bg-popover border border-border">
-                    <DropdownMenuItem
-                      onClick={() => navigate('/dashboard')}
-                      className="bg-ure-yellow text-ure-dark hover:bg-ure-yellow/90 font-bold py-3 cursor-pointer"
-                    >
-                      <CreditCard className="mr-2 h-5 w-5" />
-                      Minha Carteirinha
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => navigate(profileLink)}
-                      className="cursor-pointer"
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      Meu Perfil
-                    </DropdownMenuItem>
-                    {showPhysicalOption && (
-                      <>
-                        <DropdownMenuSeparator />
+                    {avatarMenuItems.map((item, index) => {
+                      let itemClass = 'cursor-pointer';
+                      if (item.primary) {
+                        itemClass += ' bg-ure-yellow text-ure-dark hover:bg-ure-yellow/90 font-bold py-3';
+                      } else if (item.highlight) {
+                        itemClass += ' bg-ure-yellow/10 text-foreground hover:bg-ure-yellow/20 font-semibold py-2';
+                      }
+                      return (
                         <DropdownMenuItem
-                          onClick={() => navigate('/adquirir-fisica')}
-                          className="text-ure-blue font-medium cursor-pointer"
+                          key={index}
+                          onClick={item.onClick}
+                          className={itemClass}
                         >
-                          <Package className="mr-2 h-4 w-4" />
-                          Adquirir Carteirinha Física - R$ 19
+                          <item.icon className="mr-2 h-4 w-4" />
+                          {item.label}
                         </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={toggleTheme}
-                      className="cursor-pointer"
-                    >
-                      {theme === 'dark' ? (
-                        <>
-                          <Sun className="mr-2 h-4 w-4" />
-                          Modo Claro
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="mr-2 h-4 w-4" />
-                          Modo Escuro
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleSignOut}
-                      className="cursor-pointer text-red-600 focus:text-red-600"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sair
-                    </DropdownMenuItem>
+                      );
+                    })}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>

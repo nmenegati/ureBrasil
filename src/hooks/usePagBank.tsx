@@ -39,7 +39,7 @@ export function usePagBank() {
       }
 
       const script = document.createElement('script')
-      script.src = 'https://stc.sandbox.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js'
+      script.src = 'https://stc.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js'
       script.onload = () => resolve()
       script.onerror = () => reject(new Error('Failed to load PagBank script'))
       document.body.appendChild(script)

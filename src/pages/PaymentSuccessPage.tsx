@@ -14,17 +14,47 @@ const PaymentSuccessPage = () => {
   const [showUpsellModal, setShowUpsellModal] = useState(false);
   const [isPhysicalCard, setIsPhysicalCard] = useState<boolean | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [planName, setPlanName] = useState<string | null>(null);
+  const [amount, setAmount] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [isPhysicalPlan, setIsPhysicalPlan] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
 
+  const formatPrice = (price: number | null) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(price ?? 0);
+  };
+
   useEffect(() => {
-    const id = (location.state as { paymentId?: string })?.paymentId;
-    if (id) {
-      setPaymentId(id);
-      localStorage.setItem('recent_payment_id', id);
-      checkIfPhysicalCard(id);
+    const state = (location.state as {
+      paymentId?: string;
+      planName?: string;
+      amount?: number;
+      paymentMethod?: string;
+      isPhysicalPlan?: boolean;
+    }) || {};
+
+    if (state.paymentId) {
+      setPaymentId(state.paymentId);
+      setPlanName(state.planName ?? null);
+      setAmount(state.amount ?? null);
+      setPaymentMethod(state.paymentMethod ?? null);
+      setIsPhysicalPlan(!!state.isPhysicalPlan);
+      localStorage.setItem("recent_payment_id", state.paymentId);
+
+      if (state.isPhysicalPlan) {
+        setIsPhysicalCard(true);
+        setShowUpsellModal(false);
+        setTimeout(() => {
+          navigate("/upload-documentos", { replace: true });
+        }, 2000);
+      } else {
+        checkIfPhysicalCard(state.paymentId);
+      }
     } else {
-      // Sem paymentId, redirecionar direto
-      navigate('/upload-documentos', { replace: true });
+      navigate("/upload-documentos", { replace: true });
     }
   }, [location.state, navigate]);
 
@@ -101,7 +131,21 @@ const PaymentSuccessPage = () => {
             Pagamento Aprovado!
           </h1>
           <p className="text-white/80 text-sm mb-8">
-            Agora envie seus documentos para validar sua carteirinha...
+            {planName ? (
+              <>
+                {paymentMethod === "pix" ? "PIX aprovado. " : "Pagamento aprovado. "}
+                Você adquiriu <span className="font-semibold">{planName}</span>
+                {typeof amount === "number" && (
+                  <>
+                    {" "}
+                    por <span className="font-semibold">{formatPrice(amount)}</span>
+                  </>
+                )}
+                . Agora envie seus documentos para validar sua carteirinha.
+              </>
+            ) : (
+              "Agora envie seus documentos para validar sua carteirinha."
+            )}
           </p>
           
           {/* Loader de redirecionamento */}
@@ -146,14 +190,13 @@ const PaymentSuccessPage = () => {
             <div className="text-center space-y-3">
               <h3 className="text-2xl font-bold">🎉 Oferta Especial!</h3>
               <p className="text-lg">
-                Adicione a <span className="font-bold">Carteirinha Física</span> por apenas
+                Adicione a <span className="font-bold">Carteirinha Física</span>, com frete incluso, por apenas
               </p>
               <div className="flex items-center justify-center gap-3">
-                <span className="text-2xl text-muted-foreground line-through">R$ 19,00</span>
                 <span className="text-4xl font-bold text-ure-green">R$ 15,00</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Economize R$ 4,00 na compra conjunta!
+                Economize 40% na compra conjunta!
               </p>
               <Alert className="text-left">
                 <Info className="h-4 w-4" />

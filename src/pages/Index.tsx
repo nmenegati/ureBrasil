@@ -246,7 +246,7 @@ const Index = () => {
               {/* Main Heading */}
               <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-tight drop-shadow-lg">
-                  Sua Carteirinha Estudantil Válida em Todo o Brasil
+                  Sua Carteira do Estudante Válida em Todo o Brasil
                 </h1>
                 <div className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start">
                   <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold tracking-tight text-ure-yellow min-h-[56px] sm:min-h-[64px] lg:min-h-[72px] xl:min-h-[80px] flex items-center drop-shadow-md">
@@ -254,7 +254,7 @@ const Index = () => {
                       text={[
                         "100% digital no seu celular",
                         "Aprovação rápida",
-                        "Carteirinha física disponível",
+                        "Carteira física disponível",
                       ]}
                       speed={70}
                       deleteSpeed={40}
@@ -269,7 +269,7 @@ const Index = () => {
 
               {/* Subtitle */}
               <p className="text-base sm:text-lg lg:text-xl text-gray-50 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed drop-shadow-md">
-                Pare de pagar inteira. Emita sua carteirinha estudantil digital, válida pela Lei da Meia-Entrada. Economize em cinemas, shows, teatros e eventos culturais.
+                Pare de pagar inteira. Emita sua Carteira do Estudante URE, válida pela Lei da Meia-Entrada. Economize em cinemas, shows, teatros e eventos culturais.
               </p>
 
               {/* Feature Badges - Removed as per new design focus on text, or keep if user didn't ask to remove? 
@@ -291,12 +291,12 @@ const Index = () => {
                   {user && hasActiveCard ? (
                     <>
                       <CreditCard className="mr-2 h-5 w-5" />
-                      Ver Minha Carteirinha
+                      Ver Minha Carteira
                     </>
                   ) : (
                     <>
                       <Rocket className="mr-2 h-5 w-5" />
-                      Solicitar Carteirinha
+                      Solicitar Carteira URE
                     </>
                   )}
                 </Button>
@@ -427,7 +427,7 @@ const Index = () => {
                 <h3 className="text-2xl font-bold text-foreground">Pagamento Online</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Pague com PIX ou cartão.<br />
-                  O pagamento libera o envio para validação.
+                  O pagamento libera o envio dos documentos.
                 </p>
               </CardContent>
             </Card>
@@ -439,10 +439,10 @@ const Index = () => {
                   <FileCheck className="w-10 h-10 text-white" />
                   <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] dark:bg-background border-2 border-ure-orange flex items-center justify-center text-sm font-bold text-ure-orange">3</span>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">Carteirinha Digital</h3>
+                <h3 className="text-2xl font-bold text-foreground">Carteira do Estudante</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Envie seus documentos.<br />
-                  Após validação, sua carteirinha fica disponível.
+                  Após validação, sua carteira estará disponível.
                 </p>
               </CardContent>
             </Card>
@@ -503,7 +503,7 @@ const Index = () => {
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Eventos Esportivos</h3>
               <p className="text-muted-foreground text-center">
-                Eventos esportivos, feiras e atrações diversas com meia-entrada. Sua carteirinha abre portas (e economiza dinheiro).
+                Eventos esportivos, feiras e atrações diversas com meia-entrada. Sua carteira abre portas (e economiza dinheiro).
               </p>
             </div>
           </div>

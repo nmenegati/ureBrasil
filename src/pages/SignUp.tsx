@@ -650,6 +650,13 @@ export default function SignUp() {
         return;
       }
 
+      if (data?.user && Array.isArray((data.user as any).identities) && (data.user as any).identities.length === 0) {
+        setEmailError('Este email já está cadastrado');
+        toast.error('Este email já está cadastrado. Deseja fazer login?');
+        setLoading(false);
+        return;
+      }
+
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem('ure_signup_draft');
         window.localStorage.setItem('pending_email', email);

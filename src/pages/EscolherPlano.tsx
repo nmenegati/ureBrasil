@@ -28,7 +28,7 @@ const digitalPlans = [
   },
   {
     type: 'direito_digital',
-    name: 'Carteira Estudantil Digital LexPraxis | URE',
+    name: 'Carteira Estudantil Digital URE | LexPraxis',
     price: 44,
     description: 'Exclusiva para estudantes de Direito',
     features: [

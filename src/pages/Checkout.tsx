@@ -148,9 +148,7 @@ export default function Checkout() {
             is_physical: true,
             is_direito: false,
           });
-          
-          // NÃO carregar PagBank para upsell - usar mock
-          console.log('📦 Checkout de upsell - usando mock (sem PagBank)');
+
           setLoading(false);
           return;
         }
@@ -214,35 +212,58 @@ export default function Checkout() {
 
   const handleSubmit = async () => {
     if (!plan || !studentProfile) return;
-    
-    // Para upsell, não validar formulário de cartão (usa mock)
-    if (!isUpsell && !validateCardForm()) return;
+
+    if (!validateCardForm()) return;
 
     setProcessing(true);
 
     try {
-      // === UPSELL: Usar mock (create-payment) ===
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
+      // === UPSELL: Carteirinha física usando PagBank (pagbank-payment-v2) ===
       if (isUpsell && originalPaymentId) {
-        console.log('💳 Processando upsell com mock...');
-        
-        const { data, error } = await supabase.functions.invoke('create-payment', {
-          body: {
-            plan_id: null, // Não necessário para upsell
-            payment_method: paymentMethod === 'pix' ? 'pix' : 'credit_card',
-            amount: upsellAmount, // Valor do upsell (R$15)
-            card_data: paymentMethod === 'card' ? {
-              card_number: cardNumber.replace(/\s/g, '').slice(-4) || '0000',
-              brand: 'visa'
-            } : undefined,
-            metadata: {
-              is_upsell: true,
-              original_payment_id: originalPaymentId
-            }
-          }
-        });
+        console.log("💳 Processando upsell via PagBank (pagbank-payment-v2)...");
+
+        const [month, year] = cardExpiry.split("/");
+        const expYear = year && year.length === 2 ? `20${year}` : year;
+
+        const { data, error } = await supabase.functions.invoke(
+          "pagbank-payment-v2",
+          {
+            body: {
+              amount: upsellAmount,
+              installments: 1,
+              card: {
+                number: cardNumber.replace(/\s/g, ""),
+                exp_month: month,
+                exp_year: expYear,
+                security_code: cardCvv,
+                holder_name: cardName,
+              },
+              metadata: {
+                is_upsell: true,
+                original_payment_id: originalPaymentId,
+              },
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          },
+        );
 
         if (error) throw error;
-        if (!data.success) throw new Error(data.error || 'Erro ao processar pagamento');
+        if (!data?.success) {
+          throw new Error(
+            (data && (data.error as string | undefined)) ||
+              "Erro ao processar pagamento do upsell",
+          );
+        }
 
         // Atualizar carteirinha original para física
         const { error: updateError } = await supabase
@@ -264,9 +285,9 @@ export default function Checkout() {
         
         toast.success('🎉 Carteirinha física adicionada! Você receberá em 7-10 dias úteis.');
         
-        // Usar window.location.href para forçar reload completo do Dashboard
+        // Usar window.location.href para forçar reload completo da página de documentos
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = '/upload-documentos';
         }, 2000);
         
         return;
