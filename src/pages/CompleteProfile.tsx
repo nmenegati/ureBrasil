@@ -13,18 +13,82 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Info, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/Header';
 
-const periodSuggestions = [
-  '1º semestre', '1º período', '1º ano',
-  '2º semestre', '2º período', '2º ano',
-  '3º semestre', '3º período', '3º ano',
-  '4º semestre', '4º período', '4º ano',
-  '5º semestre', '5º período', '5º ano',
-  '6º semestre', '6º período', '6º ano',
-  '7º semestre', '7º período', '7º ano',
-  '8º semestre', '8º período', '8º ano',
-  '9º semestre', '9º período', '9º ano',
-  '10º semestre', '10º período',
+const educationLevels = [
+  { id: 'fundamental', label: 'Ensino Fundamental' },
+  { id: 'medio', label: 'Ensino Médio' },
+  { id: 'tecnico', label: 'Curso Técnico' },
+  { id: 'graduacao', label: 'Graduação' },
+  { id: 'pos', label: 'Mestrado/Doutorado' },
 ];
+
+const fieldConfiguration = {
+  fundamental: {
+    showCourseField: false,
+    seriesLabel: 'Série *',
+    seriesPlaceholder: 'Selecione a série',
+    seriesOptions: [
+      '1º ano',
+      '2º ano',
+      '3º ano',
+      '4º ano',
+      '5º ano',
+      '6º ano',
+      '7º ano',
+      '8º ano',
+      '9º ano',
+    ],
+  },
+  medio: {
+    showCourseField: false,
+    seriesLabel: 'Série *',
+    seriesPlaceholder: 'Selecione a série',
+    seriesOptions: ['1º ano', '2º ano', '3º ano'],
+  },
+  tecnico: {
+    showCourseField: true,
+    courseLabel: 'Curso *',
+    coursePlaceholder: 'Ex: Técnico em Enfermagem',
+    periodLabel: 'Módulo *',
+    periodPlaceholder: 'Selecione o módulo',
+    periodOptions: ['1º módulo', '2º módulo', '3º módulo', '4º módulo'],
+  },
+  graduacao: {
+    showCourseField: true,
+    courseLabel: 'Curso *',
+    coursePlaceholder: 'Ex: Direito',
+    periodLabel: 'Semestre *',
+    periodPlaceholder: 'Selecione o semestre',
+    periodOptions: [
+      '1º semestre',
+      '2º semestre',
+      '3º semestre',
+      '4º semestre',
+      '5º semestre',
+      '6º semestre',
+      '7º semestre',
+      '8º semestre',
+      '9º semestre',
+      '10º semestre',
+    ],
+  },
+  pos: {
+    showCourseField: true,
+    courseLabel: 'Programa *',
+    coursePlaceholder: 'Ex: Mestrado em Educação',
+    periodLabel: 'Semestre *',
+    periodPlaceholder: 'Selecione o semestre',
+    periodOptions: [
+      '1º semestre',
+      '2º semestre',
+      '3º semestre',
+      '4º semestre',
+      '5º semestre',
+      '6º semestre',
+      '7º semestre',
+      '8º semestre',
+    ],
+  },
+} as const;
 
 export default function CompleteProfile() {
   const { user, loading: authLoading } = useAuth();
@@ -42,9 +106,13 @@ export default function CompleteProfile() {
   const [course, setCourse] = useState('');
   const [period, setPeriod] = useState('');
   const [enrollmentNumber, setEnrollmentNumber] = useState('');
+  const [educationLevel, setEducationLevel] = useState<'fundamental' | 'medio' | 'tecnico' | 'graduacao' | 'pos'>('graduacao');
   const [loading, setLoading] = useState(false);
-  const [periodOptions, setPeriodOptions] = useState<string[]>([]);
   const [isCepResolved, setIsCepResolved] = useState(false);
+
+  const config = fieldConfiguration[educationLevel];
+  const basePeriodOptions =
+    (config.showCourseField ? config.periodOptions : config.seriesOptions) || [];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -57,7 +125,7 @@ export default function CompleteProfile() {
       if (!user) return;
       const { data } = await supabase
         .from('student_profiles')
-        .select('cep, street, number, complement, neighborhood, city, state, institution, course, period, enrollment_number')
+        .select('cep, street, number, complement, neighborhood, city, state, institution, course, period, enrollment_number, education_level')
         .eq('user_id', user.id)
         .maybeSingle();
       if (data) {
@@ -72,6 +140,9 @@ export default function CompleteProfile() {
         setCourse(data.course || '');
         setPeriod(data.period || '');
         setEnrollmentNumber(data.enrollment_number || '');
+        if (data.education_level === 'fundamental' || data.education_level === 'medio' || data.education_level === 'tecnico' || data.education_level === 'graduacao' || data.education_level === 'pos') {
+          setEducationLevel(data.education_level);
+        }
       }
     };
     prefill();
@@ -144,7 +215,7 @@ export default function CompleteProfile() {
       return;
     }
 
-    if (!institution || !course || !period || !enrollmentNumber) {
+    if (!institution || !period || !enrollmentNumber || (config.showCourseField && !course)) {
       toast.error('Preencha todos os campos acadêmicos');
       return;
     }
@@ -168,9 +239,10 @@ export default function CompleteProfile() {
         city,
         state,
         institution,
-        course,
+        course: config.showCourseField ? course : null,
         period,
         enrollment_number: enrollmentNumber,
+        education_level: educationLevel,
         profile_completed: true,
         updated_at: new Date().toISOString(),
       })
@@ -241,9 +313,9 @@ export default function CompleteProfile() {
                     Endereço Residencial
                   </h2>
 
-                  {/* CEP com mensagem informativa ao lado */}
-                  <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-4">
-                    <div className="w-full sm:w-36">
+                  {/* CEP com mensagem informativa */}
+                  <div className="flex flex-row items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                    <div className="w-32 sm:w-36">
                       <Label htmlFor="cep" className="text-foreground">CEP</Label>
                       <div className="relative">
                         <Input
@@ -261,7 +333,7 @@ export default function CompleteProfile() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 pb-0 sm:pb-2">
+                    <div className="flex-1 flex items-center gap-1.5 pt-6">
                       <Info className="h-4 w-4 text-primary shrink-0" />
                       <span className="text-sm text-muted-foreground">
                         Insira seu CEP para preencher o endereço automaticamente.
@@ -279,28 +351,30 @@ export default function CompleteProfile() {
                     </Alert>
                   )}
 
-                  {/* Rua (3 cols) + Número (1 col) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div className="sm:col-span-3 space-y-2">
-                      <Label htmlFor="street" className="text-foreground">Rua</Label>
-                      <Input
-                        id="street"
-                        type="text"
-                        placeholder="Nome da rua"
-                        value={street}
-                        onChange={(e) => setStreet(e.target.value)}
-                        maxLength={150}
-                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                        required
-                      />
-                      <span className="text-xs text-muted-foreground block text-right">{street.length}/150</span>
-                    </div>
-                    <div className="sm:col-span-1 space-y-2">
+                  {/* Rua */}
+                  <div className="space-y-2">
+                    <Label htmlFor="street" className="text-foreground">Rua</Label>
+                    <Input
+                      id="street"
+                      type="text"
+                      placeholder="Nome da rua"
+                      value={street}
+                      onChange={(e) => setStreet(e.target.value)}
+                      maxLength={70}
+                      className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                      required
+                    />
+                    <span className="text-xs text-muted-foreground block text-right">{street.length}/70</span>
+                  </div>
+
+                  {/* Número + Complemento */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-1 space-y-2">
                       <Label htmlFor="number" className="text-foreground">Número</Label>
                       <Input
                         id="number"
                         type="text"
-                        placeholder="123"
+                        placeholder="Ex: 123, 54, 1002"
                         value={number}
                         onChange={(e) => setNumber(e.target.value)}
                         maxLength={10}
@@ -309,25 +383,7 @@ export default function CompleteProfile() {
                       />
                       <span className="text-xs text-muted-foreground block text-right">{number.length}/10</span>
                     </div>
-                  </div>
-
-                  {/* Bairro + Complemento */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="neighborhood" className="text-foreground">Bairro</Label>
-                      <Input
-                        id="neighborhood"
-                        type="text"
-                        placeholder="Nome do bairro"
-                        value={neighborhood}
-                        onChange={(e) => setNeighborhood(e.target.value)}
-                        maxLength={100}
-                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                        required
-                      />
-                      <span className="text-xs text-muted-foreground block text-right">{neighborhood.length}/100</span>
-                    </div>
-                    <div className="space-y-2">
+                    <div className="col-span-2 space-y-2">
                       <Label htmlFor="complement" className="text-foreground">Complemento</Label>
                       <Input
                         id="complement"
@@ -335,11 +391,29 @@ export default function CompleteProfile() {
                         placeholder="Apto, bloco... (opcional)"
                         value={complement}
                         onChange={(e) => setComplement(e.target.value)}
-                        maxLength={100}
+                        maxLength={50}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       />
-                      <span className="text-xs text-muted-foreground block text-right">{complement.length}/100</span>
+                      <span className="text-xs text-muted-foreground block text-right">{complement.length}/50</span>
                     </div>
+                  </div>
+
+                  {/* Bairro */}
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood" className="text-foreground">Bairro</Label>
+                    <Input
+                      id="neighborhood"
+                      type="text"
+                      placeholder="Nome do bairro"
+                      value={neighborhood}
+                      onChange={(e) => setNeighborhood(e.target.value)}
+                      maxLength={70}
+                      className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                      required
+                    />
+                    <span className="text-xs text-muted-foreground block text-right">
+                      {neighborhood.length}/70
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-4 gap-4">
@@ -413,98 +487,112 @@ export default function CompleteProfile() {
                     Dados Acadêmicos
                   </h2>
 
-                  {/* Instituição */}
+                  <div className="space-y-2">
+                    <Label className="text-foreground">Nível de ensino</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {educationLevels.map((level) => (
+                        <Button
+                          key={level.id}
+                          type="button"
+                          variant={educationLevel === level.id ? 'default' : 'outline'}
+                          className="justify-start"
+                          onClick={() => {
+                            setEducationLevel(level.id as typeof educationLevel);
+                            setCourse('');
+                            setPeriod('');
+                          }}
+                        >
+                          {level.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="institution" className="text-foreground">Instituição de ensino</Label>
                     <Input
                       id="institution"
                       type="text"
-                      placeholder="Ex: Universidade Federal..."
+                      placeholder="Ex: Universidade Federal de Juiz de Fora"
                       value={institution}
                       onChange={(e) => setInstitution(e.target.value)}
-                      maxLength={150}
+                      maxLength={70}
                       className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       required
                     />
-                    <span className="text-xs text-muted-foreground block text-right">{institution.length}/150</span>
+                    <span className="text-xs text-muted-foreground block text-right">{institution.length}/70</span>
                   </div>
 
-                  {/* Curso */}
-                  <div className="space-y-2">
-                    <Label htmlFor="course" className="text-foreground">Curso</Label>
-                    <Input
-                      id="course"
-                      type="text"
-                      placeholder="Ex: Direito"
-                      value={course}
-                      onChange={(e) => setCourse(e.target.value)}
-                      maxLength={150}
-                      className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                      required
-                    />
-                    <span className="text-xs text-muted-foreground block text-right">{course.length}/150</span>
-                  </div>
-
-                  {/* Período e Matrícula */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {config.showCourseField && (
                     <div className="space-y-2">
-                      <Label htmlFor="period" className="text-foreground">Período/Semestre</Label>
-                      <div className="relative">
-                        <Input
-                          id="period"
-                          type="text"
-                          placeholder="Ex: 1º semestre, 3º ano, Pré II, etc."
-                          value={period}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setPeriod(value);
-                            if (!value) {
-                              setPeriodOptions([]);
-                              return;
-                            }
-                            const lower = value.toLowerCase();
-                            const filtered = periodSuggestions.filter((option) =>
-                              option.toLowerCase().includes(lower)
-                            ).slice(0, 6);
-                            setPeriodOptions(filtered);
-                          }}
-                          maxLength={30}
-                          className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                          required
-                        />
-                        {periodOptions.length > 0 && (
-                          <div className="absolute z-20 mt-1 w-full rounded-md border border-border bg-popover text-popover-foreground shadow-md text-sm">
-                            {periodOptions.map((option) => (
-                              <button
-                                key={option}
-                                type="button"
-                                className="w-full px-3 py-1.5 text-left hover:bg-accent hover:text-accent-foreground"
-                                onClick={() => {
-                                  setPeriod(option);
-                                  setPeriodOptions([]);
-                                }}
-                              >
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <Label htmlFor="course" className="text-foreground">
+                        {config.courseLabel}
+                      </Label>
+                      <Input
+                        id="course"
+                        type="text"
+                        placeholder={config.coursePlaceholder}
+                        value={course}
+                        onChange={(e) => setCourse(e.target.value)}
+                        maxLength={70}
+                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                        required
+                      />
+                      <span className="text-xs text-muted-foreground block text-right">
+                        {course.length}/70
+                      </span>
                     </div>
-                    <div className="space-y-2">
+                  )}
+
+                  <div className="flex flex-row gap-4">
+                    <div className="space-y-2 w-1/2">
+                      <Label htmlFor="period" className="text-foreground">
+                        {config.showCourseField ? config.periodLabel : config.seriesLabel}
+                      </Label>
+                      <Select
+                        value={period}
+                        onValueChange={(value) => setPeriod(value)}
+                      >
+                        <SelectTrigger className="border-input h-11 text-base bg-background text-foreground">
+                          <SelectValue
+                            placeholder={
+                              config.showCourseField
+                                ? config.periodPlaceholder
+                                : config.seriesPlaceholder
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {basePeriodOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 w-1/2">
                       <Label htmlFor="enrollmentNumber" className="text-foreground">Nº de matrícula</Label>
                       <Input
                         id="enrollmentNumber"
                         type="text"
-                        placeholder="12345678"
+                        placeholder="Ex: 123456"
                         value={enrollmentNumber}
-                        onChange={(e) => setEnrollmentNumber(e.target.value)}
-                        maxLength={20}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setEnrollmentNumber(digitsOnly);
+                        }}
+                        maxLength={10}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                         required
                       />
-                      <span className="text-xs text-muted-foreground block text-right">{enrollmentNumber.length}/20</span>
+                      <span className="text-xs text-muted-foreground block text-right">{enrollmentNumber.length}/10</span>
                     </div>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>Esses dados aparecerão na sua carteirinha.</p>
+                    <p>Exemplo: "Graduação – 3º semestre – Direito – UFJF"</p>
                   </div>
                 </div>
 

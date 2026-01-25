@@ -45,16 +45,13 @@ serve(async (req) => {
     }
     
     const isLawStudent = card.student_profiles?.plan_id === 'lexpraxis'
-    const templatePrefix = isLawStudent ? 'direito-' : ''
+    const templatePrefix = isLawStudent ? 'direito-' : 'geral-'
     
     console.log(`Tipo de carteirinha: ${isLawStudent ? 'Direito (LexPraxis)' : 'Geral'}`)
-    console.log(`Templates: ${templatePrefix}frente-template.png, ${templatePrefix}verso-template.png`)
+    console.log(`Templates: ${templatePrefix}frente-template-v.png, ${templatePrefix}verso-template-v.png`)
     
     // TODO: Implementar geração de imagem com canvas
     // Placeholder apenas registra e retorna tipo
-    // Templates disponíveis:
-    // Geral: /public/templates/frente-template.png, /public/templates/verso-template.png
-    // Direito: /public/templates/frente-template-direito.png, /public/templates/verso-template-direito.png
     
     return new Response(JSON.stringify({
       success: true,
@@ -73,4 +70,3 @@ serve(async (req) => {
     })
   }
 })
-

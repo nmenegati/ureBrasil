@@ -14,6 +14,7 @@ import {
   HelpCircle, ChevronRight, User,
   AlertCircle, Download, QrCode, Truck, Lock
 } from 'lucide-react';
+import { StudentCardConfirmationModal } from '@/components/StudentCardConfirmationModal';
 interface StudentProfile {
   id: string;
   full_name: string;
@@ -32,6 +33,9 @@ interface StudentCard {
   status: 'pending_docs' | 'pending_payment' | 'processing' | 'active' | 'expired' | 'cancelled';
   qr_code: string;
   digital_card_url: string | null;
+  digital_card_generated?: boolean;
+  generation_attempts?: number;
+  last_generation_error?: string | null;
   is_physical?: boolean;
   shipping_status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'failed' | null;
   shipping_code?: string | null;
@@ -60,6 +64,11 @@ export default function Dashboard() {
     payment: false,
     card: false
   });
+  const [showDigitalModal, setShowDigitalModal] = useState(false);
+  const [digitalGenerating, setDigitalGenerating] = useState(false);
+  const [digitalError, setDigitalError] = useState<string | null>(null);
+  const [digitalAttempts, setDigitalAttempts] = useState(0);
+  const [digitalPhotoUrl, setDigitalPhotoUrl] = useState<string | null>(null);
   
   // Estados para modal de upsell
   const [showUpsellModal, setShowUpsellModal] = useState(false);
@@ -197,6 +206,7 @@ export default function Dashboard() {
       console.log('📦 is_physical:', cardData?.is_physical, '| tipo:', typeof cardData?.is_physical);
 
       setCard(cardData);
+      setDigitalAttempts(cardData?.generation_attempts ?? 0);
       
       // 5. Calcular progresso
       const newProgress = {
@@ -262,6 +272,65 @@ export default function Dashboard() {
     if (pct === 33) return "Bom começo! Continue completando as etapas.";
     if (pct === 67) return "Quase lá! Só mais um passo.";
     return "Parabéns! Sua carteirinha está pronta!";
+  };
+
+  const canGenerateDigitalCard =
+    !!card &&
+    card.status === 'active' &&
+    paymentApproved &&
+    documentsApproved >= 4 &&
+    (profile as any)?.face_validated === true &&
+    !card.digital_card_url;
+
+  const handleOpenDigitalModal = async () => {
+    if (!profile) return;
+    setDigitalError(null);
+    setDigitalPhotoUrl(null);
+    if (profile && (profile as any).profile_photo_url) {
+      try {
+        const path = (profile as any).profile_photo_url as string;
+        const { data } = await supabase.storage.from('documents').createSignedUrl(path, 300);
+        if (data?.signedUrl) {
+          setDigitalPhotoUrl(data.signedUrl);
+        }
+      } catch {
+        setDigitalPhotoUrl(null);
+      }
+    }
+    setShowDigitalModal(true);
+  };
+
+  const handleConfirmGenerateDigital = async () => {
+    if (!user || !profile || !card) return;
+    try {
+      setDigitalGenerating(true);
+      setDigitalError(null);
+      const { data, error } = await supabase.functions.invoke('generate-digital-card', {
+        body: {
+          userId: user.id,
+          cardType: isLawStudent ? 'direito' : 'geral'
+        }
+      });
+
+      if (error || !data || data.error) {
+        const message =
+          (error && (error as any).message) ||
+          (data && (data as any).error) ||
+          'Erro ao gerar carteirinha digital';
+        setDigitalError(message);
+        await fetchData();
+        return;
+      }
+
+      toast.success('Carteirinha gerada com sucesso!');
+      setShowDigitalModal(false);
+      await fetchData();
+    } catch {
+      setDigitalError('Erro inesperado ao gerar carteirinha digital.');
+      await fetchData();
+    } finally {
+      setDigitalGenerating(false);
+    }
   };
 
   // Determina o próximo passo - NOVA ORDEM: Perfil → Pagamento → Docs → Carteirinha
@@ -386,10 +455,30 @@ export default function Dashboard() {
             >
               Completar Perfil <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
-          </div>
-        </main>
-      </div>
-    );
+        </div>
+        {profile && card && (
+          <StudentCardConfirmationModal
+            open={showDigitalModal}
+            onOpenChange={setShowDigitalModal}
+            fullName={profile.full_name}
+            cpf={formatCPF(profile.cpf)}
+            birthDate={new Date((profile as any).birth_date).toLocaleDateString('pt-BR')}
+            institution={profile.institution}
+            course={profile.course}
+            period={null}
+            enrollmentNumber={(profile as any).enrollment_number ?? null}
+            cardNumber={card.card_number}
+            qrData={card.qr_code || card.card_number}
+            photoUrl={digitalPhotoUrl}
+            loading={digitalGenerating}
+            error={digitalError}
+            attempts={digitalAttempts}
+            onConfirm={handleConfirmGenerateDigital}
+          />
+        )}
+      </main>
+    </div>
+  );
   }
 
   const percentage = getPercentage();
@@ -561,21 +650,42 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-4">
-              <Button 
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
-                size="sm"
-                onClick={() => toast.info('Em breve!')}
-              >
-                <Download className="w-4 h-4 mr-2" /> Baixar PDF
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex-1 border-primary text-primary hover:bg-primary/10"
-                onClick={() => toast.info('Em breve!')}
-              >
-                <QrCode className="w-4 h-4 mr-2" /> Ver QR Code
-              </Button>
+              {card.digital_card_url ? (
+                <>
+                  <Button 
+                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                    size="sm"
+                    onClick={() => window.open(card.digital_card_url || undefined, '_blank')}
+                  >
+                    <Download className="w-4 h-4 mr-2" /> Ver Carteirinha Digital
+                  </Button>
+                </>
+              ) : canGenerateDigitalCard ? (
+                <Button 
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  size="sm"
+                  onClick={handleOpenDigitalModal}
+                >
+                  Gerar Minha Carteirinha Digital
+                </Button>
+              ) : (
+                <div className="flex-1">
+                  <Button 
+                    className="w-full bg-muted text-muted-foreground"
+                    size="sm"
+                    disabled
+                  >
+                    Carteirinha Digital ainda não disponível
+                  </Button>
+                  {!canGenerateDigitalCard && card?.status === 'active' && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      {!paymentApproved && "⏳ Aguardando confirmação de pagamento"}
+                      {paymentApproved && documentsApproved < 4 && "⏳ Envie todos os documentos"}
+                      {paymentApproved && documentsApproved >= 4 && !(profile as any)?.face_validated && "⏳ Validação facial em andamento"}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -617,6 +727,27 @@ export default function Dashboard() {
             </Button>
           </div>
         </div>
+
+        {profile && card && (
+          <StudentCardConfirmationModal
+            open={showDigitalModal}
+            onOpenChange={setShowDigitalModal}
+            fullName={profile.full_name}
+            cpf={formatCPF(profile.cpf)}
+            birthDate={new Date((profile as any).birth_date).toLocaleDateString('pt-BR')}
+            institution={profile.institution}
+            course={profile.course}
+            period={null}
+            enrollmentNumber={(profile as any).enrollment_number ?? null}
+            cardNumber={card.card_number}
+            qrData={card.qr_code || card.card_number}
+            photoUrl={digitalPhotoUrl}
+            loading={digitalGenerating}
+            error={digitalError}
+            attempts={digitalAttempts}
+            onConfirm={handleConfirmGenerateDigital}
+          />
+        )}
       </main>
 
       {/* Modal Upsell - Carteirinha Física */}

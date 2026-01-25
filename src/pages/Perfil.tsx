@@ -595,7 +595,7 @@ export default function Perfil() {
                 </h2>
                 <p className="text-sm text-muted-foreground break-all">{user?.email}</p>
                 <p className="text-xs text-muted-foreground/80 mt-1">
-                  Foto atualizada conforme Foto 3x4 aprovada.
+                  Foto atualizada conforme Foto 3x4.
                 </p>
               </div>
             </div>

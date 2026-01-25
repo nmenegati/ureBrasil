@@ -122,19 +122,19 @@ export default function VerificarEmail() {
 
             <div className="space-y-3">
               <Button
+                onClick={() => navigate('/login')}
+                className="w-full"
+              >
+                Ir para Login após Confirmar
+              </Button>
+
+              <Button
                 onClick={handleResendEmail}
                 variant="outline"
                 className="w-full"
                 disabled={loading || cooldown > 0}
               >
                 Reenviar Email
-              </Button>
-
-              <Button
-                onClick={() => navigate('/login')}
-                className="w-full"
-              >
-                Ir para Login após Confirmar
               </Button>
             </div>
 

@@ -97,21 +97,14 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
       const { data: card } = await supabase
         .from('student_cards')
-        .select('status, card_number')
+        .select('status, card_number, is_physical')
         .eq('student_id', profile.id)
         .maybeSingle();
       const activeCard =
         !!card && card.status === 'active' && !!card.card_number;
       setHasActiveCard(activeCard);
-
-      const { data: physicalPayment } = await supabase
-        .from('payments')
-        .select('id')
-        .eq('student_id', profile.id)
-        .eq('metadata->>is_physical_upsell', 'true')
-        .eq('status', 'approved')
-        .maybeSingle();
-      setHasPhysicalCard(!!physicalPayment);
+      const physicalCard = !!card && card.is_physical === true;
+      setHasPhysicalCard(physicalCard);
     };
     checkPhysicalCard();
   }, [user]);

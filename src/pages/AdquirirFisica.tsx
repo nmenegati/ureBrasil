@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import { Header } from "@/components/Header";
+import { PolicyModal } from "@/components/PolicyModal";
 
 const AdquirirFisica = () => {
   const navigate = useNavigate();
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
   
   const handlePurchase = async () => {
     navigate('/pagamento', {
@@ -42,17 +45,28 @@ const AdquirirFisica = () => {
               </AlertDescription>
             </Alert>
             
-          <div className="bg-muted p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg">Carteirinha Física</span>
-              <span className="text-2xl font-bold">R$ 24,00</span>
+            <div className="bg-muted p-6 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-lg">Carteirinha Física</span>
+                <span className="text-2xl font-bold">R$ 24,00</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>✅ Frete grátis para todo Brasil</li>
-                <li>✅ Entrega em 7-10 dias úteis</li>
+                <li>✅ Entrega em 10 a 15 dias úteis</li>
                 <li>✅ Material durável de PVC</li>
                 <li>✅ Mesmo design da digital</li>
               </ul>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Ao prosseguir, você concorda com nossa{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsDeliveryModalOpen(true)}
+                  className="text-primary hover:underline"
+                >
+                  Política de Entregas
+                </button>
+                .
+              </p>
             </div>
             
             <div className="flex gap-4">
@@ -70,6 +84,11 @@ const AdquirirFisica = () => {
           </CardContent>
         </Card>
       </div>
+      <PolicyModal
+        type="delivery"
+        open={isDeliveryModalOpen}
+        onOpenChange={setIsDeliveryModalOpen}
+      />
     </div>
   );
 };

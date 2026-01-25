@@ -31,6 +31,7 @@ import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.jpg";
 import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
 import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
 import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Plan {
   id: string;
@@ -101,6 +102,7 @@ export default function Checkout() {
     phone: string;
     birth_date: string;
   } | null>(null);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchPlanAndProfile = async () => {
@@ -710,13 +712,75 @@ export default function Checkout() {
 
               <p className="text-xs text-muted-foreground text-center">
                 Ao continuar você concorda com nossos{" "}
-                <Link to="/termos" className="underline hover:text-foreground transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setIsTermsModalOpen(true)}
+                  className="underline hover:text-foreground transition-colors"
+                >
                   Termos de Uso
-                </Link>
+                </button>
               </p>
             </div>
           </CardContent>
         </Card>
+        <Dialog open={isTermsModalOpen} onOpenChange={setIsTermsModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Termos de Uso – URE Brasil</DialogTitle>
+              <DialogDescription>
+                Condições gerais para uso da plataforma e emissão de carteirinhas estudantis.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[70vh] overflow-y-auto pr-2 text-sm text-muted-foreground space-y-4">
+              <p>
+                Ao acessar ou utilizar a página da URE Brasil e solicitar a emissão de carteirinhas de estudante,
+                você aceita estes Termos de Uso integralmente. Estes termos regem o serviço de emissão de carteiras
+                estudantis padronizadas (DNE/CIE), conforme Lei 12.933/2013.
+              </p>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">Elegibilidade e responsabilidades</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>O serviço destina-se a estudantes regularmente matriculados em instituições de ensino reconhecidas.</li>
+                  <li>Você é responsável pela veracidade das informações e documentos enviados.</li>
+                  <li>O uso indevido da carteirinha pode acarretar sanções civis e penais.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">Processo de emissão</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>A carteirinha digital é emitida após validação dos documentos enviados.</li>
+                  <li>A carteirinha possui elementos de segurança para uso em pedidos de meia-entrada.</li>
+                  <li>O prazo padrão para emissão é de até 48 horas úteis após aprovação dos documentos.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">Limitação de responsabilidade</h3>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>A URE Brasil não se responsabiliza por recusa de meia-entrada por parte de terceiros.</li>
+                  <li>Não há responsabilidade por danos indiretos, lucros cessantes ou prejuízos decorrentes do uso da carteirinha.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">Alterações e contato</h3>
+                <p>
+                  Estes termos podem ser atualizados periodicamente, e a versão vigente estará sempre disponível no
+                  site oficial da URE Brasil.
+                </p>
+                <p>
+                  Em caso de dúvidas, solicitações ou pedidos de cancelamento, entre em contato pelo e-mail{" "}
+                  <span className="font-medium text-foreground">suporte@urebrasil.com.br</span>.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Última atualização: janeiro de 2026.
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

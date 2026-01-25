@@ -27,6 +27,7 @@ interface CardData {
   valid_until: string;
   status: string;
   card_type: string;
+   digital_card_url?: string | null;
 }
 
 export default function Carteirinha() {
@@ -99,7 +100,7 @@ export default function Carteirinha() {
       // Buscar carteirinha ativa
       const { data: card, error: cardError } = await supabase
         .from('student_cards')
-        .select('card_number, usage_code, qr_code, valid_until, status, card_type')
+        .select('card_number, usage_code, qr_code, valid_until, status, card_type, digital_card_url')
         .eq('student_id', profileData.id)
         .eq('status', 'active')
         .single();
@@ -149,16 +150,14 @@ export default function Carteirinha() {
       return;
     }
 
-    // Tamanho original do template (1010x644)
     canvas.width = 1010;
     canvas.height = 644;
     console.log('📐 Canvas configurado: 1010x644');
 
-    // Tentar carregar template por plano
     const isLawStudent = profileData.plan_id === 'lexpraxis';
     const frontTemplate = isLawStudent
-      ? '/templates/direito-frente-template.png'
-      : '/templates/frente-template.png';
+      ? '/templates/direito-frente-template-v.png'
+      : '/templates/geral-frente-template-v.png';
     const templatePath = frontTemplate;
     console.log('📸 Tentando carregar template:', templatePath);
     
@@ -166,7 +165,9 @@ export default function Carteirinha() {
       const template = await loadImage(templatePath);
       console.log('✅ Template carregado com sucesso!');
       console.log('📐 Dimensões template:', template.width, 'x', template.height);
-      ctx.drawImage(template, 0, 0, 1010, 644);
+      canvas.width = template.width;
+      canvas.height = template.height;
+      ctx.drawImage(template, 0, 0, template.width, template.height);
       console.log('✅ Template desenhado no canvas');
     } catch (e) {
       console.error('❌ ERRO AO CARREGAR TEMPLATE:', e);
@@ -175,79 +176,89 @@ export default function Carteirinha() {
       drawFallbackBackground(ctx);
     }
 
-    // ========================================
-    // CONFIGURAÇÕES GERAIS
-    // ========================================
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    // ========================================
-    // ÁREA DE DADOS - ALINHADO COM TÍTULO
-    // ========================================
-    const xStart = 140;
+    const designWidth = 638;
+    const designHeight = 1016;
+    const cardWidth = canvas.width;
+    const cardHeight = canvas.height;
+    const scaleX = cardWidth / designWidth;
+    const scaleY = cardHeight / designHeight;
+    const sx = (value: number) => value * scaleX;
+    const sy = (value: number) => value * scaleY;
+
+    const paddingX = sx(46);
 
     console.log('✍️ Escrevendo nome:', profileData.full_name);
-    ctx.font = 'bold 24px Arial';
+    ctx.font = `bold ${24 * scaleY}px Arial`;
     ctx.fillStyle = '#000000';
-    ctx.fillText(profileData.full_name.toUpperCase(), 140, 145);
+    ctx.fillText(profileData.full_name.toUpperCase(), paddingX, sy(520));
 
-    ctx.font = '18px Arial';
+    const textLineHeight = sy(26);
+    let currentY = sy(550);
+
+    ctx.font = `${18 * scaleY}px Arial`;
     ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.institution || 'Instituição', 140, 175);
+    if (profileData.institution) {
+      ctx.fillText(profileData.institution, paddingX, currentY);
+      currentY += textLineHeight;
+    }
 
-    ctx.font = '18px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.course || 'Curso', 140, 195);
+    if (profileData.course) {
+      ctx.fillText(profileData.course, paddingX, currentY);
+      currentY += textLineHeight;
+    }
 
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#374151';
-    ctx.fillText(profileData.period || '1º Período', 140, 215);
+    if (profileData.period) {
+      ctx.fillText(profileData.period, paddingX, currentY);
+      currentY += textLineHeight * 1.5;
+    } else {
+      currentY += textLineHeight * 1.5;
+    }
 
-    ctx.font = 'bold 16px Arial';
+    ctx.font = `bold ${16 * scaleY}px Arial`;
     ctx.fillStyle = '#1F2937';
-    ctx.fillText('CPF:', 140, 240);
-    ctx.font = '16px Arial';
-    ctx.fillText(profileData.cpf, 180, 240);
+    ctx.fillText('CPF:', paddingX, currentY);
+    ctx.font = `${16 * scaleY}px Arial`;
+    ctx.fillText(profileData.cpf, paddingX + sx(80), currentY);
 
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText('RG:', 140, 260);
-    ctx.font = '16px Arial';
-    ctx.fillText(profileData.rg || 'Não informado', 170, 260);
-
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText('DATA NASC.:', 140, 280);
-    ctx.font = '16px Arial';
+    currentY += textLineHeight;
+    ctx.font = `bold ${16 * scaleY}px Arial`;
+    ctx.fillText('Data Nasc.:', paddingX, currentY);
+    ctx.font = `${16 * scaleY}px Arial`;
     ctx.fillText(
       new Date(profileData.birth_date).toLocaleDateString('pt-BR'),
-      245,
-      280
+      paddingX + sx(120),
+      currentY
     );
 
-    ctx.font = 'bold 18px monospace';
-    ctx.fillStyle = '#000000';
-    ctx.fillText('COD. USO:', 30, 550);
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText(card.usage_code || 'XXXX-XXXX', 30, 575);
+    const bottomBlockY = sy(840);
 
-    ctx.font = 'bold 16px Arial';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('VÁLIDO ATÉ:', 30, 610);
-    ctx.font = 'bold 20px Arial';
+    ctx.font = `bold ${18 * scaleY}px monospace`;
+    ctx.fillStyle = '#000000';
+    ctx.fillText('COD. USO:', paddingX, bottomBlockY);
+    ctx.font = `bold ${22 * scaleY}px monospace`;
+    ctx.fillText(card.usage_code || 'XXXX-XXXX', paddingX, bottomBlockY + textLineHeight);
+
+    ctx.font = `bold ${16 * scaleY}px Arial`;
+    ctx.fillStyle = '#000000';
+    ctx.fillText('VÁLIDO ATÉ:', paddingX, bottomBlockY + textLineHeight * 2.1);
+    ctx.font = `bold ${20 * scaleY}px Arial`;
     ctx.fillText(
       new Date(card.valid_until).toLocaleDateString('pt-BR'),
-      140,
-      610
+      paddingX + sx(110),
+      bottomBlockY + textLineHeight * 2.1
     );
 
     console.log('✅ Textos desenhados');
 
-    // ========================================
-    const fotoX = 720;
-    const fotoY = 120;
-    const fotoW = 180;
-    const fotoH = 220;
+    const fotoW = sx(240);
+    const fotoH = sy(300);
+    const fotoX = sx(46);
+    const fotoY = sy(190);
 
     if (profileData.profile_photo_url) {
       console.log('📸 Carregando foto (profile_photo_url):', profileData.profile_photo_url);
@@ -282,14 +293,14 @@ export default function Carteirinha() {
       ctx.textAlign = 'left';
     }
 
-    console.log('📱 Carregando QR Code');
+      console.log('📱 Carregando QR Code');
     try {
       const qr = await loadImage(qrUrl);
       console.log('✅ QR Code carregado');
 
-      const qrSize = 90;
-      const qrX = fotoX + (fotoW - qrSize) / 2;
-      const qrY = fotoY + fotoH + 20;
+      const qrSize = sx(150);
+      const qrX = cardWidth - sx(46) - qrSize;
+      const qrY = sy(190);
       ctx.drawImage(qr, qrX, qrY, qrSize, qrSize);
 
       console.log('✅ Todos os elementos desenhados');
@@ -306,6 +317,7 @@ export default function Carteirinha() {
 
   const generateCard = useCallback(async () => {
     if (!profile || !cardData) return;
+    if (cardData.digital_card_url) return;
     
     setGenerating(true);
     try {
@@ -328,7 +340,7 @@ export default function Carteirinha() {
 
   // Effect separado para gerar card quando dados e canvas estiverem prontos
   useEffect(() => {
-    if (profile && cardData && canvasRef.current && !generatedFront) {
+    if (profile && cardData && canvasRef.current && !generatedFront && !cardData.digital_card_url) {
       console.log('🔄 Triggering card generation via useEffect');
       generateCard();
     }
@@ -342,22 +354,28 @@ export default function Carteirinha() {
     setGeneratedFront('');
   };
 
+  const isLawStudentView = profile?.plan_id === 'lexpraxis';
+  const backTemplatePath = isLawStudentView
+    ? '/templates/direito-verso-template-v.png'
+    : '/templates/geral-verso-template-v.png';
+
   const downloadCard = (side: 'front' | 'back') => {
     const link = document.createElement('a');
     link.download = `carteirinha-${side === 'front' ? 'frente' : 'verso'}-${cardData?.card_number || 'ure'}.png`;
 
     if (side === 'front') {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        link.href = canvas.toDataURL('image/png');
+      if (cardData?.digital_card_url) {
+        link.href = cardData.digital_card_url;
         link.click();
+      } else {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }
       }
     } else {
-      const isLawStudent = profile?.plan_id === 'lexpraxis';
-      const backTemplate = isLawStudent
-        ? '/templates/verso-template-direito.png'
-        : '/templates/verso-template.png';
-      link.href = backTemplate;
+      link.href = backTemplatePath;
       link.click();
     }
 
@@ -411,9 +429,15 @@ export default function Carteirinha() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   <p className="text-muted-foreground">Gerando carteirinha...</p>
                 </div>
+              ) : cardData.digital_card_url ? (
+                <img
+                  src={showFront ? cardData.digital_card_url : backTemplatePath}
+                  alt={showFront ? 'Frente da carteirinha' : 'Verso da carteirinha'}
+                  className="w-full h-auto rounded-xl shadow-xl"
+                />
               ) : generatedFront || !showFront ? (
                 <img
-                  src={showFront ? generatedFront : '/templates/verso-template.png'}
+                  src={showFront ? generatedFront : backTemplatePath}
                   alt={showFront ? 'Frente da carteirinha' : 'Verso da carteirinha'}
                   className="w-full h-auto rounded-xl shadow-xl"
                 />
@@ -443,17 +467,19 @@ export default function Carteirinha() {
                 Verso
               </Button>
             </div>
-            <div className="flex justify-center">
-              <Button
-                onClick={regenerateCard}
-                variant="ghost"
-                size="sm"
-                className="text-xs"
-              >
-                <RotateCw className="h-3 w-3 mr-1" />
-                Regenerar Carteirinha
-              </Button>
-            </div>
+            {!cardData.digital_card_url && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={regenerateCard}
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                >
+                  <RotateCw className="h-3 w-3 mr-1" />
+                  Regenerar Carteirinha
+                </Button>
+              </div>
+            )}
             <div className="space-y-1">
               <p className="text-center text-xs text-muted-foreground">
                 {cardData.card_number} • Válida até {new Date(cardData.valid_until).toLocaleDateString('pt-BR')}

@@ -14,3 +14,9 @@ verify_jwt = true
 
 [functions.delete-user-data]
 verify_jwt = false
+
+[functions.generate-student-card]
+verify_jwt = true
+
+[functions.generate-digital-card]
+verify_jwt = true

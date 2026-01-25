@@ -54,6 +54,7 @@ import iconeTeatro from "@/assets/icone-teatro.png";
 import iconeEsporte from "@/assets/icone-esporte.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { PolicyModal } from "@/components/PolicyModal";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -65,6 +66,7 @@ const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [currentHumanSlide, setCurrentHumanSlide] = useState(0);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
   
@@ -1153,6 +1155,15 @@ const Index = () => {
                   </a>
                 </li>
                 <li>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeliveryModalOpen(true)}
+                    className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
+                  >
+                    Política de Entregas
+                  </button>
+                </li>
+                <li>
                   <a
                     href="#"
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
@@ -1184,6 +1195,11 @@ const Index = () => {
           </div>
         </div>
       </footer>
+      <PolicyModal
+        type="delivery"
+        open={isDeliveryModalOpen}
+        onOpenChange={setIsDeliveryModalOpen}
+      />
     </div>
   );
 };

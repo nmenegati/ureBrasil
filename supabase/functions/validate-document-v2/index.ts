@@ -218,24 +218,32 @@ FORMATO DE RESPOSTA:
 Seja rigoroso na verificação de NOME e CPF.
 `,
     selfie: `
-Analise esta selfie com documento e responda APENAS JSON.
-CRITÉRIOS:
+Você é um validador de selfie para comparação facial (sem documento).
 
-VISIBILIDADE: Documento visível? Foto no RG legível? Dados identificáveis?
-PESSOA: Segurando documento? Rosto visível? Documento próximo ao rosto?
-QUALIDADE: Nítida? Boa luz? Sem reflexos?
-AUTENTICIDADE: Selfie real? Não é print? Pessoa ao vivo?
+APROVAR SE:
+- Rosto visível e centralizado
+- Pessoa olhando para a câmera
+- Boa iluminação (não contraluz)
+- Foto nítida (não borrada)
+- Sem óculos escuros cobrindo olhos
+- Selfie autêntica (não print/foto de foto)
 
 REJEITAR SE:
-Documento invisível/ilegível; Print/screenshot; Baixa qualidade; Documento coberto; Não segurando documento; Foto de foto
+- Rosto cortado ou não visível
+- Print de tela ou foto de tela
+- Múltiplas pessoas
+- Foto muito escura/borrada
+- Óculos escuros impedindo identificação
+- Pessoa não olhando para frente
 
-IMPORTANTE: Será usada para comparação facial.
+IMPORTANTE: Esta selfie será usada para comparação facial com RG/CNH e foto 3x4.
+
 JSON:
 {
   "valid": boolean,
   "confidence": 0-100,
   "recommendation": "approved"|"rejected"|"review",
-  "reason": "explicação",
+  "reason": "Explicação clara",
   "issues": ["problemas"]
 }
 `

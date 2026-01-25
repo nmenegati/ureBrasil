@@ -58,31 +58,31 @@ const documentConfigs: DocumentConfig[] = [
   {
     type: 'rg',
     label: 'Documento de Identidade',
-    description: 'Pode ser RG, CNH ou passaporte. Envie fotos nítidas da frente e do verso.',
+    description: 'Envie RG/CIN, CNH ou Passaporte. Fotos nítidas da frente e do verso.',
     icon: FileText,
-    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
-    maxSizeMB: 5
-  },
-  {
-    type: 'matricula',
-    label: 'Comprovante de Matrícula',
-    description: 'Pode ser declaração, boleto recente ou print do portal do aluno.',
-    icon: GraduationCap,
     acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
     maxSizeMB: 5
   },
   {
     type: 'foto',
     label: 'Foto 3x4',
-    description: 'Fundo branco ou azul, sem óculos',
+    description: 'Envie foto 3x4 com fundo neutro, sem óculos e com boa iluminação.',
     icon: Camera,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
   },
   {
+    type: 'matricula',
+    label: 'Comprovante de Matrícula',
+    description: 'Envie Declaração, Comprovante de Matrícula ou Boleto recente.',
+    icon: GraduationCap,
+    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    maxSizeMB: 5
+  },
+  {
     type: 'selfie',
-    label: 'Selfie com Documento',
-    description: 'Tire uma selfie segurando o documento ao lado do rosto. Isso protege você contra uso indevido.',
+    label: 'Selfie do Rosto',
+    description: 'Tire uma selfie com boa iluminação, olhando para a câmera para validar sua identidade.',
     icon: UserCircle,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
@@ -395,6 +395,7 @@ export default function UploadDocumentos() {
     const isUploading = uploading[config.type];
     const progress = uploadProgress[config.type] || 0;
     const IconComponent = config.icon;
+    const status = doc?.status;
     
     const handleDragOver = (e: React.DragEvent) => {
       e.preventDefault();
@@ -458,8 +459,10 @@ export default function UploadDocumentos() {
     return (
       <div 
         className={cn(
-          "bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors shadow-lg shadow-black/5",
-          doc ? "border-solid border-white/20" : "border-slate-300 dark:border-slate-600 hover:border-primary/50"
+          "bg-sky-900/15 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors shadow-lg shadow-black/5",
+          doc
+            ? "border-solid border-slate-200 dark:border-slate-600"
+            : "border-slate-300 dark:border-slate-600 hover:border-primary/50"
         )}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -471,8 +474,19 @@ export default function UploadDocumentos() {
               <IconComponent className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 dark:text-white">{config.label}</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300">{config.description}</p>
+              <h3 className="font-semibold text-slate-900 dark:text-white">
+                {config.label}
+                {status === 'approved' && (
+                  <span className="ml-2 text-xs font-semibold text-green-600 dark:text-green-400">
+                    ✓ Aprovado
+                  </span>
+                )}
+              </h3>
+              {status !== 'approved' && (
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  {config.description}
+                </p>
+              )}
             </div>
           </div>
           {getStatusBadge()}
@@ -491,18 +505,35 @@ export default function UploadDocumentos() {
             <img 
               src={preview} 
               alt="Preview" 
-              className="w-full h-40 object-cover rounded-lg"
+              className={cn(
+                "object-cover rounded-lg mx-auto",
+                status === 'approved' ? "w-28 h-20" : "w-full h-40"
+              )}
             />
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-sm text-slate-600 dark:text-slate-300 truncate flex-1">{doc.file_name}</p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => inputRef.current?.click()}
-                className="text-primary hover:text-primary/80 hover:bg-primary/10"
+            <div
+              className={cn(
+                "mt-2 flex items-center",
+                status === 'approved' ? "justify-center" : "justify-between"
+              )}
+            >
+              <p
+                className={cn(
+                  "text-sm text-slate-600 dark:text-slate-300 truncate",
+                  status === 'approved' ? "text-center" : "flex-1"
+                )}
               >
-                Trocar
-              </Button>
+                {doc.file_name}
+              </p>
+              {status !== 'approved' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => inputRef.current?.click()}
+                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                >
+                  Trocar
+                </Button>
+              )}
             </div>
             <input
               ref={inputRef}
@@ -518,16 +549,18 @@ export default function UploadDocumentos() {
               <File className="w-8 h-8 text-slate-500 dark:text-slate-400" />
               <p className="text-sm text-slate-900 dark:text-white truncate flex-1">{doc.file_name}</p>
             </div>
-            <div className="flex justify-end mt-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => inputRef.current?.click()}
-                className="text-primary hover:text-primary/80 hover:bg-primary/10"
-              >
-                Trocar
-              </Button>
-            </div>
+            {status !== 'approved' && (
+              <div className="flex justify-end mt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => inputRef.current?.click()}
+                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                >
+                  Trocar
+                </Button>
+              </div>
+            )}
             <input
               ref={inputRef}
               type="file"
@@ -671,15 +704,15 @@ export default function UploadDocumentos() {
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       
-      <main className="relative z-10 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto">
-        <div>
+      <main className="relative z-10 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Validar Minha Carteirinha Estudantil
+              Vamos Preparar Sua Carteirinha URE
             </h1>
             <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-              Para garantir a autenticidade do documento e evitar fraudes, solicitamos o envio de alguns arquivos. O processo é rápido e seguro.
+              Envie seus documentos para aprovação. O processo é rápido e seguro.
               <br />
               <span className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1 mt-2">
                 <CheckCircle className="w-4 h-4" /> Seus dados estão protegidos pela LGPD
@@ -688,7 +721,7 @@ export default function UploadDocumentos() {
           </div>
         
         {/* Grid de cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 max-w-md sm:max-w-none mx-auto">
           {documentConfigs.map(config => (
             <DocumentCard key={config.type} config={config} />
           ))}

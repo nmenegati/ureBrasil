@@ -437,6 +437,7 @@ export type Database = {
           course: string | null
           cpf: string
           created_at: string
+          education_level: string | null
           enrollment_number: string | null
           full_name: string
           id: string
@@ -467,6 +468,7 @@ export type Database = {
           course?: string | null
           cpf: string
           created_at?: string
+          education_level?: string | null
           enrollment_number?: string | null
           full_name: string
           id?: string
@@ -497,6 +499,7 @@ export type Database = {
           course?: string | null
           cpf?: string
           created_at?: string
+          education_level?: string | null
           enrollment_number?: string | null
           full_name?: string
           id?: string
