@@ -7,10 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Header } from '@/components/Header';
+import { ProgressBar } from '@/components/ProgressBar';
 import { 
   FileText, GraduationCap, Camera, UserCircle,
   Loader2, CheckCircle, XCircle, RefreshCw, Clock
 } from 'lucide-react';
+import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.jpg";
+import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
+import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
+import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
 
 interface DocumentRecord {
   id: string;
@@ -23,8 +28,8 @@ interface DocumentRecord {
 }
 
 const documentConfigs = [
-  { type: 'rg', label: 'RG ou CNH', icon: FileText },
   { type: 'matricula', label: 'Comprovante de Matrícula', icon: GraduationCap },
+  { type: 'rg', label: 'RG ou CNH', icon: FileText },
   { type: 'foto', label: 'Foto 3x4', icon: Camera },
   { type: 'selfie', label: 'Selfie com Documento', icon: UserCircle },
 ];
@@ -104,6 +109,8 @@ export default function StatusValidacao() {
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [isLawStudentView, setIsLawStudentView] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
 
   const loadDocuments = useCallback(async (studentId: string) => {
     const { data, error } = await supabase
@@ -127,7 +134,7 @@ export default function StatusValidacao() {
 
     const { data: profileData, error: profileError } = await supabase
       .from('student_profiles')
-      .select('id')
+      .select('id, is_law_student, education_level')
       .eq('user_id', user.id)
       .single();
 
@@ -138,6 +145,12 @@ export default function StatusValidacao() {
     }
 
     setProfileId(profileData.id);
+
+    const isLaw =
+      profileData.is_law_student &&
+      (profileData.education_level === 'graduacao' || profileData.education_level === 'pos');
+    setIsLawStudentView(!!isLaw);
+    setImageIndex(Math.floor(Math.random() * 2));
     await loadDocuments(profileData.id);
   }, [user?.id, navigate, loadDocuments]);
 
@@ -166,26 +179,6 @@ export default function StatusValidacao() {
     return () => clearInterval(interval);
   }, [profileId, loadDocuments]);
 
-  // Verificar se todos foram processados
-  useEffect(() => {
-    if (documents.length < 4) return;
-    
-    const allProcessed = documents.every(d => 
-      d.status === 'approved' || d.status === 'rejected'
-    );
-    
-    if (allProcessed) {
-      const allApproved = documents.every(d => d.status === 'approved');
-      
-      if (allApproved) {
-        toast.success('Todos os documentos foram aprovados! 🎉');
-        setTimeout(() => navigate('/dashboard'), 2000);
-      } else if (documents.some(d => d.status === 'rejected')) {
-        toast.error('Alguns documentos precisam ser corrigidos');
-      }
-    }
-  }, [documents, navigate]);
-
   const handleRefresh = async () => {
     if (!profileId) return;
     setRefreshing(true);
@@ -195,6 +188,11 @@ export default function StatusValidacao() {
 
   const hasRejected = documents.some(d => d.status === 'rejected');
   const allPending = documents.length > 0 && documents.every(d => d.status === 'pending');
+
+  const direitoImages = [carteirinhaDireitoImg1, carteirinhaDireitoImg2];
+  const geralImages = [carteirinhaGeralImg1, carteirinhaGeralImg2];
+  const images = isLawStudentView ? direitoImages : geralImages;
+  const imagemCarteirinha = images[imageIndex] || images[0];
 
   if (authLoading || loadingDocs) {
     return (
@@ -208,46 +206,55 @@ export default function StatusValidacao() {
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <div>
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-            {documents.length === 4 && documents.every(d => d.status === 'approved') ? (
-              <CheckCircle className="w-8 h-8 text-green-500" />
-            ) : allPending ? (
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            ) : hasRejected ? (
-              <XCircle className="w-8 h-8 text-red-500" />
-            ) : (
-              <CheckCircle className="w-8 h-8 text-green-500" />
-            )}
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {documents.length === 4 && documents.every(d => d.status === 'approved')
-              ? 'Tudo certo! Sua carteirinha está ativa 🎓'
-              : hasRejected 
-                ? 'Documentos precisam de correção' 
-                : 'Estamos analisando seus documentos'
-            }
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            {documents.length === 4 && documents.every(d => d.status === 'approved')
-              ? 'Você será redirecionado para o painel em instantes.'
-              : hasRejected 
-                ? 'Veja abaixo quais documentos precisam ser reenviados.'
-                : 'Normalmente esse processo leva apenas alguns minutos.'
-            }
-          </p>
+      <main className="container mx-auto px-4 pt-4 pb-8 max-w-2xl">
+        <div className="mb-4">
+          <ProgressBar currentStep="documents" />
         </div>
-
-        {documents.length === 4 && documents.every(d => d.status === 'approved') && (
-          <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-500/10 dark:border-green-500/30">
-            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-            <AlertDescription className="text-green-600 dark:text-green-300">
-              Todos os documentos foram aprovados! Redirecionando para o painel...
-            </AlertDescription>
-          </Alert>
-        )}
+        <div>
+        <div className="mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full">
+              {documents.length === 4 && documents.every(d => d.status === 'approved') ? (
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              ) : allPending ? (
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              ) : hasRejected ? (
+                <XCircle className="w-8 h-8 text-red-500" />
+              ) : (
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-4 items-center">
+            <div className="col-span-3 text-center">
+              <h1 className="text-2xl font-bold text-foreground">
+                {documents.length === 4 && documents.every(d => d.status === 'approved')
+                  ? 'Documentos aprovados! Tudo pronto para gerar sua carteirinha. 🤩'
+                  : hasRejected 
+                    ? 'Documentos precisam de correção' 
+                    : 'Estamos analisando seus documentos'
+                }
+              </h1>
+              <p className="text-sm text-muted-foreground mt-2">
+                {documents.length === 4 && documents.every(d => d.status === 'approved')
+                  ? 'Você está a um passo de ter sua carteirinha '
+                  : hasRejected 
+                    ? 'Veja abaixo quais documentos precisam ser reenviados.'
+                    : 'Normalmente esse processo leva apenas alguns minutos.'
+                }
+              </p>
+            </div>
+            <div className="col-span-1 lg:justify-self-center">
+              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border border-white/20 p-1.5 shadow-lg shadow-black/5 flex items-center justify-center w-full lg:w-[180px] mx-auto">
+                <img
+                  src={imagemCarteirinha}
+                  alt="Modelo da carteirinha"
+                  className="rounded-lg shadow-md w-full h-auto object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {hasRejected && (
           <Alert className="mb-6 bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30">
@@ -267,7 +274,7 @@ export default function StatusValidacao() {
           </Alert>
         )}
 
-        <div className="space-y-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           {documentConfigs.map(config => {
             const doc = documents.find(d => d.type === config.type);
             return <DocCard key={config.type} config={config} doc={doc} />;
@@ -312,10 +319,10 @@ export default function StatusValidacao() {
           
           {documents.length === 4 && documents.every(d => d.status === 'approved') && (
             <Button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/carteirinha')}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white"
             >
-              Ir para o Painel →
+              Ir para a Carteirinha →
             </Button>
           )}
         </div>

@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
+import { ProgressBar } from "@/components/ProgressBar";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -384,6 +385,11 @@ export default function Pagamento() {
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       <main className="py-8 px-4">
+        {!isStandalonePhysical && (
+          <div className="container mx-auto max-w-4xl mb-4">
+            <ProgressBar currentStep="payment" />
+          </div>
+        )}
         <Card className="max-w-2xl mx-auto">
           <CardContent className="p-6 space-y-5">
             <div className="flex items-center gap-1.5 mb-1 text-green-600">

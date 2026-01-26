@@ -97,12 +97,16 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
       const { data: card } = await supabase
         .from('student_cards')
-        .select('status, card_number, is_physical')
+        .select('status, card_number, digital_card_url, is_physical')
         .eq('student_id', profile.id)
         .maybeSingle();
-      const activeCard =
-        !!card && card.status === 'active' && !!card.card_number;
-      setHasActiveCard(activeCard);
+
+      const hasDigitalCard =
+        !!card &&
+        card.status === 'active' &&
+        !!card.digital_card_url;
+      setHasActiveCard(hasDigitalCard);
+
       const physicalCard = !!card && card.is_physical === true;
       setHasPhysicalCard(physicalCard);
     };
@@ -123,6 +127,100 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const profileLink = isProfileComplete ? '/perfil' : '/complete-profile';
   const showPhysicalOption = hasActiveCard && !hasPhysicalCard;
 
+  const handleMyCardClick = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('student_profiles')
+      .select('id, profile_completed, is_law_student, education_level, manual_review_requested, face_validated, terms_accepted')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      navigate('/complete-profile');
+      return;
+    }
+
+    if (profile.manual_review_requested && !profile.face_validated) {
+      navigate('/aguardando-aprovacao');
+      return;
+    }
+
+    if (!profile.profile_completed) {
+      navigate('/complete-profile');
+      return;
+    }
+
+    const { data: payments } = await supabase
+      .from('payments')
+      .select('status')
+      .eq('student_id', profile.id);
+
+    const hasPayment = (payments || []).some((p) => p.status === 'approved');
+
+    if (!hasPayment) {
+      const isLawStudent =
+        profile.is_law_student &&
+        (profile.education_level === 'graduacao' || profile.education_level === 'pos');
+
+      if (isLawStudent) {
+        navigate('/escolher-plano');
+      } else {
+        navigate('/pagamento');
+      }
+      return;
+    }
+
+    const { data: docs } = await supabase
+      .from('documents')
+      .select('status')
+      .eq('student_id', profile.id);
+
+    const approvedCount = (docs || []).filter((d) => d.status === 'approved').length;
+    const docsOk = approvedCount === 4;
+    const faceOk = !!profile.face_validated;
+    const termsOk = !!profile.terms_accepted;
+
+    if (!docsOk || !faceOk || !termsOk) {
+      navigate('/upload-documentos');
+      return;
+    }
+
+    const { data: card } = await supabase
+      .from('student_cards')
+      .select('status, digital_card_url')
+      .eq('student_id', profile.id)
+      .maybeSingle();
+
+    if (card?.digital_card_url || card?.status === 'active') {
+      navigate('/carteirinha');
+    } else {
+      navigate('/gerar-carteirinha');
+    }
+  };
+
+  const handleMyProfileClick = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('student_profiles')
+      .select('profile_completed')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profile || !profile.profile_completed) {
+      navigate('/complete-profile');
+    } else {
+      navigate('/perfil');
+    }
+  };
+
   const avatarMenuItems: {
     label: string;
     icon: typeof User;
@@ -135,26 +233,26 @@ export function Header({ variant = 'app' }: HeaderProps) {
     avatarMenuItems.push({
       label: 'Meu Perfil',
       icon: User,
-      onClick: () => navigate(profileLink),
+      onClick: handleMyProfileClick,
     });
   } else if (isPerfilPage) {
     avatarMenuItems.push({
       label: 'Minha Carteirinha',
       icon: CreditCard,
-      onClick: () => navigate(hasActiveCard ? '/carteirinha' : '/dashboard'),
+      onClick: handleMyCardClick,
       primary: true,
     });
   } else {
     avatarMenuItems.push({
       label: 'Minha Carteirinha',
       icon: CreditCard,
-      onClick: () => navigate(hasActiveCard ? '/carteirinha' : '/dashboard'),
+      onClick: handleMyCardClick,
       primary: true,
     });
     avatarMenuItems.push({
       label: 'Meu Perfil',
       icon: User,
-      onClick: () => navigate(profileLink),
+      onClick: handleMyProfileClick,
     });
   }
 

@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Info, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/Header';
+import { ProgressBar } from '@/components/ProgressBar';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const educationLevels = [
   { id: 'fundamental', label: 'Ensino Fundamental' },
@@ -55,7 +57,7 @@ const fieldConfiguration = {
   graduacao: {
     showCourseField: true,
     courseLabel: 'Curso *',
-    coursePlaceholder: 'Ex: Direito',
+    coursePlaceholder: 'Ex: Odontologia',
     periodLabel: 'Semestre *',
     periodPlaceholder: 'Selecione o semestre',
     periodOptions: [
@@ -109,10 +111,13 @@ export default function CompleteProfile() {
   const [educationLevel, setEducationLevel] = useState<'fundamental' | 'medio' | 'tecnico' | 'graduacao' | 'pos'>('graduacao');
   const [loading, setLoading] = useState(false);
   const [isCepResolved, setIsCepResolved] = useState(false);
+  const [courseType, setCourseType] = useState<'direito' | 'outro'>('outro');
+  const [customCourseName, setCustomCourseName] = useState('');
 
   const config = fieldConfiguration[educationLevel];
   const basePeriodOptions =
     (config.showCourseField ? config.periodOptions : config.seriesOptions) || [];
+  const canBeLawStudent = educationLevel === 'graduacao' || educationLevel === 'pos';
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -125,7 +130,9 @@ export default function CompleteProfile() {
       if (!user) return;
       const { data } = await supabase
         .from('student_profiles')
-        .select('cep, street, number, complement, neighborhood, city, state, institution, course, period, enrollment_number, education_level')
+        .select(
+          'cep, street, number, complement, neighborhood, city, state, institution, course, period, enrollment_number, education_level, is_law_student'
+        )
         .eq('user_id', user.id)
         .maybeSingle();
       if (data) {
@@ -140,8 +147,29 @@ export default function CompleteProfile() {
         setCourse(data.course || '');
         setPeriod(data.period || '');
         setEnrollmentNumber(data.enrollment_number || '');
-        if (data.education_level === 'fundamental' || data.education_level === 'medio' || data.education_level === 'tecnico' || data.education_level === 'graduacao' || data.education_level === 'pos') {
+        if (
+          data.education_level === 'fundamental' ||
+          data.education_level === 'medio' ||
+          data.education_level === 'tecnico' ||
+          data.education_level === 'graduacao' ||
+          data.education_level === 'pos'
+        ) {
           setEducationLevel(data.education_level);
+        }
+
+        const isGradOrPost =
+          data.education_level === 'graduacao' ||
+          data.education_level === 'pos';
+
+        if (isGradOrPost && data.course === 'Direito') {
+          setCourseType('direito');
+          setCustomCourseName('');
+        } else if (isGradOrPost) {
+          setCourseType('outro');
+          setCustomCourseName(data.course || '');
+        } else {
+          setCourseType('outro');
+          setCustomCourseName('');
         }
       }
     };
@@ -222,6 +250,10 @@ export default function CompleteProfile() {
 
     setLoading(true);
 
+    const isLawStudent =
+      (educationLevel === 'graduacao' || educationLevel === 'pos') &&
+      courseType === 'direito';
+
     // ID do plano Geral Digital para não-Direito
     const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
 
@@ -243,6 +275,7 @@ export default function CompleteProfile() {
         period,
         enrollment_number: enrollmentNumber,
         education_level: educationLevel,
+        is_law_student: isLawStudent,
         profile_completed: true,
         updated_at: new Date().toISOString(),
       })
@@ -255,18 +288,11 @@ export default function CompleteProfile() {
       return;
     }
 
-    // Buscar perfil atualizado para verificar is_law_student (trigger já atualizou)
-    const { data: updatedProfile } = await supabase
-      .from('student_profiles')
-      .select('is_law_student')
-      .eq('user_id', user.id)
-      .single();
-
     toast.success('Perfil completado com sucesso!');
     setLoading(false);
 
     // Redirecionar baseado em is_law_student
-    if (updatedProfile?.is_law_student) {
+    if (isLawStudent) {
       // Estudante de Direito → pode escolher plano
       window.location.href = '/escolher-plano';
     } else {
@@ -286,23 +312,18 @@ export default function CompleteProfile() {
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
-
-      {/* Content */}
-      <div className="flex items-center justify-center p-4 py-8">
-        <div className="w-full max-w-2xl">
-          {/* Card */}
-          <div className="bg-card rounded-2xl shadow-xl border border-border p-6 md:p-8">
-            <div className="space-y-6">
+      <main className="py-8 px-4">
+        <div className="container mx-auto max-w-4xl mb-4">
+          <ProgressBar currentStep="profile" />
+        </div>
+        <div className="flex items-center justify-center">
+          <div className="w-full max-w-2xl">
+            <div className="bg-card rounded-2xl shadow-xl border border-border p-6 md:p-8">
+              <div className="space-y-6">
               {/* Título */}
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-foreground">Complete seu perfil</h1>
                 <p className="text-muted-foreground">Precisamos de mais algumas informações</p>
-                <div className="flex items-center gap-2 mt-4">
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary w-1/3"></div>
-                  </div>
-                  <span className="text-sm text-muted-foreground">Etapa 1 de 3</span>
-                </div>
               </div>
 
               {/* Formulário */}
@@ -374,9 +395,13 @@ export default function CompleteProfile() {
                       <Input
                         id="number"
                         type="text"
+                        inputMode="numeric"
                         placeholder="Ex: 123, 54, 1002"
                         value={number}
-                        onChange={(e) => setNumber(e.target.value)}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setNumber(digitsOnly);
+                        }}
                         maxLength={10}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                         required
@@ -500,6 +525,8 @@ export default function CompleteProfile() {
                             setEducationLevel(level.id as typeof educationLevel);
                             setCourse('');
                             setPeriod('');
+                            setCourseType('outro');
+                            setCustomCourseName('');
                           }}
                         >
                           {level.label}
@@ -524,24 +551,79 @@ export default function CompleteProfile() {
                   </div>
 
                   {config.showCourseField && (
-                    <div className="space-y-2">
-                      <Label htmlFor="course" className="text-foreground">
-                        {config.courseLabel}
-                      </Label>
-                      <Input
-                        id="course"
-                        type="text"
-                        placeholder={config.coursePlaceholder}
-                        value={course}
-                        onChange={(e) => setCourse(e.target.value)}
-                        maxLength={70}
-                        className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                        required
-                      />
-                      <span className="text-xs text-muted-foreground block text-right">
-                        {course.length}/70
-                      </span>
-                    </div>
+                    canBeLawStudent ? (
+                      <div className="space-y-3">
+                        <Label className="text-foreground">Tipo de curso *</Label>
+                        <RadioGroup
+                          value={courseType}
+                          onValueChange={(value: 'direito' | 'outro') => {
+                            setCourseType(value);
+                            if (value === 'direito') {
+                              setCourse('Direito');
+                              setCustomCourseName('');
+                            } else {
+                              setCourse('');
+                            }
+                          }}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="direito" id="direito" />
+                            <Label htmlFor="direito" className="font-normal cursor-pointer">
+                              Curso de Direito
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="outro" id="outro" />
+                            <Label htmlFor="outro" className="font-normal cursor-pointer">
+                              Outro curso
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                        {courseType === 'outro' && (
+                          <div className="space-y-2">
+                            <Label htmlFor="course" className="text-foreground">
+                              {config.courseLabel}
+                            </Label>
+                            <Input
+                              id="course"
+                              type="text"
+                              placeholder={config.coursePlaceholder}
+                              value={customCourseName}
+                              onChange={(e) => {
+                                setCustomCourseName(e.target.value);
+                                setCourse(e.target.value);
+                              }}
+                              maxLength={150}
+                              className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                              required
+                            />
+                            <span className="text-xs text-muted-foreground block text-right">
+                              {customCourseName.length}/150
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="course" className="text-foreground">
+                          {config.courseLabel}
+                        </Label>
+                        <Input
+                          id="course"
+                          type="text"
+                          placeholder={config.coursePlaceholder}
+                          value={course}
+                          onChange={(e) => setCourse(e.target.value)}
+                          maxLength={70}
+                          className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                          required
+                        />
+                        <span className="text-xs text-muted-foreground block text-right">
+                          {course.length}/70
+                        </span>
+                      </div>
+                    )
                   )}
 
                   <div className="flex flex-row gap-4">
@@ -609,6 +691,7 @@ export default function CompleteProfile() {
           </div>
         </div>
       </div>
+      </main>
     </div>
   );
 }

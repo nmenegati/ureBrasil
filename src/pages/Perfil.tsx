@@ -713,7 +713,7 @@ export default function Perfil() {
                   <div className="flex items-center gap-1.5 pb-0 sm:pb-2">
                     <Info className="h-4 w-4 text-primary shrink-0" />
                     <span className="text-sm text-muted-foreground">
-                      Altere o CEP para atualizar o endereço automaticamente.
+                      Altere o CEP para atualizar o endereço.
                     </span>
                   </div>
                 </div>
@@ -874,10 +874,6 @@ export default function Perfil() {
                   />
                   <span className="text-xs text-muted-foreground block text-right mt-1">{securityForm.newEmail.length}/100</span>
                 </div>
-                <div className="bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 p-3 rounded-lg flex items-start gap-2 text-sm">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>Você receberá um email de confirmação. O email só será alterado após clicar no link de confirmação.</span>
-                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                   <div>
                     <Label htmlFor="currentPasswordForEmail">Senha Atual *</Label>
@@ -887,7 +883,7 @@ export default function Perfil() {
                         type={showCurrentPasswordEmail ? 'text' : 'password'}
                         value={securityForm.currentPasswordForEmail}
                         onChange={(e) => setSecurityForm(prev => ({ ...prev, currentPasswordForEmail: e.target.value }))}
-                        placeholder="Digite sua senha atual"
+                        placeholder="Digite sua senha"
                         className="pr-10"
                       />
                       <button
@@ -916,6 +912,10 @@ export default function Perfil() {
                       Clique para solicitar a troca
                     </p>
                   </div>
+                </div>
+                <div className="bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 p-3 rounded-lg flex items-start gap-2 text-sm">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>Esta alteração só será realizada após você clicar no link do email de confirmação.</span>
                 </div>
               </div>
 

@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePagBank } from "@/hooks/usePagBank";
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
+import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -103,6 +104,7 @@ export default function Checkout() {
     birth_date: string;
   } | null>(null);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isValidLawStudent, setIsValidLawStudent] = useState(false);
 
   useEffect(() => {
     const fetchPlanAndProfile = async () => {
@@ -112,7 +114,7 @@ export default function Checkout() {
         // Buscar perfil COM dados necessários para PagBank
         const { data: profile, error: profileError } = await supabase
           .from("student_profiles")
-          .select("plan_id, cpf, phone, birth_date")
+          .select("plan_id, cpf, phone, birth_date, is_law_student, education_level")
           .eq("user_id", user.id)
           .single();
 
@@ -128,6 +130,11 @@ export default function Checkout() {
           phone: profile.phone,
           birth_date: profile.birth_date,
         });
+
+        const validLaw =
+          profile.is_law_student === true &&
+          (profile.education_level === "graduacao" || profile.education_level === "pos");
+        setIsValidLawStudent(validLaw);
 
         // === MODO UPSELL ===
         if (isUpsell && originalPaymentId) {
@@ -426,6 +433,9 @@ export default function Checkout() {
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       <main className="py-8 px-4">
+        <div className="container mx-auto max-w-4xl mb-4">
+          <ProgressBar currentStep="payment" />
+        </div>
         <Card className="max-w-2xl mx-auto">
           <CardContent className="p-6 space-y-5">
             <div className="flex items-center gap-1.5 mb-1 text-green-600">

@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/Header';
+import { ProgressBar } from '@/components/ProgressBar';
 import { Check, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BorderTrail } from '@/components/ui/border-trail';
@@ -66,7 +67,7 @@ export default function EscolherPlano() {
       // Buscar perfil com is_law_student
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('id, is_law_student')
+        .select('id, is_law_student, education_level')
         .eq('user_id', user.id)
         .single();
 
@@ -164,6 +165,7 @@ export default function EscolherPlano() {
       
       <main className="py-8 px-4">
         <div className="container mx-auto max-w-4xl">
+          <ProgressBar currentStep="payment" />
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">

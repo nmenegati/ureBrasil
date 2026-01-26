@@ -60,7 +60,7 @@ export default function Login() {
       // 2. Buscar perfil com is_law_student
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('id, profile_completed, is_law_student')
+        .select('id, profile_completed, is_law_student, education_level, manual_review_requested, face_validated, terms_accepted')
         .eq('user_id', data.user.id)
         .maybeSingle();
 
@@ -70,13 +70,19 @@ export default function Login() {
         return;
       }
 
-      // 3. Verificar perfil completo (ANTES do pagamento no novo fluxo)
+      // 3. Redireciono imediato se está em revisão manual
+      if (profile.manual_review_requested && !profile.face_validated) {
+        navigate('/aguardando-aprovacao');
+        return;
+      }
+
+      // 4. Verificar perfil completo (ANTES do pagamento no novo fluxo)
       if (!profile.profile_completed) {
         window.location.href = '/complete-profile';
         return;
       }
 
-      // 4. Verificar pagamento aprovado
+      // 5. Verificar pagamento aprovado
       const { data: payment } = await supabase
         .from('payments')
         .select('id')
@@ -98,7 +104,7 @@ export default function Login() {
         return;
       }
 
-      // 5. Verificar carteirinha ativa
+      // 6. Verificar carteirinha ativa
       const { data: card } = await supabase
         .from('student_cards')
         .select('status')
@@ -110,20 +116,24 @@ export default function Login() {
         return;
       }
 
-      // 6. Verificar documentos aprovados
+      // 7. Verificar documentos aprovados
       const { count: docsApproved } = await supabase
         .from('documents')
         .select('id', { count: 'exact', head: true })
         .eq('student_id', profile.id)
         .eq('status', 'approved');
 
-      if ((docsApproved || 0) < 4) {
+      const docsOk = (docsApproved || 0) === 4;
+      const faceOk = !!profile.face_validated;
+      const termsOk = !!profile.terms_accepted;
+
+      if (!docsOk || !faceOk || !termsOk) {
         window.location.href = '/upload-documentos';
         return;
       }
 
-      // 7. Tudo OK - ir para dashboard
-      window.location.href = '/dashboard';
+      // 8. Tudo OK para gerar carteira e ainda não há carteirinha ativa
+      navigate('/gerar-carteirinha');
       return;
     }
     

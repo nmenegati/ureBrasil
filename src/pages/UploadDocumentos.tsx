@@ -8,7 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { compressImage } from '@/lib/imageCompression';
 import { Header } from '@/components/Header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ProgressBar } from '@/components/ProgressBar';
 import { 
   FileText, 
   GraduationCap, 
@@ -52,9 +55,27 @@ interface StudentProfile {
   full_name: string;
   cpf: string;
   profile_completed: boolean;
+  is_law_student?: boolean;
+  education_level?: string;
+  face_validated?: boolean;
+  face_validation_attempts?: number;
+  manual_review_requested?: boolean;
+  institution?: string | null;
+  course?: string | null;
+  period?: string | null;
+  enrollment_number?: string | null;
+  birth_date?: string | null;
 }
 
 const documentConfigs: DocumentConfig[] = [
+  {
+    type: 'matricula',
+    label: 'Comprovante de Matrícula',
+    description: 'Envie Declaração, Comprovante de Matrícula ou Boleto recente.',
+    icon: GraduationCap,
+    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    maxSizeMB: 5
+  },
   {
     type: 'rg',
     label: 'Documento de Identidade',
@@ -69,14 +90,6 @@ const documentConfigs: DocumentConfig[] = [
     description: 'Envie foto 3x4 com fundo neutro, sem óculos e com boa iluminação.',
     icon: Camera,
     acceptedTypes: ['image/jpeg', 'image/png'],
-    maxSizeMB: 5
-  },
-  {
-    type: 'matricula',
-    label: 'Comprovante de Matrícula',
-    description: 'Envie Declaração, Comprovante de Matrícula ou Boleto recente.',
-    icon: GraduationCap,
-    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
     maxSizeMB: 5
   },
   {
@@ -158,7 +171,6 @@ export default function UploadDocumentos() {
         .maybeSingle();
       if (card?.status === 'active') {
         toast.error('Documentos não podem ser alterados com carteirinha ativa. Entre em contato com suporte.');
-        navigate('/carteirinha');
       }
     };
     checkIfLocked();
@@ -254,12 +266,21 @@ export default function UploadDocumentos() {
     try {
       setUploading(prev => ({ ...prev, [type]: true }));
       setUploadProgress(prev => ({ ...prev, [type]: 0 }));
+
+      let fileToUpload = file;
+      if (file.type.startsWith('image/') && file.size > 1024 * 1024) {
+        toast.info('Otimizando imagem...');
+        const isDocument = type === 'rg' || type === 'matricula';
+        const maxSize = isDocument ? 2400 : 1920;
+        const quality = isDocument ? 0.9 : 0.8;
+        fileToUpload = await compressImage(file, maxSize, maxSize, quality);
+      }
       
       // Validações
-      if (file.size > config.maxSizeMB * 1024 * 1024) {
+      if (fileToUpload.size > config.maxSizeMB * 1024 * 1024) {
         throw new Error(`Arquivo maior que ${config.maxSizeMB}MB`);
       }
-      if (!config.acceptedTypes.includes(file.type)) {
+      if (!config.acceptedTypes.includes(fileToUpload.type)) {
         throw new Error('Tipo de arquivo não aceito');
       }
       
@@ -273,13 +294,13 @@ export default function UploadDocumentos() {
       
       // Path usando USER.ID para satisfazer RLS policy do storage
       // A policy verifica: (storage.foldername(name))[1] = (auth.uid())::text
-      const ext = file.name.split('.').pop();
+      const ext = fileToUpload.name.split('.').pop();
       const filePath = `${user.id}/${type}/${Date.now()}.${ext}`;
       
       // Upload para Storage
       const { error: storageError } = await supabase.storage
         .from('documents')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, fileToUpload, { upsert: true });
         
       if (storageError) {
         throw storageError;
@@ -298,9 +319,9 @@ export default function UploadDocumentos() {
           .from('documents')
           .update({
             file_url: filePath,
-            file_name: file.name,
-            file_size: file.size,
-            mime_type: file.type,
+            file_name: fileToUpload.name,
+            file_size: fileToUpload.size,
+            mime_type: fileToUpload.type,
             status: 'pending',
             // Limpar campos de rejeição ao reenviar
             rejection_reason: null,
@@ -323,9 +344,9 @@ export default function UploadDocumentos() {
             student_id: profile.id,
             type: type,
             file_url: filePath,
-            file_name: file.name,
-            file_size: file.size,
-            mime_type: file.type,
+            file_name: fileToUpload.name,
+            file_size: fileToUpload.size,
+            mime_type: fileToUpload.type,
             status: 'pending'
           })
           .select('id')
@@ -624,6 +645,15 @@ export default function UploadDocumentos() {
     return doc && doc.status === "approved";
   });
 
+  const termsOk = termsAccepted || termsAlreadyAccepted;
+  const faceOk = !!profile?.face_validated;
+  const canGenerateCard = allDocsApproved && faceOk && termsOk;
+
+  const canSubmit =
+    allDocsUploaded &&
+    allDocsApproved &&
+    termsOk;
+
   const handleSubmit = async () => {
     if (!termsAccepted && !termsAlreadyAccepted) {
       toast.error('Você precisa aceitar a declaração de veracidade');
@@ -703,9 +733,9 @@ export default function UploadDocumentos() {
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
-      
       <main className="relative z-10 px-4 py-6 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
+          <ProgressBar currentStep="documents" />
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
@@ -720,55 +750,37 @@ export default function UploadDocumentos() {
             </p>
           </div>
         
-        {/* Grid de cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 max-w-md sm:max-w-none mx-auto">
           {documentConfigs.map(config => (
             <DocumentCard key={config.type} config={config} />
           ))}
         </div>
-        
-        {/* Contador de progresso - logo abaixo das imagens */}
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl p-4 mb-6 flex items-center justify-between shadow-lg shadow-black/5 border border-white/20">
-          <span className="text-slate-600 dark:text-slate-300">
-            Documentos enviados: <span className="text-primary font-semibold">{uploadedCount}</span> de 4
-          </span>
-          <Progress 
-            value={(uploadedCount / 4) * 100} 
-            className="w-32 h-2"
-          />
-        </div>
-        
-        {/* Texto de segurança (tema verde) - abaixo do contador */}
-        <div className="mb-8">
-          <div className="max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
-            <p className="text-sm md:text-base text-green-900 dark:text-green-200 text-center">
-              <Shield className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
-              Se algum arquivo não estiver legível, avisaremos você para corrigir.
-            </p>
-          </div>
-        </div>
-        
+
+        <Alert className="bg-blue-50 border-blue-200 py-2 mb-6">
+          <AlertDescription className="text-sm text-gray-700 flex items-center gap-2">
+            <span>🔍</span>
+            <span>Validação facial após aprovação da documentação. Acompanhe o status na página de validação.</span>
+          </AlertDescription>
+        </Alert>
+
         {allDocsUploaded && !termsAlreadyAccepted && (
-          <div className="mb-6">
-            <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/10">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <Checkbox
-                  checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                  className="mt-0.5 border-yellow-500 data-[state=checked]:bg-yellow-500 data-[state=checked]:border-yellow-500"
-                />
-                <span className="text-sm text-slate-600 dark:text-slate-300">
-                  Declaro que li e concordo com o{" "}
-                  <button
-                    type="button"
-                    onClick={() => setShowFullTerms(true)}
-                    className="text-yellow-600 dark:text-yellow-400 underline underline-offset-2"
-                  >
-                    Termo de Responsabilidade
-                  </button>
-                  . Estou ciente de que a falsificação de documentos é crime
-                  (Arts. 297-299 do Código Penal).
-                </span>
+          <div className="mb-6 max-w-2xl mx-auto">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+              />
+              <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer">
+                Declaro que li e concordo com o{' '}
+                <button
+                  type="button"
+                  onClick={() => setShowFullTerms(true)}
+                  className="text-blue-600 hover:underline"
+                >
+                  Termo de Responsabilidade
+                </button>
+                . Os documentos fornecidos são verdadeiros e de minha responsabilidade.
               </label>
             </div>
 
@@ -814,8 +826,7 @@ export default function UploadDocumentos() {
           </div>
         )}
 
-        {/* Mensagem de termo já aceito */}
-        {allDocsUploaded && termsAlreadyAccepted && (
+        {allDocsUploaded && termsAlreadyAccepted && !canGenerateCard && (
           <div className="mb-6 max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
             <p className="text-sm text-green-900 dark:text-green-200">
               ✅ Você já aceitou o Termo de Responsabilidade
@@ -826,28 +837,37 @@ export default function UploadDocumentos() {
             </p>
           </div>
         )}
-        
-        {/* Botão continuar */}
-        <Button
-          disabled={
-            !allDocsUploaded ||
-            !allDocsApproved ||
-            (!termsAccepted && !termsAlreadyAccepted)
-          }
-          onClick={handleSubmit}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
-        >
-          {!allDocsUploaded
-            ? `Envie todos os ${4 - uploadedCount} documentos restantes`
-            : !allDocsApproved
-              ? "Aguarde aprovação dos documentos"
-              : !termsAccepted && !termsAlreadyAccepted
-                ? "Aceite o termo de responsabilidade"
-                : termsAlreadyAccepted
-                  ? "Ir para Validação"
-                  : "Enviar para Validação"
-          }
-        </Button>
+
+        {canGenerateCard && (
+          <>
+            <Alert className="mb-4 max-w-2xl mx-auto bg-green-500/20 border-green-500/50">
+              <AlertDescription className="text-sm text-slate-800">
+                Documentos, validação facial e Termo de Tesponsabilidade aprovados.
+                Você já aceitou o Termo em{' '}
+                {termsAcceptedDate
+                  ? new Date(termsAcceptedDate).toLocaleString('pt-BR')
+                  : 'data não disponível'}
+                {` • Versão: ${termsVersion || '1.0'}.`}
+              </AlertDescription>
+            </Alert>
+            <Button
+              className="w-full max-w-2xl mx-auto block"
+              onClick={() => navigate('/gerar-carteirinha')}
+            >
+              Ir para revisão e geração da carteirinha
+            </Button>
+          </>
+        )}
+
+        {!canGenerateCard && (
+          <Button
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
+          >
+            {termsAlreadyAccepted ? 'Ver status da validação' : 'Aceitar termo e enviar para validação'}
+          </Button>
+        )}
         </div>
       </main>
     </div>

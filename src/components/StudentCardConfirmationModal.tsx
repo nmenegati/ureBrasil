@@ -47,7 +47,7 @@ export function StudentCardConfirmationModal({
         <DialogHeader>
           <DialogTitle>Confirme seus dados</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
           <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
             <div className="flex flex-col items-center gap-3">
               <div className="w-32 h-40 rounded-xl overflow-hidden bg-muted flex items-center justify-center">
@@ -118,23 +118,23 @@ export function StudentCardConfirmationModal({
               </p>
             </div>
           )}
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={onConfirm}
-              disabled={loading || (!canRetry && !!error)}
-            >
-              {loading ? "Gerando sua carteirinha..." : "Confirmar e Gerar"}
-            </Button>
-          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading || (!canRetry && !!error)}
+          >
+            {loading ? "Gerando sua carteirinha..." : "Confirmar e Gerar"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

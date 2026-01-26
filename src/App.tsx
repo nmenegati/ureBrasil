@@ -17,12 +17,14 @@ import AdminEditEmail from "./pages/AdminEditEmail";
 import UploadDocumentos from "./pages/UploadDocumentos";
 import EscolherPlano from "./pages/EscolherPlano";
 import StatusValidacao from "./pages/StatusValidacao";
+import { AguardandoAprovacao } from "./pages/AguardandoAprovacao";
 import Pagamento from "./pages/Pagamento";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import MeusPagamentos from "./pages/MeusPagamentos";
 import Perfil from "./pages/Perfil";
 import Checkout from "./pages/Checkout";
 import Carteirinha from "./pages/Carteirinha";
+import GerarCarteirinha from "./pages/GerarCarteirinha";
 import AdquirirFisica from "./pages/AdquirirFisica";
 import Privacidade from "./pages/Privacidade";
 import Termos from "./pages/Termos";
@@ -79,6 +81,16 @@ const App = () => (
             <Route path="/status-validacao" element={
               <ProtectedRoute>
                 <StatusValidacao />
+              </ProtectedRoute>
+            } />
+            <Route path="/gerar-carteirinha" element={
+              <ProtectedRoute>
+                <GerarCarteirinha />
+              </ProtectedRoute>
+            } />
+            <Route path="/aguardando-aprovacao" element={
+              <ProtectedRoute>
+                <AguardandoAprovacao />
               </ProtectedRoute>
             } />
             <Route path="/pagamento" element={
