@@ -481,10 +481,8 @@ export default function SignUp() {
         let birthText = apiBirth || '';
 
         if (apiBirth && /^\d{4}-\d{2}-\d{2}$/.test(apiBirth)) {
-          const parsed = new Date(apiBirth);
-          if (!isNaN(parsed.getTime())) {
-            birthText = format(parsed, 'dd/MM/yyyy');
-          }
+          const [year, month, day] = apiBirth.split('-');
+          birthText = `${day}/${month}/${year}`;
         }
 
         setCpfData({
