@@ -55,6 +55,7 @@ import iconeEsporte from "@/assets/icone-esporte.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { PolicyModal } from "@/components/PolicyModal";
+import { goToStudentCardFlow } from "@/lib/cardNavigation";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -127,15 +128,17 @@ const Index = () => {
     checkActiveCard();
   }, [user?.id]);
 
-  const handleCTA = () => {
+  const handleCTA = async () => {
     if (ctaLoading) return;
     setCtaLoading(true);
-    if (user && hasActiveCard) {
-      navigate('/carteirinha');
-    } else if (user) {
-      navigate('/dashboard');
-    } else {
-      navigate('/signup');
+    try {
+      if (!user) {
+        navigate('/signup');
+      } else {
+        await goToStudentCardFlow(navigate);
+      }
+    } finally {
+      setCtaLoading(false);
     }
   };
   // Testimonial Rotation Logic
@@ -517,7 +520,7 @@ const Index = () => {
                 Cinema, shows, teatro e eventos culturais com meia-entrada.
               </h3>
               <p className="text-muted-foreground dark:text-gray-300 text-lg mb-6">
-                Um benefício simples que gera economia ao longo do ano, no uso do dia a dia.
+                Um benefício simples que, no uso do dia a dia, gera economia ao longo do ano.
               </p>
               <Button
                 variant="brand-primary"

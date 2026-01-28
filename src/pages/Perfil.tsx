@@ -42,6 +42,7 @@ interface StudentProfile {
   enrollment_number: string | null;
   plan_id: string | null;
   is_law_student?: boolean | null;
+  education_level?: string | null;
 }
 
 interface Document {
@@ -86,6 +87,20 @@ const formatDate = (date: string) => {
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
+
+const formatEducationLevel = (level: string | null | undefined) => {
+  if (!level) return 'Não informado';
+  const map: Record<string, string> = {
+    fundamental: 'Fundamental',
+    medio: 'Médio',
+    tecnico: 'Técnico',
+    graduacao: 'Graduação',
+    pos: 'Pós-graduação',
+    mestrado: 'Mestrado',
+    doutorado: 'Doutorado',
+  };
+  return map[level] || level;
 };
 
 const getPaymentVariantLabel = (payment: Payment, profile: StudentProfile | null) => {
@@ -559,6 +574,11 @@ export default function Perfil() {
   };
 
   const isCardActive = card?.status === 'active';
+  const academicLocked = isCardActive;
+  const effectivePeriodOptions =
+    academicForm.period && !periodOptions.includes(academicForm.period)
+      ? [academicForm.period, ...periodOptions]
+      : periodOptions;
   const initials = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
   if (authLoading || loading) {
@@ -796,11 +816,21 @@ export default function Perfil() {
             <TabsContent value="academic" className="p-6">
               <div className="space-y-4">
                 <div>
+                  <Label>Nível</Label>
+                  <Input
+                    value={formatEducationLevel((profile as StudentProfile | null)?.education_level)}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
+
+                <div>
                   <Label htmlFor="institution">Instituição de Ensino</Label>
                   <Input
                     id="institution"
                     value={academicForm.institution}
                     onChange={(e) => setAcademicForm(prev => ({ ...prev, institution: e.target.value }))}
+                    disabled={academicLocked}
                     maxLength={150}
                   />
                   <span className="text-xs text-muted-foreground block text-right mt-1">{academicForm.institution.length}/150</span>
@@ -812,6 +842,7 @@ export default function Perfil() {
                     id="course"
                     value={academicForm.course}
                     onChange={(e) => setAcademicForm(prev => ({ ...prev, course: e.target.value }))}
+                    disabled={academicLocked}
                     maxLength={150}
                   />
                   <span className="text-xs text-muted-foreground block text-right mt-1">{academicForm.course.length}/150</span>
@@ -820,12 +851,16 @@ export default function Perfil() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="period">Período</Label>
-                    <Select value={academicForm.period} onValueChange={(value) => setAcademicForm(prev => ({ ...prev, period: value }))}>
+                    <Select
+                      value={academicForm.period}
+                      onValueChange={(value) => setAcademicForm(prev => ({ ...prev, period: value }))}
+                      disabled={academicLocked}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
-                        {periodOptions.map(period => (
+                        {effectivePeriodOptions.map(period => (
                           <SelectItem key={period} value={period}>{period}</SelectItem>
                         ))}
                       </SelectContent>
@@ -837,16 +872,22 @@ export default function Perfil() {
                       id="enrollment_number"
                       value={academicForm.enrollment_number}
                       onChange={(e) => setAcademicForm(prev => ({ ...prev, enrollment_number: e.target.value }))}
+                      disabled={academicLocked}
                       maxLength={20}
                     />
                     <span className="text-xs text-muted-foreground block text-right mt-1">{academicForm.enrollment_number.length}/20</span>
                   </div>
                 </div>
 
-                <Button onClick={saveAcademicInfo} disabled={savingAcademic} className="w-full sm:w-auto">
+                <Button onClick={saveAcademicInfo} disabled={savingAcademic || academicLocked} className="w-full sm:w-auto">
                   {savingAcademic ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                   Salvar Dados Acadêmicos
                 </Button>
+                {academicLocked && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Dados acadêmicos não podem ser alterados após emissão da carteirinha. Contate o suporte para ajustes.
+                  </p>
+                )}
               </div>
             </TabsContent>
 

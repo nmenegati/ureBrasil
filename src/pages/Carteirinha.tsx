@@ -39,6 +39,7 @@ export default function Carteirinha() {
   const [card, setCard] = useState<CardData | null>(null);
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -74,6 +75,27 @@ export default function Carteirinha() {
 
     load();
   }, [navigate]);
+
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      if (!profile?.profile_photo_url) {
+        setProfilePhotoUrl(null);
+        return;
+      }
+
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(profile.profile_photo_url, 600);
+
+      if (!error && data?.signedUrl) {
+        setProfilePhotoUrl(data.signedUrl);
+      } else {
+        setProfilePhotoUrl(null);
+      }
+    };
+
+    loadProfilePhoto();
+  }, [profile?.profile_photo_url]);
 
   useEffect(() => {
     const generateImage = async () => {
@@ -239,7 +261,7 @@ export default function Carteirinha() {
                   enrollmentNumber={profile.enrollment_number}
                   usageCode={card.usage_code || card.card_number}
                   validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
-                  photoUrl={profile.profile_photo_url}
+              photoUrl={profilePhotoUrl}
                   qrData={card.qr_code || card.usage_code || card.card_number}
                 />
               </div>

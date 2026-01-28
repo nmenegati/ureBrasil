@@ -751,7 +751,7 @@ export default function SignUp() {
                   <Button
                     type="button"
                     onClick={handleCPFValidation}
-                    disabled={!cpf || !cpfConsent || loading}
+                    disabled={!cpf || !cpfConsent || !isCpfValid || loading}
                     className="w-full h-11"
                   >
                     {loading ? 'Validando...' : 'Validar CPF'}
