@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { ProgressBar } from '@/components/ProgressBar';
 
 interface ProfileData {
   id: string;
@@ -20,6 +21,19 @@ interface ProfileData {
   education_level: string | null;
   face_validated: boolean | null;
   terms_accepted: boolean | null;
+  profile_completed: boolean | null;
+}
+
+function getPeriodLabel(educationLevel: string | null, period: string | null) {
+  if (!period) return 'Período';
+  const lower = period.toLowerCase();
+  if (lower.includes('semestre')) return 'Semestre';
+  if (lower.includes('trimestre')) return 'Trimestre';
+  if (lower.includes('bimestre')) return 'Bimestre';
+  if (lower.includes('ano')) return 'Ano';
+  if (lower.includes('módulo') || lower.includes('modulo')) return 'Módulo';
+  if (lower.includes('série') || lower.includes('serie')) return 'Série';
+  return 'Período';
 }
 
 export default function GerarCarteirinha() {
@@ -28,6 +42,7 @@ export default function GerarCarteirinha() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -57,11 +72,11 @@ export default function GerarCarteirinha() {
 
         const { data: card } = await supabase
           .from('student_cards')
-          .select('status')
+          .select('status, digital_card_url')
           .eq('student_id', profileData.id)
           .maybeSingle();
 
-        if (card?.status === 'active') {
+        if (card?.status === 'active' && card.digital_card_url) {
           navigate('/carteirinha');
           return;
         }
@@ -96,6 +111,14 @@ export default function GerarCarteirinha() {
     }
   }, [user, authLoading, navigate]);
 
+  const handleConfirmGenerate = async () => {
+    if (!user || !profile || generating) return;
+    setGenerating(true);
+    setError(null);
+    navigate('/carteirinha');
+    setGenerating(false);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -120,20 +143,20 @@ export default function GerarCarteirinha() {
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
-      <main className="container mx-auto px-4 py-8 max-w-xl">
-        <Card className="border-blue-200 bg-blue-50">
+      <main className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="mb-4">
+          <ProgressBar currentStep="card" />
+        </div>
+        <Card className="bg-card border border-border shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">
-              Revise os dados da sua carteirinha digital
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Confirme os dados para emissão da sua Carteirinha do Estudante URE
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm text-slate-700">
-            <p>
-              Confira os dados que serão usados na sua carteirinha. Se algo estiver incorreto,
-              entre em contato com o suporte antes de continuar.
-            </p>
+          <CardContent className="space-y-4 text-sm text-foreground">
 
-            <div className="space-y-2 text-slate-800">
+
+            <div className="space-y-2">
               <p><strong>Nome:</strong> {profile.full_name}</p>
               <p><strong>CPF:</strong> {profile.cpf}</p>
               <p>
@@ -144,41 +167,63 @@ export default function GerarCarteirinha() {
               </p>
             </div>
 
-            <div className="space-y-2 text-slate-800 pt-2 border-t border-slate-200">
+            <div className="space-y-2 pt-2 border-t border-border">
               <p><strong>Instituição:</strong> {profile.institution || 'Não informado'}</p>
               <p>
                 <strong>Nível:</strong>{' '}
                 {profile.education_level || 'Não informado'}
               </p>
               <p>
-                <strong>Período/Semestre/Módulo/Ano:</strong>{' '}
+                <strong>{getPeriodLabel(profile.education_level, profile.period)}:</strong>{' '}
                 {profile.period || 'Não informado'}
               </p>
-              <p><strong>Curso:</strong> {profile.course || 'Não informado'}</p>
+              {!(
+                (!profile.course || profile.course.trim() === '') &&
+                (profile.education_level === 'fundamental' || profile.education_level === 'medio')
+              ) && (
+                <p><strong>Curso:</strong> {profile.course || 'Não informado'}</p>
+              )}
               <p><strong>Matrícula:</strong> {profile.enrollment_number || 'Não informado'}</p>
             </div>
 
-            <Alert className="bg-blue-100 border-blue-200 mt-2">
-              <AlertDescription className="text-xs text-slate-600">
-                Após confirmar, a carteirinha será emitida com base nesses dados e na foto 3x4 enviada.
-                Alterações posteriores poderão exigir análise manual através do suporte.
+            <Alert className="mt-2">
+              <AlertDescription className="text-xs text-muted-foreground">
+                Ao confirmar, você declara que os dados estão corretos e autoriza a emissão da
+                carteirinha com base nessas informações e na foto 3x4 enviada. Alterações posteriores
+                podem exigir análise manual pelo suporte.
               </AlertDescription>
             </Alert>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription className="text-xs">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="flex flex-col gap-2 pt-2">
               <Button
                 className="w-full"
-                onClick={() => navigate('/carteirinha')}
+                disabled={generating}
+                onClick={handleConfirmGenerate}
               >
-                Confirmar dados e ver carteirinha
+                {generating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Gerando sua carteirinha...
+                  </>
+                ) : (
+                  'Confirmar dados e gerar carteirinha'
+                )}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate('/upload-documentos')}
+                onClick={() => navigate('/perfil')}
               >
-                Voltar para documentos
+                Ir para meu perfil
               </Button>
             </div>
           </CardContent>

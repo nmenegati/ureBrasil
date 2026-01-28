@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 import { ProgressBar } from '@/components/ProgressBar';
+import { CardLayoutFront } from '@/components/CardLayoutFront';
+import html2canvas from 'html2canvas';
 
 interface StudentProfile {
   id: string;
@@ -17,20 +18,28 @@ interface StudentProfile {
   period: string | null;
   education_level: string | null;
   enrollment_number: string | null;
+  profile_photo_url: string | null;
 }
 
 interface CardData {
   card_number: string;
   valid_until: string;
   status: string;
+  digital_card_url: string | null;
+  card_type: string | null;
+  usage_code: string | null;
+  qr_code: string | null;
+  digital_card_generated?: boolean;
 }
 
 export default function Carteirinha() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [card, setCard] = useState<CardData | null>(null);
+  const [side, setSide] = useState<'front' | 'back'>('front');
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -42,7 +51,7 @@ export default function Carteirinha() {
 
       const { data: profileData } = await supabase
         .from('student_profiles')
-        .select('id, full_name, cpf, birth_date, institution, course, period, education_level, enrollment_number')
+        .select('id, full_name, cpf, birth_date, institution, course, period, education_level, enrollment_number, profile_photo_url')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -53,7 +62,7 @@ export default function Carteirinha() {
 
       const { data: cardData } = await supabase
         .from('student_cards')
-        .select('card_number, valid_until, status')
+        .select('card_number, usage_code, qr_code, valid_until, status, digital_card_url, card_type, digital_card_generated')
         .eq('student_id', profileData.id)
         .eq('status', 'active')
         .maybeSingle();
@@ -65,6 +74,84 @@ export default function Carteirinha() {
 
     load();
   }, [navigate]);
+
+  useEffect(() => {
+    const generateImage = async () => {
+      if (!profile || !card) return;
+      if (card.digital_card_url || generatingImage) return;
+      if (!cardRef.current) return;
+
+      try {
+        setGeneratingImage(true);
+
+        const canvas = await html2canvas(cardRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+        });
+
+        const blob: Blob | null = await new Promise((resolve) =>
+          canvas.toBlob(resolve, 'image/png')
+        );
+
+        if (!blob) {
+          return;
+        }
+
+        const path = `${profile.id}/digital-card-front.png`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('student-cards')
+          .upload(path, blob, {
+            upsert: true,
+            contentType: 'image/png',
+          });
+
+        if (uploadError) {
+          console.error('Erro ao enviar imagem da carteirinha:', uploadError);
+          return;
+        }
+
+        const { data: publicData } = supabase.storage
+          .from('student-cards')
+          .getPublicUrl(path);
+
+        const publicUrl = publicData?.publicUrl;
+        if (!publicUrl) {
+          return;
+        }
+
+        const { error: updateError } = await supabase
+          .from('student_cards')
+          .update({
+            digital_card_url: publicUrl,
+            digital_card_generated: true,
+          })
+          .eq('student_id', profile.id)
+          .eq('status', 'active');
+
+        if (updateError) {
+          console.error('Erro ao atualizar registro da carteirinha:', updateError);
+        }
+
+        setCard((current) =>
+          current
+            ? {
+                ...current,
+                digital_card_url: publicUrl,
+                digital_card_generated: true,
+              }
+            : current
+        );
+      } catch (err) {
+        console.error('Erro ao gerar imagem da carteirinha:', err);
+      } finally {
+        setGeneratingImage(false);
+      }
+    };
+
+    generateImage();
+  }, [profile, card, generatingImage]);
 
   if (loading) {
     return (
@@ -114,48 +201,76 @@ export default function Carteirinha() {
     );
   }
 
+  const hasDigital = !!card.digital_card_url;
+  const isLawCard =
+    !!card.card_type && card.card_type.toLowerCase().includes('direito');
+  const mode = isLawCard ? 'direito' : 'geral';
+  const frontImageUrl = isLawCard
+    ? '/templates/direito-frente-template-v.png'
+    : '/templates/geral-frente-template-v.png';
+  const backImageUrl = isLawCard
+    ? '/templates/direito-verso-template-v.png'
+    : '/templates/geral-verso-template-v.png';
+
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
-      <main className="container mx-auto px-4 py-8 max-w-xl">
-        <div className="mb-4">
-          <ProgressBar currentStep="card" />
+      <main className="container mx-auto px-4 py-8 max-w-sm">
+        <div className="bg-white rounded-lg overflow-hidden border border-border">
+          {side === 'front' ? (
+            card.digital_card_url ? (
+              <img
+                src={card.digital_card_url}
+                alt="Carteirinha digital - frente"
+                className="w-full h-auto"
+              />
+            ) : (
+              <div ref={cardRef}>
+                <CardLayoutFront
+                  mode={mode}
+                  templateSrc={frontImageUrl}
+                  fullName={profile.full_name}
+                  cpf={profile.cpf}
+                  birthDate={new Date(profile.birth_date).toLocaleDateString('pt-BR')}
+                  institution={profile.institution}
+                  educationLabel={formatEducationLevel(profile.education_level)}
+                  period={profile.period}
+                  course={profile.course}
+                  enrollmentNumber={profile.enrollment_number}
+                  usageCode={card.usage_code || card.card_number}
+                  validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
+                  photoUrl={profile.profile_photo_url}
+                  qrData={card.qr_code || card.usage_code || card.card_number}
+                />
+              </div>
+            )
+          ) : (
+            <img
+              src={backImageUrl}
+              alt="Carteirinha digital - verso"
+              className="w-full h-auto rounded-xl"
+            />
+          )}
         </div>
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle>Carteirinha do Estudante URE Brasil</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-800">
-            <p><strong>{profile.full_name}</strong></p>
-            <p><strong>CPF:</strong> {profile.cpf}</p>
-            <p>
-              <strong>Data nasc.:</strong>{' '}
-              {new Date(profile.birth_date).toLocaleDateString('pt-BR')}
-            </p>
-            <p><strong>{profile.institution || 'Não informado'}</strong> </p>
-            <p>
-              <strong>{formatEducationLevel(profile.education_level)} - {profile.period || 'Não informado'}</strong>
-            </p>
-            <p><strong>{profile.course || 'Não informado'}</strong></p>
-            <p><strong>Matrícula:</strong> {profile.enrollment_number || 'Não informado'}</p>
-            <p className="text-xs text-slate-600 pt-2 border-t border-slate-200">
-              A versão visual da carteirinha será atualizada em breve. Este resumo
-              contém os dados oficiais da sua carteirinha ativa.
-            </p>
-            <Button
-              className="w-full mt-4"
-              onClick={() =>
-                toast({
-                  title: 'Em breve',
-                  description:
-                    'A geração visual automática da carteirinha será habilitada em breve.',
-                })
-              }
-            >
-              Gerar Minha carteirinha
-            </Button>
-          </CardContent>
-        </Card>
+
+        <div className="flex gap-2 mt-4 justify-center">
+          <Button
+            type="button"
+            variant={side === 'front' ? 'default' : 'outline'}
+            className="min-w-[100px]"
+            onClick={() => setSide('front')}
+          >
+            Frente
+          </Button>
+          <Button
+            type="button"
+            variant={side === 'back' ? 'default' : 'outline'}
+            className="min-w-[100px]"
+            onClick={() => setSide('back')}
+          >
+            Verso
+          </Button>
+        </div>
       </main>
     </div>
   );

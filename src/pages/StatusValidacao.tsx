@@ -319,10 +319,10 @@ export default function StatusValidacao() {
           
           {documents.length === 4 && documents.every(d => d.status === 'approved') && (
             <Button
-              onClick={() => navigate('/carteirinha')}
+              onClick={() => navigate('/gerar-carteirinha')}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white"
             >
-              Ir para a Carteirinha →
+              Conferir dados e gerar carteirinha →
             </Button>
           )}
         </div>

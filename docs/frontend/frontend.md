@@ -1,0 +1,2 @@
+## Frontend
+Crie docs/frontend/routes.md , pages.md , components.md , hooks.md com o conteúdo que já montei (não vou repetir inteiro aqui para não alongar ainda mais, mas é exatamente o que escrevi acima: rotas em App.tsx , descrição das páginas em src/pages , componentes em src/components , hooks em src/hooks ).

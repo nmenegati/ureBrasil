@@ -1036,21 +1036,23 @@ export default function Perfil() {
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle className="text-destructive">Tem certeza absoluta?</AlertDialogTitle>
-                      <AlertDialogDescription className="space-y-2">
-                        <p>Esta ação não pode ser desfeita. Isso irá excluir permanentemente:</p>
-                        <ul className="list-disc list-inside text-sm">
-                          <li>Seu perfil e dados pessoais</li>
-                          <li>Documentos enviados</li>
-                          <li>Histórico de pagamentos</li>
-                          <li>Sua carteirinha (se houver)</li>
-                        </ul>
-                        <p className="font-medium mt-4">Digite DELETE para confirmar:</p>
-                        <Input
-                          value={deleteConfirmation}
-                          onChange={(e) => setDeleteConfirmation(e.target.value)}
-                          placeholder="DELETE"
-                          className="mt-2"
-                        />
+                      <AlertDialogDescription asChild>
+                        <div className="space-y-2">
+                          <p>Esta ação não pode ser desfeita. Isso irá excluir permanentemente:</p>
+                          <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
+                            <li>Seu perfil e dados pessoais</li>
+                            <li>Documentos enviados</li>
+                            <li>Histórico de pagamentos</li>
+                            <li>Sua carteirinha (se houver)</li>
+                          </ul>
+                          <p className="mt-4 font-semibold">Digite DELETE para confirmar:</p>
+                          <Input
+                            value={deleteConfirmation}
+                            onChange={(e) => setDeleteConfirmation(e.target.value)}
+                            placeholder="DELETE"
+                            className="mt-2"
+                          />
+                        </div>
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
