@@ -23,10 +23,12 @@ import {
   AlertCircle,
   File,
   ChevronDown,
-  Shield
+  Shield,
+  Smartphone,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { CameraCapture } from '@/components/CameraCapture';
 
 type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
@@ -117,6 +119,8 @@ export default function UploadDocumentos() {
   const [termsAlreadyAccepted, setTermsAlreadyAccepted] = useState(false);
   const [termsAcceptedDate, setTermsAcceptedDate] = useState<string | null>(null);
   const [termsVersion, setTermsVersion] = useState<string>('');
+  const [showCamera, setShowCamera] = useState(false);
+  const [hasCameraSupport, setHasCameraSupport] = useState(true);
 
   // Redirecionar se não autenticado
   useEffect(() => {
@@ -138,6 +142,12 @@ export default function UploadDocumentos() {
       fetchDocuments();
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setHasCameraSupport(false);
+    }
+  }, []);
 
   // Verificar se já aceitou os termos
   useEffect(() => {
@@ -417,6 +427,7 @@ export default function UploadDocumentos() {
     const progress = uploadProgress[config.type] || 0;
     const IconComponent = config.icon;
     const status = doc?.status;
+    const isSelfie = config.type === 'selfie';
     
     const handleDragOver = (e: React.DragEvent) => {
       e.preventDefault();
@@ -591,26 +602,56 @@ export default function UploadDocumentos() {
             />
           </div>
         ) : (
-          <div className="mt-4">
-            <input
-              ref={inputRef}
-              type="file"
-              accept={config.acceptedTypes.join(',')}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <Button 
-              onClick={() => inputRef.current?.click()}
-              variant="outline"
-              className="w-full"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Escolher arquivo
-            </Button>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
-              {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')} 
-              {' • '}Máx {config.maxSizeMB}MB
-            </p>
+          <div className="mt-4 space-y-3">
+            {isSelfie ? (
+              <>
+                <Button
+                  onClick={() => setShowCamera(true)}
+                  className="w-full"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Tirar Selfie Agora
+                </Button>
+                {!hasCameraSupport && !doc && !preview && (
+                  <Alert className="mt-3 bg-blue-50 border-blue-200">
+                    <Smartphone className="w-4 h-4 text-blue-600" />
+                    <AlertDescription className="text-sm">
+                      <p className="font-semibold mb-2">
+                        Câmera não disponível neste dispositivo
+                      </p>
+                      <p className="mb-3">
+                        Para sua segurança, a selfie deve ser tirada ao vivo pela câmera.
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        📱 Acesse esta página pelo smartphone para continuar.
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
+            ) : (
+              <div>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept={config.acceptedTypes.join(',')}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <Button 
+                  onClick={() => inputRef.current?.click()}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Escolher arquivo
+                </Button>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
+                  {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')} 
+                  {' • '}Máx {config.maxSizeMB}MB
+                </p>
+              </div>
+            )}
           </div>
         )}
         
@@ -867,6 +908,17 @@ export default function UploadDocumentos() {
           >
             {termsAlreadyAccepted ? 'Ver status da validação' : 'Aceitar termo e enviar para validação'}
           </Button>
+        )}
+        {showCamera && (
+          <CameraCapture
+            onCapture={(file) => {
+              handleUpload(file, 'selfie');
+              setShowCamera(false);
+            }}
+            onCancel={() => {
+              setShowCamera(false);
+            }}
+          />
         )}
         </div>
       </main>
