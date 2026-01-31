@@ -40,7 +40,9 @@ export async function goToStudentCardFlow(navigate: NavigateFunction) {
   if (!hasPayment) {
     const isLawStudent =
       profile.is_law_student &&
-      (profile.education_level === "graduacao" || profile.education_level === "pos");
+      (profile.education_level === "graduacao" ||
+        profile.education_level === "pos_lato" ||
+        profile.education_level === "stricto_sensu");
 
     if (isLawStudent) {
       navigate("/escolher-plano");
@@ -77,4 +79,3 @@ export async function goToStudentCardFlow(navigate: NavigateFunction) {
     navigate("/gerar-carteirinha");
   }
 }
-

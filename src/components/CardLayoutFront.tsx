@@ -25,14 +25,14 @@ export function CardLayoutFront(props: CardLayoutFrontProps) {
 
   return (
     <div className="w-full flex justify-center">
-      <div className="relative w-full rounded-lg overflow-hidden shadow-md bg-muted">
+      <div className="relative w-full rounded-lg overflow-hidden shadow-md bg-white">
         <img
           src={props.templateSrc}
           alt="Carteirinha digital - frente"
           className="block w-full h-auto"
         />
 
-        <div className="absolute left-[10.5%] top-[18%] w-[36%] aspect-[3/3.6] rounded-lg overflow-hidden bg-muted">
+        <div className="absolute left-[10.5%] top-[18%] w-[36%] aspect-[3/3.6] rounded-lg overflow-hidden bg-slate-200">
           {props.photoUrl ? (
             <img
               src={props.photoUrl}
@@ -40,7 +40,7 @@ export function CardLayoutFront(props: CardLayoutFrontProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
+            <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-700">
               Foto 3x4
             </div>
           )}
@@ -50,13 +50,13 @@ export function CardLayoutFront(props: CardLayoutFrontProps) {
           <div className="w-full bg-white rounded-lg flex items-center justify-center p-1">
             <QRCodeCanvas value={props.qrData} size={82} />
           </div>
-          <div className="text-[10px] text-center leading-tight text-foreground">
+          <div className="text-[10px] text-center leading-tight text-slate-900">
             <div className="font-semibold tracking-wide">COD. USO:</div>
             <div className="font-mono text-xs font-semibold">{props.usageCode}</div>
           </div>
         </div>
 
-        <div className="absolute left-[10.5%] right-[8%] top-[51%] text-[13px] leading-[1.5] text-foreground">
+        <div className="absolute left-[10.5%] right-[8%] top-[51%] text-[13px] leading-[1.5] text-slate-900">
           <div className="font-bold text-[13px] mb-1">{nameUpper}</div>
           <div>
             <span className="font-bold">CPF:</span> {props.cpf}
@@ -84,7 +84,7 @@ export function CardLayoutFront(props: CardLayoutFrontProps) {
           </div>
         </div>
 
-        <div className="absolute left-[20%] bottom-[9%] text-[10px] leading-tight text-foreground">
+        <div className="absolute left-[20%] bottom-[9%] text-[10px] leading-tight text-slate-900">
           <div>VÁLIDO ATÉ:</div>
           <div className="font-bold">{props.validUntil}</div>
         </div>

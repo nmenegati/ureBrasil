@@ -1,12 +1,15 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { formatBirthDate } from '@/lib/dateUtils';
 import { Header } from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ProgressBar } from '@/components/ProgressBar';
 import { CardLayoutFront } from '@/components/CardLayoutFront';
 import html2canvas from 'html2canvas';
+import { toast } from 'sonner';
+import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 interface StudentProfile {
   id: string;
@@ -33,6 +36,8 @@ interface CardData {
 }
 
 export default function Carteirinha() {
+  useOnboardingGuard('completed');
+
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -97,83 +102,113 @@ export default function Carteirinha() {
     loadProfilePhoto();
   }, [profile?.profile_photo_url]);
 
-  useEffect(() => {
-    const generateImage = async () => {
-      if (!profile || !card) return;
-      if (card.digital_card_url || generatingImage) return;
-      if (!cardRef.current) return;
+  const generateAndSaveCard = useCallback(async () => {
+    try {
+      if (!cardRef.current) {
+        throw new Error('Elemento da carteirinha não encontrado');
+      }
 
-      try {
-        setGeneratingImage(true);
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-        const canvas = await html2canvas(cardRef.current, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: null,
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: studentProfile, error: profileError } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError || !studentProfile) {
+        throw new Error('Perfil de estudante não encontrado');
+      }
+
+      setGeneratingImage(true);
+
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob(resolve, 'image/png', 0.95)
+      );
+
+      if (!blob) {
+        throw new Error('Falha ao gerar imagem da carteirinha');
+      }
+
+      const path = `${user.id}/digital-card-front.png`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('student-cards')
+        .upload(path, blob, {
+          upsert: true,
+          contentType: 'image/png',
         });
 
-        const blob: Blob | null = await new Promise((resolve) =>
-          canvas.toBlob(resolve, 'image/png')
-        );
-
-        if (!blob) {
-          return;
-        }
-
-        const path = `${profile.id}/digital-card-front.png`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('student-cards')
-          .upload(path, blob, {
-            upsert: true,
-            contentType: 'image/png',
-          });
-
-        if (uploadError) {
-          console.error('Erro ao enviar imagem da carteirinha:', uploadError);
-          return;
-        }
-
-        const { data: publicData } = supabase.storage
-          .from('student-cards')
-          .getPublicUrl(path);
-
-        const publicUrl = publicData?.publicUrl;
-        if (!publicUrl) {
-          return;
-        }
-
-        const { error: updateError } = await supabase
-          .from('student_cards')
-          .update({
-            digital_card_url: publicUrl,
-            digital_card_generated: true,
-          })
-          .eq('student_id', profile.id)
-          .eq('status', 'active');
-
-        if (updateError) {
-          console.error('Erro ao atualizar registro da carteirinha:', updateError);
-        }
-
-        setCard((current) =>
-          current
-            ? {
-                ...current,
-                digital_card_url: publicUrl,
-                digital_card_generated: true,
-              }
-            : current
-        );
-      } catch (err) {
-        console.error('Erro ao gerar imagem da carteirinha:', err);
-      } finally {
-        setGeneratingImage(false);
+      if (uploadError) {
+        console.error('Erro ao enviar imagem da carteirinha:', uploadError);
+        throw uploadError;
       }
-    };
 
-    generateImage();
-  }, [profile, card, generatingImage]);
+      const { data: publicData } = supabase.storage
+        .from('student-cards')
+        .getPublicUrl(path);
+
+      const publicUrl = publicData?.publicUrl;
+      if (!publicUrl) {
+        throw new Error('Não foi possível obter a URL pública da carteirinha');
+      }
+
+      const { error: updateError } = await supabase
+        .from('student_cards')
+        .update({
+          digital_card_url: publicUrl,
+          digital_card_generated: true,
+        })
+        .eq('student_id', studentProfile.id)
+        .eq('status', 'active');
+
+      if (updateError) {
+        console.error('Erro ao atualizar registro da carteirinha:', updateError);
+        throw updateError;
+      }
+
+      setCard((current) =>
+        current
+          ? {
+              ...current,
+              digital_card_url: publicUrl,
+              digital_card_generated: true,
+            }
+          : current
+      );
+
+      toast.success('Carteirinha digital gerada com sucesso');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Erro ao gerar carteirinha digital';
+      console.error('Erro ao gerar imagem da carteirinha:', error);
+      toast.error(message);
+    } finally {
+      setGeneratingImage(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!profile || !card) return;
+    if (card.digital_card_url || generatingImage) return;
+    if (!cardRef.current) return;
+
+    generateAndSaveCard();
+  }, [profile, card, generatingImage, generateAndSaveCard]);
 
   if (loading) {
     return (
@@ -193,9 +228,8 @@ export default function Carteirinha() {
       medio: 'Médio',
       tecnico: 'Técnico',
       graduacao: 'Graduação',
-      pos: 'Pós-graduação',
-      mestrado: 'Mestrado',
-      doutorado: 'Doutorado',
+      pos_lato: 'Pós-graduação',
+      stricto_sensu: 'Mestrado/Doutorado',
     };
     return map[level] || level;
   };
@@ -253,7 +287,7 @@ export default function Carteirinha() {
                   templateSrc={frontImageUrl}
                   fullName={profile.full_name}
                   cpf={profile.cpf}
-                  birthDate={new Date(profile.birth_date).toLocaleDateString('pt-BR')}
+                  birthDate={formatBirthDate(profile.birth_date)}
                   institution={profile.institution}
                   educationLabel={formatEducationLevel(profile.education_level)}
                   period={profile.period}

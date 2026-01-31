@@ -157,7 +157,16 @@ serve(async (req) => {
         : "";
     const courseName = escapeForPrompt(profile.course);
     const cpf = escapeForPrompt(profile.cpf);
-    const birthDate = new Date(profile.birth_date).toLocaleDateString("pt-BR");
+    const birthDate = profile.birth_date
+      ? (() => {
+          const datePart = String(profile.birth_date).includes("T")
+            ? String(profile.birth_date).split("T")[0]
+            : String(profile.birth_date);
+          const [year, month, day] = datePart.split("-");
+          if (!year || !month || !day) return String(profile.birth_date);
+          return `${day}/${month}/${year}`;
+        })()
+      : "";
     const registration = escapeForPrompt(profile.enrollment_number);
     const cardNumber = escapeForPrompt(card.card_number);
 

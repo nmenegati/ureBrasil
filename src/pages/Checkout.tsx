@@ -33,6 +33,7 @@ import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
 import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
 import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 
 interface Plan {
   id: string;
@@ -72,6 +73,8 @@ const getValidityDate = () => {
 };
 
 export default function Checkout() {
+  useOnboardingGuard("payment_upsell");
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -133,7 +136,9 @@ export default function Checkout() {
 
         const validLaw =
           profile.is_law_student === true &&
-          (profile.education_level === "graduacao" || profile.education_level === "pos");
+          (profile.education_level === "graduacao" ||
+            profile.education_level === "pos_lato" ||
+            profile.education_level === "stricto_sensu");
         setIsValidLawStudent(validLaw);
 
         // === MODO UPSELL ===
@@ -276,29 +281,50 @@ export default function Checkout() {
 
         // Atualizar carteirinha original para física
         const { error: updateError } = await supabase
-          .from('student_cards')
-          .update({ 
+          .from("student_cards")
+          .update({
             is_physical: true,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
-          .eq('payment_id', originalPaymentId);
+          .eq("payment_id", originalPaymentId);
 
         if (updateError) {
-          console.error('Erro ao atualizar carteirinha:', updateError);
+          console.error("Erro ao atualizar carteirinha:", updateError);
         } else {
-          console.log('✅ Carteirinha atualizada para física');
+          console.log("✅ Carteirinha atualizada para física");
+        }
+
+        // Atualizar step de onboarding para upload de documentos
+        if (user) {
+          const { data: profileRow } = await supabase
+            .from("student_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (profileRow?.id) {
+            const { error: stepError } = await supabase
+              .from("student_profiles")
+              .update({ current_onboarding_step: "upload_documents" })
+              .eq("id", profileRow.id);
+
+            if (stepError) {
+              console.warn(
+                "Erro ao atualizar current_onboarding_step (não crítico):",
+                stepError,
+              );
+            }
+          }
         }
 
         // Limpar flag para não mostrar modal novamente
-        localStorage.removeItem('recent_payment_id');
-        
-        toast.success('🎉 Carteirinha física adicionada! Você receberá em 7-10 dias úteis.');
-        
-        // Usar window.location.href para forçar reload completo da página de documentos
-        setTimeout(() => {
-          window.location.href = '/upload-documentos';
-        }, 2000);
-        
+        localStorage.removeItem("recent_payment_id");
+
+        toast.success(
+          "🎉 Carteirinha física adicionada! Você receberá em 7-10 dias úteis.",
+        );
+
+        navigate("/upload-documentos", { replace: true });
         return;
       }
 

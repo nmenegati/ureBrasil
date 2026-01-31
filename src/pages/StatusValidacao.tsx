@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Header } from '@/components/Header';
 import { ProgressBar } from '@/components/ProgressBar';
+import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 import { 
   FileText, GraduationCap, Camera, UserCircle,
   Loader2, CheckCircle, XCircle, RefreshCw, Clock
@@ -102,6 +103,8 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
 };
 
 export default function StatusValidacao() {
+  useOnboardingGuard('pending_validation');
+
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
@@ -148,7 +151,9 @@ export default function StatusValidacao() {
 
     const isLaw =
       profileData.is_law_student &&
-      (profileData.education_level === 'graduacao' || profileData.education_level === 'pos');
+      (profileData.education_level === 'graduacao' ||
+        profileData.education_level === 'pos_lato' ||
+        profileData.education_level === 'stricto_sensu');
     setIsLawStudentView(!!isLaw);
     setImageIndex(Math.floor(Math.random() * 2));
     await loadDocuments(profileData.id);
@@ -178,6 +183,27 @@ export default function StatusValidacao() {
 
     return () => clearInterval(interval);
   }, [profileId, loadDocuments]);
+
+  // Quando todos os documentos forem aprovados, atualizar step e seguir para geração da carteirinha
+  useEffect(() => {
+    if (!profileId) return;
+    if (documents.length === 0) return;
+
+    const allApproved = documents.every(d => d.status === 'approved');
+    if (allApproved) {
+      supabase
+        .from('student_profiles')
+        .update({ current_onboarding_step: 'review_data' })
+        .eq('id', profileId)
+        .then(() => {
+          navigate('/gerar-carteirinha');
+        })
+        .catch((error) => {
+          console.error('Erro ao atualizar current_onboarding_step para review_data:', error);
+          navigate('/gerar-carteirinha');
+        });
+    }
+  }, [documents, profileId, navigate]);
 
   const handleRefresh = async () => {
     if (!profileId) return;

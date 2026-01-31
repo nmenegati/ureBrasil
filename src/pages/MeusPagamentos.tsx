@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { formatDate } from "@/lib/dateUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,14 +82,6 @@ export default function MeusPagamentos() {
       style: "currency",
       currency: "BRL",
     }).format(value);
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
   };
 
   const formatPaymentMethod = (method: string | undefined) => {

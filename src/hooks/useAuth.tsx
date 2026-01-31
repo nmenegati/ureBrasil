@@ -6,6 +6,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -20,20 +21,41 @@ export function useAuth() {
     });
 
     // Listener de mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
       }
-    );
+    });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setProfile(null);
+      return;
+    }
+
+    supabase
+      .from("student_profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setProfile(data);
+        }
+      })
+      .catch(() => {
+        setProfile(null);
+      });
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -68,5 +90,5 @@ export function useAuth() {
     return { error };
   };
 
-  return { user, session, loading, signIn, signUp, signOut };
+  return { user, session, loading, profile, signIn, signUp, signOut };
 }

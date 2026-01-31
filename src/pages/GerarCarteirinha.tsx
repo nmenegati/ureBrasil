@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { ProgressBar } from '@/components/ProgressBar';
+import { formatBirthDate } from '@/lib/dateUtils';
+import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 interface ProfileData {
   id: string;
@@ -37,6 +39,8 @@ function getPeriodLabel(educationLevel: string | null, period: string | null) {
 }
 
 export default function GerarCarteirinha() {
+  useOnboardingGuard('review_data');
+
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -115,8 +119,21 @@ export default function GerarCarteirinha() {
     if (!user || !profile || generating) return;
     setGenerating(true);
     setError(null);
-    navigate('/carteirinha');
-    setGenerating(false);
+
+    try {
+      const { error: stepError } = await supabase
+        .from('student_profiles')
+        .update({ current_onboarding_step: 'completed' })
+        .eq('id', profile.id);
+
+      if (stepError) {
+        console.warn('Erro ao atualizar current_onboarding_step (não crítico):', stepError);
+      }
+
+      navigate('/carteirinha');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   if (authLoading || loading) {
@@ -160,10 +177,8 @@ export default function GerarCarteirinha() {
               <p><strong>Nome:</strong> {profile.full_name}</p>
               <p><strong>CPF:</strong> {profile.cpf}</p>
               <p>
-                <strong>Data nasc.:</strong>{' '}
-                {profile.birth_date
-                  ? new Date(profile.birth_date).toLocaleDateString('pt-BR')
-                  : 'Não informado'}
+                <strong>Data nasc.:</strong>{" "}
+                {profile.birth_date ? formatBirthDate(profile.birth_date) : "Não informado"}
               </p>
             </div>
 

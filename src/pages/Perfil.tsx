@@ -6,6 +6,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCPF, formatPhone, formatCEP } from '@/lib/validators';
+import { formatBirthDate, formatDate } from '@/lib/dateUtils';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -81,10 +82,6 @@ interface Plan {
 
 // formatCPF and formatPhone imported from @/lib/validators
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('pt-BR');
-};
-
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
@@ -96,9 +93,8 @@ const formatEducationLevel = (level: string | null | undefined) => {
     medio: 'Médio',
     tecnico: 'Técnico',
     graduacao: 'Graduação',
-    pos: 'Pós-graduação',
-    mestrado: 'Mestrado',
-    doutorado: 'Doutorado',
+    pos_lato: 'Pós-graduação',
+    stricto_sensu: 'Mestrado/Doutorado',
   };
   return map[level] || level;
 };
@@ -692,7 +688,7 @@ export default function Perfil() {
                   </div>
                   <div>
                     <Label>Data de Nascimento</Label>
-                    <Input value={profile?.birth_date ? formatDate(profile.birth_date) : ''} disabled className="bg-muted" />
+                    <Input value={profile?.birth_date ? formatBirthDate(profile.birth_date) : ''} disabled className="bg-muted" />
                     <p className="text-xs text-muted-foreground mt-1">
                       Conforme CPF. Contate suporte para alterações.
                     </p>

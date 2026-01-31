@@ -25,10 +25,15 @@ import {
   ChevronDown,
   Shield,
   Smartphone,
+  CreditCard,
+  User,
+  Square,
+  Smile,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { CameraCapture } from '@/components/CameraCapture';
+import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
@@ -73,23 +78,20 @@ const documentConfigs: DocumentConfig[] = [
   {
     type: 'matricula',
     label: 'Comprovante de Matrícula',
-    description: 'Envie Declaração, Comprovante de Matrícula ou Boleto recente.',
     icon: GraduationCap,
     acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
-    maxSizeMB: 5
+    maxSizeMB: 3
   },
   {
     type: 'rg',
     label: 'Documento de Identidade',
-    description: 'Envie RG/CIN, CNH ou Passaporte. Fotos nítidas da frente e do verso.',
     icon: FileText,
-    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
   },
   {
     type: 'foto',
     label: 'Foto 3x4',
-    description: 'Envie foto 3x4 com fundo neutro, sem óculos e com boa iluminação.',
     icon: Camera,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
@@ -97,7 +99,7 @@ const documentConfigs: DocumentConfig[] = [
   {
     type: 'selfie',
     label: 'Selfie do Rosto',
-    description: 'Tire uma selfie com boa iluminação, olhando para a câmera para validar sua identidade.',
+
     icon: UserCircle,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
@@ -105,6 +107,8 @@ const documentConfigs: DocumentConfig[] = [
 ];
 
 export default function UploadDocumentos() {
+  useOnboardingGuard('upload_documents');
+
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
@@ -268,6 +272,37 @@ export default function UploadDocumentos() {
       toast.error('Tipo de documento inválido');
       return;
     }
+
+    // Regras de tipo por documento
+    if (type === 'selfie' || type === 'foto') {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Apenas imagens são aceitas para este documento');
+        return;
+      }
+    }
+
+    if (type === 'rg') {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        toast.error('Apenas imagens são aceitas para Documento de Identidade');
+        return;
+      }
+    }
+
+    if (type === 'matricula') {
+      const isImage = file.type.startsWith('image/');
+      const isPDF = file.type === 'application/pdf';
+
+      if (!isImage && !isPDF) {
+        toast.error('Apenas imagens ou PDFs são aceitos para Comprovante de Matrícula');
+        return;
+      }
+
+      if (isPDF && file.size > 3 * 1024 * 1024) {
+        toast.error('PDF deve ter no máximo 3MB');
+        return;
+      }
+    }
     
     // Toast de loading
     const toastId = `upload-${type}`;
@@ -287,8 +322,16 @@ export default function UploadDocumentos() {
       }
       
       // Validações
-      if (fileToUpload.size > config.maxSizeMB * 1024 * 1024) {
-        throw new Error(`Arquivo maior que ${config.maxSizeMB}MB`);
+      const fileIsImage = fileToUpload.type.startsWith('image/');
+      const fileIsPDF = fileToUpload.type === 'application/pdf';
+
+      let maxSizeMB = config.maxSizeMB;
+      if (type === 'matricula') {
+        maxSizeMB = fileIsPDF ? 3 : 5;
+      }
+
+      if (fileToUpload.size > maxSizeMB * 1024 * 1024) {
+        throw new Error(`Arquivo maior que ${maxSizeMB}MB`);
       }
       if (!config.acceptedTypes.includes(fileToUpload.type)) {
         throw new Error('Tipo de arquivo não aceito');
@@ -437,6 +480,10 @@ export default function UploadDocumentos() {
     const handleDrop = (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (isSelfie) {
+        toast.error('Use a câmera para enviar a selfie');
+        return;
+      }
       const file = e.dataTransfer.files[0];
       if (file) {
         handleUpload(file, config.type);
@@ -488,42 +535,160 @@ export default function UploadDocumentos() {
       }
     };
     
+    const handleCardClick = () => {
+      if (isUploading) return;
+      if (isSelfie) {
+        setShowCamera(true);
+        return;
+      }
+      if (!doc || status !== 'approved') {
+        inputRef.current?.click();
+      }
+    };
+
+    let PrimaryIcon: React.ElementType = IconComponent;
+    let SecondaryIcon: React.ElementType | null = null;
+
+    if (config.type === 'matricula') {
+      PrimaryIcon = FileText;
+      SecondaryIcon = GraduationCap;
+    } else if (config.type === 'rg') {
+      PrimaryIcon = CreditCard;
+      SecondaryIcon = User;
+    } else if (config.type === 'foto') {
+      PrimaryIcon = Camera;
+      SecondaryIcon = Square;
+    } else if (config.type === 'selfie') {
+      PrimaryIcon = Smartphone;
+      SecondaryIcon = Smile;
+    }
+
+    const baseCardClasses =
+      'relative backdrop-blur-sm rounded-xl border-2 p-6 transition-colors shadow-sm';
+
+    let stateClasses = '';
+    if (!doc) {
+      stateClasses =
+        'bg-slate-200 border-slate-400 border-dashed hover:border-sky-500 hover:bg-yellow-100 hover:shadow-md';
+    } else if (status === 'approved') {
+      stateClasses = 'bg-sky-200 border-sky-300 border-solid';
+    } else if (status === 'rejected') {
+      stateClasses = 'bg-red-200 border-red-500 border-solid';
+    } else if (status === 'pending') {
+      stateClasses = 'bg-slate-50 border-slate-300 border-dashed';
+    }
+
+    const interactive =
+      !isUploading && status !== 'approved';
+
+    const renderTips = () => {
+      if (config.type === 'selfie') {
+        return (
+          <ul className="mt-1 space-y-1 text-xs text-slate-700">
+            <li>💡 Boa iluminação</li>
+            <li>👓 Sem óculos</li>
+            <li>🧢 Sem boné</li>
+          </ul>
+        );
+      }
+
+      if (config.type === 'foto') {
+        return (
+          <ul className="mt-1 space-y-1 text-xs text-slate-700">
+            <li>☀️ Fundo claro</li>
+            <li>👁️ Olhe para frente</li>
+            <li>🚫 Sem acessórios</li>
+          </ul>
+        );
+      }
+
+      if (config.type === 'rg') {
+        return (
+          <ul className="mt-1 space-y-1 text-xs text-slate-700">
+            <li>🪪 RG (Frente e Verso)</li>
+            <li>🚗 CNH</li>
+            <li>🛂 Passaporte</li>
+          </ul>
+        );
+      }
+
+      if (config.type === 'matricula') {
+        return (
+          <ul className="mt-1 space-y-1 text-xs text-slate-700">
+            <li>📄 Comprovante de matrícula 2026</li>
+            <li>🏫 Declaração da faculdade</li>
+            <li>💰 Boleto pago recente</li>
+          </ul>
+        );
+      }
+
+      return null;
+    };
+
+    const isEmpty = !doc;
+
     return (
       <div 
-        className={cn(
-          "bg-sky-900/15 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border-2 border-dashed p-6 transition-colors shadow-lg shadow-black/5",
-          doc
-            ? "border-solid border-slate-200 dark:border-slate-600"
-            : "border-slate-300 dark:border-slate-600 hover:border-primary/50"
-        )}
+        className={cn(baseCardClasses, stateClasses, interactive && 'cursor-pointer')}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
+        onClick={interactive ? handleCardClick : undefined}
       >
         {/* Header do card */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <IconComponent className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 dark:text-white">
-                {config.label}
-                {status === 'approved' && (
-                  <span className="ml-2 text-xs font-semibold text-green-600 dark:text-green-400">
-                    ✓ Aprovado
-                  </span>
-                )}
-              </h3>
-              {status !== 'approved' && (
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {config.description}
-                </p>
-              )}
-            </div>
-          </div>
-          {getStatusBadge()}
+          {isEmpty ? (
+            <>
+              <div className="flex items-start gap-4 flex-1">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-slate-900/90 flex items-center justify-center">
+                    <PrimaryIcon className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-900 dark:text-white">
+                    {config.label}
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    {config.description}
+                  </p>
+                  {renderTips()}
+                </div>
+              </div>
+              <div className="ml-3">{getStatusBadge()}</div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg flex items-center gap-1.5">
+                  <PrimaryIcon className="w-5 h-5 text-primary" />
+                  {SecondaryIcon && <SecondaryIcon className="w-4 h-4 text-primary/80" />}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">
+                    {config.label}
+                  </h3>
+                  {status !== 'approved' && (
+                    <>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        {config.description}
+                      </p>
+                      {renderTips()}
+                    </>
+                  )}
+                </div>
+              </div>
+              {getStatusBadge()}
+            </>
+          )}
         </div>
-        
+
+        {/* Selo de aprovado no fundo do card */}
+        {status === 'approved' && (
+          <div className="pointer-events-none absolute inset-0 flex justify-end items-start pr-4 pt-4 opacity-10">
+            <CheckCircle className="w-16 h-16 text-sky-700" />
+          </div>
+        )}
+
         {/* Área de upload ou preview */}
         {isUploading ? (
           <div className="mt-4">
@@ -539,7 +704,7 @@ export default function UploadDocumentos() {
               alt="Preview" 
               className={cn(
                 "object-cover rounded-lg mx-auto",
-                status === 'approved' ? "w-28 h-20" : "w-full h-40"
+                "w-full h-40"
               )}
             />
             <div
@@ -556,7 +721,7 @@ export default function UploadDocumentos() {
               >
                 {doc.file_name}
               </p>
-              {status !== 'approved' && (
+              {status !== 'approved' && status !== 'rejected' && !isSelfie && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -566,14 +731,26 @@ export default function UploadDocumentos() {
                   Trocar
                 </Button>
               )}
+              {status !== 'approved' && isSelfie && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCamera(true)}
+                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                >
+                  Tirar nova selfie
+                </Button>
+              )}
             </div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept={config.acceptedTypes.join(',')}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
+            {!isSelfie && (
+              <input
+                ref={inputRef}
+                type="file"
+                accept={config.acceptedTypes.join(',')}
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            )}
           </div>
         ) : doc && !preview ? (
           <div className="mt-4">
@@ -581,7 +758,7 @@ export default function UploadDocumentos() {
               <File className="w-8 h-8 text-slate-500 dark:text-slate-400" />
               <p className="text-sm text-slate-900 dark:text-white truncate flex-1">{doc.file_name}</p>
             </div>
-            {status !== 'approved' && (
+            {status !== 'approved' && status !== 'rejected' && !isSelfie && (
               <div className="flex justify-end mt-2">
                 <Button
                   variant="ghost"
@@ -593,21 +770,23 @@ export default function UploadDocumentos() {
                 </Button>
               </div>
             )}
-            <input
-              ref={inputRef}
-              type="file"
-              accept={config.acceptedTypes.join(',')}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
+            {!isSelfie && (
+              <input
+                ref={inputRef}
+                type="file"
+                accept={config.acceptedTypes.join(',')}
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            )}
           </div>
         ) : (
-          <div className="mt-4 space-y-3">
+          <div className="mt-6 space-y-3">
             {isSelfie ? (
               <>
                 <Button
                   onClick={() => setShowCamera(true)}
-                  className="w-full"
+                  className="w-full py-3"
                 >
                   <Camera className="w-4 h-4 mr-2" />
                   Tirar Selfie Agora
@@ -680,7 +859,9 @@ export default function UploadDocumentos() {
   };
 
   const uploadedCount = Object.keys(documents).length;
-  const allDocsUploaded = uploadedCount >= 4;
+  const allDocsUploaded = documentConfigs.every((config) => {
+    return !!documents[config.type];
+  });
   const allDocsApproved = documentConfigs.every((config) => {
     const doc = documents[config.type];
     return doc && doc.status === "approved";
@@ -701,8 +882,19 @@ export default function UploadDocumentos() {
       return;
     }
 
-    // Se já aceitou antes, só redireciona
+    // Se já aceitou antes, só atualiza step/rota
     if (termsAlreadyAccepted) {
+      if (profile?.id) {
+        const { error: stepError } = await supabase
+          .from('student_profiles')
+          .update({ current_onboarding_step: 'pending_validation' })
+          .eq('id', profile.id);
+
+        if (stepError) {
+          console.warn('Erro ao atualizar current_onboarding_step (não crítico):', stepError);
+        }
+      }
+
       navigate('/status-validacao');
       return;
     }
@@ -732,6 +924,16 @@ export default function UploadDocumentos() {
       if (error) {
         toast.error('Erro ao salvar aceitação do termo');
         return;
+      }
+
+      // Atualizar step de onboarding para pending_validation
+      const { error: stepError } = await supabase
+        .from('student_profiles')
+        .update({ current_onboarding_step: 'pending_validation' })
+        .eq('id', profile!.id);
+
+      if (stepError) {
+        console.warn('Erro ao atualizar current_onboarding_step (não crítico):', stepError);
       }
 
       toast.success('Termo aceito com sucesso!');

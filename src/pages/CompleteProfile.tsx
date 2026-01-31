@@ -14,13 +14,15 @@ import { Loader2, Info, AlertTriangle } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { ProgressBar } from '@/components/ProgressBar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 const educationLevels = [
   { id: 'fundamental', label: 'Ensino Fundamental' },
   { id: 'medio', label: 'Ensino Médio' },
   { id: 'tecnico', label: 'Curso Técnico' },
   { id: 'graduacao', label: 'Graduação' },
-  { id: 'pos', label: 'Mestrado/Doutorado' },
+  { id: 'pos_lato', label: 'Pós-graduação' },
+  { id: 'stricto_sensu', label: 'Mestrado/Doutorado' },
 ];
 
 const fieldConfiguration = {
@@ -73,9 +75,26 @@ const fieldConfiguration = {
       '10º semestre',
     ],
   },
-  pos: {
+  pos_lato: {
     showCourseField: true,
-    courseLabel: 'Programa *',
+    courseLabel: 'Nome da Especialização *',
+    coursePlaceholder: 'Ex: Especialização em Gestão Escolar',
+    periodLabel: 'Semestre *',
+    periodPlaceholder: 'Selecione o semestre',
+    periodOptions: [
+      '1º semestre',
+      '2º semestre',
+      '3º semestre',
+      '4º semestre',
+      '5º semestre',
+      '6º semestre',
+      '7º semestre',
+      '8º semestre',
+    ],
+  },
+  stricto_sensu: {
+    showCourseField: true,
+    courseLabel: 'Programa de Pós-graduação Stricto Sensu *',
     coursePlaceholder: 'Ex: Mestrado em Educação',
     periodLabel: 'Semestre *',
     periodPlaceholder: 'Selecione o semestre',
@@ -93,6 +112,8 @@ const fieldConfiguration = {
 } as const;
 
 export default function CompleteProfile() {
+  useOnboardingGuard('complete_profile');
+
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { fetchAddress, loading: cepLoading, error: cepError } = useViaCep();
@@ -108,7 +129,9 @@ export default function CompleteProfile() {
   const [course, setCourse] = useState('');
   const [period, setPeriod] = useState('');
   const [enrollmentNumber, setEnrollmentNumber] = useState('');
-  const [educationLevel, setEducationLevel] = useState<'fundamental' | 'medio' | 'tecnico' | 'graduacao' | 'pos'>('graduacao');
+  const [educationLevel, setEducationLevel] = useState<
+    'fundamental' | 'medio' | 'tecnico' | 'graduacao' | 'pos_lato' | 'stricto_sensu'
+  >('graduacao');
   const [loading, setLoading] = useState(false);
   const [isCepResolved, setIsCepResolved] = useState(false);
   const [courseType, setCourseType] = useState<'direito' | 'outro'>('outro');
@@ -117,7 +140,10 @@ export default function CompleteProfile() {
   const config = fieldConfiguration[educationLevel];
   const basePeriodOptions =
     (config.showCourseField ? config.periodOptions : config.seriesOptions) || [];
-  const canBeLawStudent = educationLevel === 'graduacao' || educationLevel === 'pos';
+  const canBeLawStudent =
+    educationLevel === 'graduacao' ||
+    educationLevel === 'pos_lato' ||
+    educationLevel === 'stricto_sensu';
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -152,14 +178,16 @@ export default function CompleteProfile() {
           data.education_level === 'medio' ||
           data.education_level === 'tecnico' ||
           data.education_level === 'graduacao' ||
-          data.education_level === 'pos'
+          data.education_level === 'pos_lato' ||
+          data.education_level === 'stricto_sensu'
         ) {
           setEducationLevel(data.education_level);
         }
 
         const isGradOrPost =
           data.education_level === 'graduacao' ||
-          data.education_level === 'pos';
+          data.education_level === 'pos_lato' ||
+          data.education_level === 'stricto_sensu';
 
         if (isGradOrPost && data.course === 'Direito') {
           setCourseType('direito');
@@ -251,7 +279,9 @@ export default function CompleteProfile() {
     setLoading(true);
 
     const isLawStudent =
-      (educationLevel === 'graduacao' || educationLevel === 'pos') &&
+      (educationLevel === 'graduacao' ||
+        educationLevel === 'pos_lato' ||
+        educationLevel === 'stricto_sensu') &&
       courseType === 'direito';
 
     // ID do plano Geral Digital para não-Direito
@@ -293,8 +323,13 @@ export default function CompleteProfile() {
 
     // Redirecionar baseado em is_law_student
     if (isLawStudent) {
-      // Estudante de Direito → pode escolher plano
-      window.location.href = '/escolher-plano';
+      // Atualizar step de onboarding para escolha de plano
+      await supabase
+        .from('student_profiles')
+        .update({ current_onboarding_step: 'choose_plan' })
+        .eq('user_id', user.id);
+
+      navigate('/escolher-plano');
     } else {
       // Não é Direito → plano Geral Digital automaticamente
       localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);

@@ -37,6 +37,7 @@ import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.jpg";
 import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
 import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
 import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
+import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 
 interface Plan {
   id: string;
@@ -73,6 +74,8 @@ const getValidityDate = () => {
 };
 
 export default function Pagamento() {
+  useOnboardingGuard("payment");
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
@@ -266,7 +269,28 @@ export default function Pagamento() {
           navigate("/pagamento/pix", { state: { paymentData: data } });
         } else {
           toast.success("Pagamento processado com sucesso!");
-          navigate("/pagamento/sucesso", {
+          const nextStep = plan.is_physical ? "upload_documents" : "upsell_physical";
+
+          const { data: profileRow } = await supabase
+            .from("student_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (profileRow?.id) {
+            const { error: stepError } = await supabase
+              .from("student_profiles")
+              .update({ current_onboarding_step: nextStep })
+              .eq("id", profileRow.id);
+
+            if (stepError) {
+              console.warn("Erro ao atualizar current_onboarding_step (não crítico):", stepError);
+            }
+          }
+
+          const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/sucesso";
+
+          navigate(nextRoute, {
             state: {
               planName: plan.name,
               amount: paymentAmount,
@@ -274,6 +298,7 @@ export default function Pagamento() {
               cardType: plan.is_direito ? "direito" : "geral",
               paymentMethod: "pix",
               isPhysicalPlan: plan.is_physical,
+              isStandalonePhysical: isStandalone,
             },
           });
         }
@@ -319,6 +344,27 @@ export default function Pagamento() {
         }
 
         toast.success("Pagamento processado com sucesso!");
+        const nextStep = plan.is_physical ? "upload_documents" : "upsell_physical";
+
+        const { data: profileRow } = await supabase
+          .from("student_profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (profileRow?.id) {
+          const { error: stepError } = await supabase
+            .from("student_profiles")
+            .update({ current_onboarding_step: nextStep })
+            .eq("id", profileRow.id);
+
+          if (stepError) {
+            console.warn("Erro ao atualizar current_onboarding_step (não crítico):", stepError);
+          }
+        }
+
+        const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/sucesso";
+
         navigate("/pagamento/sucesso", {
           state: {
             planName: plan.name,
@@ -327,6 +373,7 @@ export default function Pagamento() {
             cardType: plan.is_direito ? "direito" : "geral",
             paymentMethod: cardType,
             isPhysicalPlan: plan.is_physical,
+            isStandalonePhysical: isStandalone,
           },
         });
       }

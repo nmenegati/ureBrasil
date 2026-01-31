@@ -9,6 +9,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Check, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BorderTrail } from '@/components/ui/border-trail';
+import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 // Configuração visual dos planos digitais
 const digitalPlans = [
@@ -48,6 +49,8 @@ const digitalPlans = [
 ];
 
 export default function EscolherPlano() {
+  useOnboardingGuard('choose_plan');
+
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [planIds, setPlanIds] = useState<Record<string, string>>({});
@@ -142,6 +145,18 @@ export default function EscolherPlano() {
       }
 
       toast.success(`Plano "${planName}" selecionado!`);
+
+      if (profileId) {
+        const { error: stepError } = await supabase
+          .from('student_profiles')
+          .update({ current_onboarding_step: 'payment' })
+          .eq('id', profileId);
+
+        if (stepError) {
+          console.warn('Erro ao atualizar current_onboarding_step (não crítico):', stepError);
+        }
+      }
+
       navigate('/pagamento');
     } catch (error: unknown) {
       toast.error('Erro ao selecionar plano');

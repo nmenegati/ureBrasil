@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCPF, formatPhone } from '@/lib/validators';
+import { formatBirthDate, formatDate } from '@/lib/dateUtils';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
@@ -457,12 +458,12 @@ export default function Dashboard() {
             </Button>
         </div>
         {profile && card && (
-          <StudentCardConfirmationModal
+            <StudentCardConfirmationModal
             open={showDigitalModal}
             onOpenChange={setShowDigitalModal}
             fullName={profile.full_name}
             cpf={formatCPF(profile.cpf)}
-            birthDate={new Date((profile as any).birth_date).toLocaleDateString('pt-BR')}
+            birthDate={formatBirthDate((profile as any).birth_date)}
             institution={profile.institution}
             course={profile.course}
             period={null}
@@ -734,7 +735,7 @@ export default function Dashboard() {
             onOpenChange={setShowDigitalModal}
             fullName={profile.full_name}
             cpf={formatCPF(profile.cpf)}
-            birthDate={new Date((profile as any).birth_date).toLocaleDateString('pt-BR')}
+            birthDate={formatBirthDate((profile as any).birth_date)}
             institution={profile.institution}
             course={profile.course}
             period={null}

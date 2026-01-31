@@ -41,8 +41,49 @@ serve(async (req) => {
     const { data: file, error: downloadError } = await supabase
       .storage.from('documents').download(file_url)
     
-    if (downloadError) throw new Error(`Download: ${downloadError.message}`)
-    
+    if (downloadError || !file) throw new Error(`Download: ${downloadError?.message || 'sem arquivo'}`)
+
+    const mimeType = file.type || guessMimeType(file_url)
+    const isImage = mimeType.startsWith('image/')
+    const isPdf = mimeType === 'application/pdf'
+
+    // Regras de tipo por documento
+    if ((type === 'foto' || type === 'selfie' || type === 'rg') && !isImage) {
+      await supabase
+        .from('documents')
+        .update({
+          status: 'rejected',
+          rejection_reason: 'Apenas imagens são aceitas para este tipo de documento',
+          validated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+
+      return new Response(JSON.stringify({
+        error: 'Tipo de arquivo inválido para este documento'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      })
+    }
+
+    if (type === 'matricula' && !isImage && !isPdf) {
+      await supabase
+        .from('documents')
+        .update({
+          status: 'rejected',
+          rejection_reason: 'Apenas imagens ou PDFs são aceitos para este documento',
+          validated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+
+      return new Response(JSON.stringify({
+        error: 'Tipo de arquivo não suportado'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
+      })
+    }
+
     // 3. Converter para base64 (Chunked para evitar RangeError)
     const buffer = await file.arrayBuffer()
     const bytes = new Uint8Array(buffer)
@@ -67,7 +108,15 @@ serve(async (req) => {
     const prompt = getPromptForType(type, profileCtx || {})
     
     // 6. Chamar Claude via OpenRouter
-    const validation = await validateWithClaude(base64, file.type, prompt)
+    let validation
+
+    if (isImage) {
+      validation = await validateWithClaudeImage(base64, mimeType, prompt)
+    } else if (isPdf) {
+      validation = await validateWithClaudePdf(base64, prompt)
+    } else {
+      throw new Error('Tipo de arquivo não suportado para validação automática')
+    }
     
     console.log('Resultado da validação:', validation)
 
@@ -248,10 +297,26 @@ JSON:
 }
 `
   }
-  return prompts[type] || prompts.rg
+  
+  const specific = prompts[type] || prompts.rg
+
+  const basePrompt = `
+${specific}
+
+IMPORTANTE: Responda APENAS com JSON válido no formato:
+{
+  "valid": true | false,
+  "confidence": 0-100,
+  "recommendation": "approved" | "rejected" | "review",
+  "reason": "Explicação clara",
+  "issues": ["problema1", "problema2"]
+}
+`
+
+  return basePrompt
 }
 
-async function validateWithClaude(base64: string, mimeType: string, prompt: string) {
+async function validateWithClaudeImage(base64: string, mimeType: string, prompt: string) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -266,16 +331,86 @@ async function validateWithClaude(base64: string, mimeType: string, prompt: stri
         role: 'user',
         content: [
           { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` }}
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }
         ]
       }]
     })
   })
   
   const data = await response.json()
-  const text = data.choices?.[0]?.message?.content || '{}'
-  
-  return parseResponse(text)
+
+  const messageContent = data.choices?.[0]?.message?.content
+  let rawContent = ''
+
+  if (typeof messageContent === 'string') {
+    rawContent = messageContent
+  } else if (Array.isArray(messageContent)) {
+    rawContent = messageContent
+      .map((c: any) => (typeof c === 'string' ? c : c.text ?? JSON.stringify(c)))
+      .join('\n')
+  } else {
+    rawContent = JSON.stringify(messageContent ?? {})
+  }
+
+  console.log('=== RESPOSTA CLAUDE (RAW) ===')
+  console.log(rawContent)
+  console.log('=== FIM RESPOSTA ===')
+
+  return parseResponse(rawContent)
+}
+
+async function validateWithClaudePdf(base64: string, prompt: string) {
+  console.log('=== PDF DEBUG ===')
+  console.log('Base64 length:', base64.length)
+  console.log('Base64 preview:', base64.substring(0, 100))
+  console.log('=== FIM PDF DEBUG ===')
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://ure.vendatto.com',
+      'X-Title': 'URE Brasil Document Validation',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'anthropic/claude-3.5-sonnet',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          {
+            type: 'file',
+            file: {
+              filename: 'documento.pdf',
+              file_data: `data:application/pdf;base64,${base64}`
+            }
+          },
+        ]
+      }]
+    })
+  })
+
+  const data = await response.json()
+
+  const messageContent = data.choices?.[0]?.message?.content
+  let rawContent = ''
+
+  if (typeof messageContent === 'string') {
+    rawContent = messageContent
+  } else if (Array.isArray(messageContent)) {
+    rawContent = messageContent
+      .map((c: any) => (typeof c === 'string' ? c : c.text ?? JSON.stringify(c)))
+      .join('\n')
+  } else {
+    rawContent = JSON.stringify(messageContent ?? {})
+  }
+
+  console.log('=== RESPOSTA CLAUDE (RAW) ===')
+  console.log(rawContent)
+  console.log('=== FIM RESPOSTA ===')
+
+  return parseResponse(rawContent)
 }
 
 interface ValidationResult {
@@ -286,31 +421,49 @@ interface ValidationResult {
   issues: string[]
 }
 
-function parseResponse(raw: string): ValidationResult {
+function parseResponse(text: string): ValidationResult {
+  let parsed: any | null = null
+
   try {
-    let clean = raw.replace(/```json\n?/g, '').replace(/```/g, '').trim()
-    const match = clean.match(/\{[\s\S]*\}/)
-    if (match) clean = match[0]
-    
-    const result = JSON.parse(clean) as Partial<ValidationResult>
-    
-    // Validar campos
-    const valid = result.valid ?? false
-    const confidence = Math.max(0, Math.min(100, Number(result.confidence) || 0))
-    const recommendation = (result.recommendation && ['approved','rejected','review'].includes(result.recommendation))
-      ? result.recommendation : 'review'
-    const reason = result.reason || 'Resposta inválida'
-    const issues = Array.isArray(result.issues) ? result.issues : []
-    
-    return { valid, confidence, recommendation, reason, issues }
+    parsed = JSON.parse(text)
   } catch {
-    return {
-      valid: false,
-      confidence: 0,
-      recommendation: 'review',
-      reason: 'Erro ao processar IA',
-      issues: ['parse_error']
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      try {
+        parsed = JSON.parse(jsonMatch[0])
+      } catch {
+        console.error('JSON inválido mesmo após extração')
+      }
     }
+  }
+
+  if (parsed && typeof parsed === 'object') {
+    const valid = typeof parsed.valid === 'boolean' ? parsed.valid : false
+    const confidenceRaw = Number(parsed.confidence)
+    const confidence = Number.isFinite(confidenceRaw)
+      ? Math.max(0, Math.min(100, confidenceRaw))
+      : 0
+
+    const rec = typeof parsed.recommendation === 'string' ? parsed.recommendation : ''
+    const allowed = ['approved', 'rejected', 'review']
+    const recommendation = allowed.includes(rec) ? (rec as ValidationResult['recommendation']) : 'review'
+
+    const reason =
+      typeof parsed.reason === 'string' && parsed.reason.trim().length > 0
+        ? parsed.reason
+        : 'Resposta inválida'
+
+    const issues = Array.isArray(parsed.issues) ? parsed.issues.map(String) : []
+
+    return { valid, confidence, recommendation, reason, issues }
+  }
+
+  return {
+    valid: false,
+    confidence: 0,
+    recommendation: 'review',
+    reason: 'Resposta inválida: ' + text.substring(0, 100),
+    issues: []
   }
 }
 
@@ -341,6 +494,19 @@ async function updateDocumentStatus(supabase: SupabaseClient, docId: string, val
   } else {
     console.log('Update successful:', data)
   }
+}
+
+function guessMimeType(filePath: string): string {
+  const ext = filePath.split('.').pop()?.toLowerCase()
+  const mimeTypes: Record<string, string> = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    pdf: 'application/pdf'
+  }
+
+  return mimeTypes[ext || ''] || 'application/octet-stream'
 }
 
 async function logAudit(supabase: SupabaseClient, studentId: string, docId: string, docType: string, validation: ValidationResult) {

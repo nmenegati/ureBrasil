@@ -1084,30 +1084,36 @@ const Index = () => {
               </p>
               <div className="flex items-center justify-center space-x-4 pt-2">
                 <a
-                  href="#"
+                  href="https://instagram.com/urebrasil"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110"
                   aria-label="Instagram"
                 >
                   <Instagram className="h-5 w-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://youtube.com/urebrasil"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110"
-                  aria-label="TikTok"
+                  aria-label="YouTube"
                 >
                   <Video className="h-5 w-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://linkedin.com/company/urebrasil"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110"
                   aria-label="LinkedIn"
                 >
                   <Linkedin className="h-5 w-5" />
                 </a>
                 <a
-                  href="#"
+                  href="tel:+5531999999999"
                   className="text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110"
-                  aria-label="WhatsApp"
+                  aria-label="Telefone"
                 >
                   <Phone className="h-5 w-5" />
                 </a>
@@ -1128,7 +1134,7 @@ const Index = () => {
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="/login"
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
                     Área do Aluno
@@ -1194,6 +1200,17 @@ const Index = () => {
                 reservados.
               </p>
               <p className="text-muted-foreground/60 text-xs">CNPJ: 04.942.797/0001-05</p>
+              <p className="text-muted-foreground/60 text-xs">
+                Desenvolvido por{" "}
+                <a
+                  href="https://vendatto.digital"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-primary"
+                >
+                  Vendatto Digital
+                </a>
+              </p>
             </div>
           </div>
         </div>
