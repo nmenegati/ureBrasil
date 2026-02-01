@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { useViaCep } from '@/hooks/useViaCep';
-import { formatCEP } from '@/lib/validators';
+import { formatCEP, formatEnrollmentNumber } from '@/lib/validators';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Info, AlertTriangle } from 'lucide-react';
@@ -172,7 +172,11 @@ export default function CompleteProfile() {
         setInstitution(data.institution || '');
         setCourse(data.course || '');
         setPeriod(data.period || '');
-        setEnrollmentNumber(data.enrollment_number || '');
+        setEnrollmentNumber(
+          data.enrollment_number
+            ? formatEnrollmentNumber(String(data.enrollment_number))
+            : ''
+        );
         if (
           data.education_level === 'fundamental' ||
           data.education_level === 'medio' ||
@@ -303,7 +307,7 @@ export default function CompleteProfile() {
         institution,
         course: config.showCourseField ? course : null,
         period,
-        enrollment_number: enrollmentNumber,
+        enrollment_number: enrollmentNumber.replace(/\D/g, ''),
         education_level: educationLevel,
         is_law_student: isLawStudent,
         profile_completed: true,
@@ -334,10 +338,13 @@ export default function CompleteProfile() {
       // Não é Direito → plano Geral Digital automaticamente
       localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
       
-      // Atualizar plan_id no banco
+      // Atualizar plan_id e onboarding_step no banco
       await supabase
         .from('student_profiles')
-        .update({ plan_id: PLAN_GERAL_DIGITAL_ID })
+        .update({
+          plan_id: PLAN_GERAL_DIGITAL_ID,
+          current_onboarding_step: 'payment',
+        })
         .eq('user_id', user.id);
       
       window.location.href = '/pagamento';
@@ -693,17 +700,19 @@ export default function CompleteProfile() {
                       <Input
                         id="enrollmentNumber"
                         type="text"
-                        placeholder="Ex: 123456"
+                        inputMode="numeric"
+                        placeholder="Ex: 345.678"
                         value={enrollmentNumber}
                         onChange={(e) => {
-                          const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
-                          setEnrollmentNumber(digitsOnly);
+                          setEnrollmentNumber(formatEnrollmentNumber(e.target.value));
                         }}
-                        maxLength={10}
+                        maxLength={14}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                         required
                       />
-                      <span className="text-xs text-muted-foreground block text-right">{enrollmentNumber.length}/10</span>
+                      <span className="text-xs text-muted-foreground block text-right">
+                        {enrollmentNumber.length}/14
+                      </span>
                     </div>
                   </div>
 

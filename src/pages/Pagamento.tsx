@@ -288,7 +288,7 @@ export default function Pagamento() {
             }
           }
 
-          const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/sucesso";
+          const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/pagamento/sucesso";
 
           navigate(nextRoute, {
             state: {
@@ -363,7 +363,7 @@ export default function Pagamento() {
           }
         }
 
-        const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/sucesso";
+        const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/pagamento/sucesso";
 
         navigate("/pagamento/sucesso", {
           state: {
@@ -513,7 +513,7 @@ export default function Pagamento() {
                   Escolha a forma de pagamento
                 </h3>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("pix")}

@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const IS_SANDBOX = Deno.env.get('PAGBANK_ENV') !== 'production';
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -120,7 +121,8 @@ Deno.serve(async (req) => {
 
     // Gerar resposta mock conforme método
     let responseData: Record<string, unknown> = {};
-    let paymentStatus: 'pending' | 'approved' = 'pending';
+    let paymentStatus: 'pending' | 'approved' =
+      payment_method === 'pix' && IS_SANDBOX ? 'approved' : 'pending';
     let pixCode: string | null = null;
     let pixQrCode: string | null = null;
     let pixQrCodeBase64: string | null = null;
@@ -136,9 +138,12 @@ Deno.serve(async (req) => {
       pixQrCode = pixCode;
       
       responseData = {
+        pix_code: pixCode,
         pix_qr_code: pixCode,
         pix_qr_code_base64: pixQrCodeBase64,
-        pix_expires_at: pixExpiresAt
+        pix_expires_at: pixExpiresAt,
+        mock: IS_SANDBOX,
+        auto_approved: IS_SANDBOX && payment_method === 'pix',
       };
       console.log('✅ PIX gerado, expira em:', pixExpiresAt);
 

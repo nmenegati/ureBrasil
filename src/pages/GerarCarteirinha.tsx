@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { ProgressBar } from '@/components/ProgressBar';
 import { formatBirthDate } from '@/lib/dateUtils';
+import { formatEnrollmentNumber } from '@/lib/validators';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 interface ProfileData {
@@ -198,14 +199,17 @@ export default function GerarCarteirinha() {
               ) && (
                 <p><strong>Curso:</strong> {profile.course || 'Não informado'}</p>
               )}
-              <p><strong>Matrícula:</strong> {profile.enrollment_number || 'Não informado'}</p>
+              <p>
+                <strong>Matrícula:</strong>{" "}
+                {profile.enrollment_number
+                  ? formatEnrollmentNumber(String(profile.enrollment_number))
+                  : 'Não informado'}
+              </p>
             </div>
 
             <Alert className="mt-2">
               <AlertDescription className="text-xs text-muted-foreground">
-                Ao confirmar, você declara que os dados estão corretos e autoriza a emissão da
-                carteirinha com base nessas informações e na foto 3x4 enviada. Alterações posteriores
-                podem exigir análise manual pelo suporte.
+                Alterações posteriores podem exigir análise manual pelo suporte.
               </AlertDescription>
             </Alert>
 

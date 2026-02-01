@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { validateCPF, formatCPF, formatPhone, formatBirthDateBR, parseBirthDateBR, isDisposableEmailDomain } from '@/lib/validators';
+import { validateCPF, formatCPF, formatPhone, formatBirthDateBR, parseBirthDateBR, isDisposableEmailDomain, validatePassword } from '@/lib/validators';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, Info, CheckCircle } from 'lucide-react';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Header } from '@/components/Header';
 import { supabase } from '@/integrations/supabase/client';
+import { isDisposableEmail } from '@/lib/emailValidation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -340,7 +341,7 @@ export default function SignUp() {
     }
     // Bloquear domínios temporários
     if (value && isDisposableEmailDomain(value)) {
-      setEmailError('Email temporário não permitido');
+      setEmailError('Este email não pode ser usado. Tente outro.');
     }
 
     if (confirmEmail) {
@@ -560,12 +561,12 @@ export default function SignUp() {
     }
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error('Email inválido');
+      toast.error('Este email parece inválido. Tente outro.');
       return;
     }
-    if (isDisposableEmailDomain(email)) {
-      toast.error('Emails temporários não são permitidos');
-      setEmailError('Email temporário não permitido');
+    if (isDisposableEmail(email)) {
+      toast.error('Este email não pode ser usado. Tente outro.');
+      setEmailError('Use um email diferente.');
       return;
     }
 
@@ -575,8 +576,14 @@ export default function SignUp() {
       return;
     }
 
-    if (!password || password.length < 6) {
-      toast.error('Senha deve ter pelo menos 6 caracteres');
+    if (!password) {
+      toast.error('Digite uma senha');
+      return;
+    }
+
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.isValid) {
+      toast.error(`Ajuste a senha: ${passwordCheck.feedback.join(' • ')}`);
       return;
     }
 
@@ -999,10 +1006,10 @@ export default function SignUp() {
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Mínimo 8 caracteres, com letra e número"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      minLength={6}
+                      minLength={8}
                       maxLength={20}
                       className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11 pr-10"
                       required
@@ -1016,7 +1023,7 @@ export default function SignUp() {
                     </button>
                   </div>
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Mínimo 6 caracteres</span>
+                    <span>Mínimo 8 caracteres, com maiúscula, minúscula e número</span>
                     <span>{password.length}/20</span>
                   </div>
                   <PasswordStrengthIndicator password={password} />
@@ -1059,7 +1066,7 @@ export default function SignUp() {
                   className="mt-1 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-                  Li e aceito os{' '}
+                  Ao continuar, concordo e aceito os{' '}
                   <button
                     type="button"
                     onClick={() => setIsTermsModalOpen(true)}
@@ -1067,15 +1074,15 @@ export default function SignUp() {
                   >
                     Termos de Uso
                   </button>
-                  {' '}e{' '}
+                  {' '}e a{' '}
                   <button
                     type="button"
                     onClick={() => setIsPrivacyModalOpen(true)}
                     className="text-primary hover:underline"
                   >
                     Política de Privacidade
-                  </button>
-                  , e declaro estar ciente de que sou o único responsável pela veracidade das informações fornecidas.
+                  </button>.
+                  Estou ciente de que sou único responsável pela veracidade das informações fornecidas.
                 </Label>
               </div>
 
@@ -1088,25 +1095,6 @@ export default function SignUp() {
                 {loading ? 'Criando conta...' : 'Criar Conta'}
               </Button>
               
-              <p className="text-xs text-center text-muted-foreground">
-                Ao continuar, você concorda com nossos{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsTermsModalOpen(true)}
-                  className="underline hover:text-foreground"
-                >
-                  Termos de Uso
-                </button>{' '}
-                e{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsPrivacyModalOpen(true)}
-                  className="underline hover:text-foreground"
-                >
-                  Política de Privacidade
-                </button>
-                .
-              </p>
 
               <p className="text-center text-sm text-muted-foreground">
                 Já tem uma conta?{' '}

@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useViaCep } from '@/hooks/useViaCep';
 import { supabase } from '@/integrations/supabase/client';
-import { formatCPF, formatPhone, formatCEP } from '@/lib/validators';
+import { formatCPF, formatPhone, formatCEP, formatEnrollmentNumber, validatePassword } from '@/lib/validators';
 import { formatBirthDate, formatDate } from '@/lib/dateUtils';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Header } from '@/components/Header';
@@ -224,7 +224,9 @@ export default function Perfil() {
           institution: profileData.institution || '',
           course: profileData.course || '',
           period: profileData.period || '',
-          enrollment_number: profileData.enrollment_number || ''
+          enrollment_number: profileData.enrollment_number
+            ? formatEnrollmentNumber(String(profileData.enrollment_number))
+            : ''
         });
 
         // Load documents
@@ -403,7 +405,7 @@ export default function Perfil() {
           institution: academicForm.institution,
           course: academicForm.course,
           period: academicForm.period,
-          enrollment_number: academicForm.enrollment_number
+          enrollment_number: academicForm.enrollment_number.replace(/\D/g, '')
         })
         .eq('id', profile.id);
 
@@ -481,8 +483,9 @@ export default function Perfil() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error('Senha deve ter no mínimo 6 caracteres');
+    const passwordCheck = validatePassword(newPassword);
+    if (!passwordCheck.isValid) {
+      toast.error(`Ajuste a nova senha: ${passwordCheck.feedback.join(' • ')}`);
       return;
     }
 
@@ -867,11 +870,18 @@ export default function Perfil() {
                     <Input
                       id="enrollment_number"
                       value={academicForm.enrollment_number}
-                      onChange={(e) => setAcademicForm(prev => ({ ...prev, enrollment_number: e.target.value }))}
+                      onChange={(e) =>
+                        setAcademicForm(prev => ({
+                          ...prev,
+                          enrollment_number: formatEnrollmentNumber(e.target.value)
+                        }))
+                      }
                       disabled={academicLocked}
-                      maxLength={20}
+                      maxLength={14}
                     />
-                    <span className="text-xs text-muted-foreground block text-right mt-1">{academicForm.enrollment_number.length}/20</span>
+                    <span className="text-xs text-muted-foreground block text-right mt-1">
+                      {academicForm.enrollment_number.length}/14
+                    </span>
                   </div>
                 </div>
 

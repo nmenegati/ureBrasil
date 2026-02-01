@@ -10,25 +10,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { compressImage } from '@/lib/imageCompression';
 import { Header } from '@/components/Header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ProgressBar';
 import { 
   FileText, 
   GraduationCap, 
   Camera, 
-  UserCircle, 
   Upload, 
   CheckCircle, 
   Clock, 
   AlertCircle,
   File,
-  ChevronDown,
-  Shield,
   Smartphone,
   CreditCard,
   User,
-  Square,
-  Smile,
+  SquareUserRound,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -40,7 +35,6 @@ type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 interface DocumentConfig {
   type: DocumentType;
   label: string;
-  description: string;
   icon: React.ElementType;
   acceptedTypes: string[];
   maxSizeMB: number;
@@ -78,29 +72,28 @@ const documentConfigs: DocumentConfig[] = [
   {
     type: 'matricula',
     label: 'Comprovante de Matrícula',
-    icon: GraduationCap,
+    icon: FileText,
     acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
     maxSizeMB: 3
   },
   {
     type: 'rg',
     label: 'Documento de Identidade',
-    icon: FileText,
+    icon: CreditCard,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
   },
   {
     type: 'foto',
     label: 'Foto 3x4',
-    icon: Camera,
+    icon: SquareUserRound,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
   },
   {
     type: 'selfie',
     label: 'Selfie do Rosto',
-
-    icon: UserCircle,
+    icon: Camera,
     acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 5
   }
@@ -126,21 +119,18 @@ export default function UploadDocumentos() {
   const [showCamera, setShowCamera] = useState(false);
   const [hasCameraSupport, setHasCameraSupport] = useState(true);
 
-  // Redirecionar se não autenticado
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, navigate]);
 
-  // Buscar perfil
   useEffect(() => {
     if (user) {
       fetchProfile();
     }
   }, [user]);
 
-  // Buscar documentos quando tiver perfil
   useEffect(() => {
     if (profile) {
       fetchDocuments();
@@ -153,7 +143,6 @@ export default function UploadDocumentos() {
     }
   }, []);
 
-  // Verificar se já aceitou os termos
   useEffect(() => {
     const checkTerms = async () => {
       if (!profile?.id) return;
@@ -188,7 +177,7 @@ export default function UploadDocumentos() {
       }
     };
     checkIfLocked();
-  }, [profile?.id, navigate]);
+  }, [profile?.id]);
 
   const fetchProfile = useCallback(async () => {
     if (!user) return;
@@ -217,18 +206,14 @@ export default function UploadDocumentos() {
       .select('*')
       .eq('student_id', profile.id);
       
-    if (error) {
-      return;
-    }
+    if (error) return;
     
-    // Organizar por tipo e gerar previews
     const docsMap: Record<string, DocumentRecord> = {};
     const newPreviews: Record<string, string> = {};
     
     for (const doc of data || []) {
       docsMap[doc.type] = doc as DocumentRecord;
       
-      // Gerar signed URL para preview de imagens
       if (doc.mime_type?.startsWith('image/')) {
         const { data: signedData } = await supabase.storage
           .from('documents')
@@ -244,15 +229,14 @@ export default function UploadDocumentos() {
     setPreviews(newPreviews);
   }, [profile]);
 
-  const handleUpload = async (file: File, type: DocumentType) => {
+const handleUpload = async (file: File, type: DocumentType) => {
+    if (uploading[type]) return;
+
     if (!profile?.id || !user?.id) {
       toast.error('Perfil não carregado. Recarregue a página.');
       return;
     }
     
-    let documentIdForValidation: string | null = null;
-    
-    // BLOQUEIO: Foto 3x4 não pode ser alterada se carteirinha ativa
     if (type === 'foto') {
       const { data: card } = await supabase
         .from('student_cards')
@@ -273,7 +257,6 @@ export default function UploadDocumentos() {
       return;
     }
 
-    // Regras de tipo por documento
     if (type === 'selfie' || type === 'foto') {
       if (!file.type.startsWith('image/')) {
         toast.error('Apenas imagens são aceitas para este documento');
@@ -282,8 +265,7 @@ export default function UploadDocumentos() {
     }
 
     if (type === 'rg') {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
+      if (!file.type.startsWith('image/')) {
         toast.error('Apenas imagens são aceitas para Documento de Identidade');
         return;
       }
@@ -304,7 +286,6 @@ export default function UploadDocumentos() {
       }
     }
     
-    // Toast de loading
     const toastId = `upload-${type}`;
     toast.loading(`Enviando ${config.label}...`, { id: toastId });
     
@@ -321,7 +302,6 @@ export default function UploadDocumentos() {
         fileToUpload = await compressImage(file, maxSize, maxSize, quality);
       }
       
-      // Validações
       const fileIsImage = fileToUpload.type.startsWith('image/');
       const fileIsPDF = fileToUpload.type === 'application/pdf';
 
@@ -337,7 +317,6 @@ export default function UploadDocumentos() {
         throw new Error('Tipo de arquivo não aceito');
       }
       
-      // Simular progresso
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => ({
           ...prev,
@@ -345,28 +324,22 @@ export default function UploadDocumentos() {
         }));
       }, 200);
       
-      // Path usando USER.ID para satisfazer RLS policy do storage
-      // A policy verifica: (storage.foldername(name))[1] = (auth.uid())::text
       const ext = fileToUpload.name.split('.').pop();
       const filePath = `${user.id}/${type}/${Date.now()}.${ext}`;
       
-      // Upload para Storage
       const { error: storageError } = await supabase.storage
         .from('documents')
         .upload(filePath, fileToUpload, { upsert: true });
         
-      if (storageError) {
-        throw storageError;
-      }
+      if (storageError) throw storageError;
       
-      // Verificar se já existe documento deste tipo para este estudante
       const { data: existingDoc } = await supabase
         .from('documents')
         .select('id')
         .eq('student_id', profile.id)
         .eq('type', type)
         .maybeSingle();
-      
+
       if (existingDoc) {
         const { error: dbError } = await supabase
           .from('documents')
@@ -376,7 +349,6 @@ export default function UploadDocumentos() {
             file_size: fileToUpload.size,
             mime_type: fileToUpload.type,
             status: 'pending',
-            // Limpar campos de rejeição ao reenviar
             rejection_reason: null,
             rejection_notes: null,
             rejection_reason_id: null,
@@ -385,13 +357,9 @@ export default function UploadDocumentos() {
           })
           .eq('id', existingDoc.id);
           
-        if (dbError) {
-          throw dbError;
-        }
-        
-        documentIdForValidation = existingDoc.id;
+        if (dbError) throw dbError;
       } else {
-        const { data: newDoc, error: dbError } = await supabase
+        const { error: dbError } = await supabase
           .from('documents')
           .insert({
             student_id: profile.id,
@@ -401,46 +369,9 @@ export default function UploadDocumentos() {
             file_size: fileToUpload.size,
             mime_type: fileToUpload.type,
             status: 'pending'
-          })
-          .select('id')
-          .single();
+          });
           
-        if (dbError) {
-          throw dbError;
-        }
-        
-        documentIdForValidation = newDoc.id;
-      }
-      
-      // Chamar validação automática
-      if (documentIdForValidation) {
-        try {
-          console.log('🔄 Iniciando validação:', {
-            documentId: documentIdForValidation,
-            studentId: profile.id,
-            type,
-            filePath
-          });
-
-          const { data, error } = await supabase.functions.invoke('validate-document-v2', {
-            body: {
-              document_id: documentIdForValidation,
-              student_id: profile.id,
-              type,
-              file_url: filePath
-            }
-          });
-
-          console.log('📦 Resposta validação:', { data, error });
-
-          if (error) {
-            console.error('❌ Erro na validação:', error);
-          } else {
-            console.log('✅ Validação iniciada com sucesso');
-          }
-        } catch (validationError) {
-          console.error('💥 Exception validação:', validationError);
-        }
+        if (dbError) throw dbError;
       }
       
       clearInterval(progressInterval);
@@ -460,8 +391,7 @@ export default function UploadDocumentos() {
     }
   };
 
-  // Componente interno do Card de Documento
-  const DocumentCard = ({ config }: { config: DocumentConfig }) => {
+const DocumentCard = ({ config }: { config: DocumentConfig }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     
     const doc = documents[config.type];
@@ -495,14 +425,13 @@ export default function UploadDocumentos() {
       if (file) {
         handleUpload(file, config.type);
       }
-      // Reset input para permitir reenvio do mesmo arquivo
       e.target.value = '';
     };
     
     const getStatusBadge = () => {
       if (!doc) {
         return (
-          <Badge variant="secondary" className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+          <Badge variant="secondary" className="bg-slate-300 dark:bg-slate-500 text-slate-600 dark:text-slate-800">
             <Clock className="w-3 h-3 mr-1" />
             Pendente
           </Badge>
@@ -525,7 +454,7 @@ export default function UploadDocumentos() {
           );
         case 'rejected':
           return (
-            <Badge variant="destructive" className="bg-red-500/20 text-red-600 dark:text-red-400">
+            <Badge variant="destructive" className="bg-red-400 text-red-600 dark:text-red-400">
               <AlertCircle className="w-3 h-3 mr-1" />
               Rejeitado
             </Badge>
@@ -556,11 +485,11 @@ export default function UploadDocumentos() {
       PrimaryIcon = CreditCard;
       SecondaryIcon = User;
     } else if (config.type === 'foto') {
-      PrimaryIcon = Camera;
-      SecondaryIcon = Square;
+      PrimaryIcon = SquareUserRound;
+      SecondaryIcon = null;
     } else if (config.type === 'selfie') {
-      PrimaryIcon = Smartphone;
-      SecondaryIcon = Smile;
+      PrimaryIcon = Camera;
+      SecondaryIcon = null;
     }
 
     const baseCardClasses =
@@ -571,15 +500,14 @@ export default function UploadDocumentos() {
       stateClasses =
         'bg-slate-200 border-slate-400 border-dashed hover:border-sky-500 hover:bg-yellow-100 hover:shadow-md';
     } else if (status === 'approved') {
-      stateClasses = 'bg-sky-200 border-sky-300 border-solid';
+      stateClasses = 'bg-sky-200 border-sky-400 border-solid';
     } else if (status === 'rejected') {
-      stateClasses = 'bg-red-200 border-red-500 border-solid';
+      stateClasses = 'bg-red-200 border-red-500 border-dashed';
     } else if (status === 'pending') {
       stateClasses = 'bg-slate-50 border-slate-300 border-dashed';
     }
 
-    const interactive =
-      !isUploading && status !== 'approved';
+    const interactive = !isUploading && status !== 'approved';
 
     const renderTips = () => {
       if (config.type === 'selfie') {
@@ -627,69 +555,54 @@ export default function UploadDocumentos() {
 
     const isEmpty = !doc;
 
-    return (
+return (
       <div 
         className={cn(baseCardClasses, stateClasses, interactive && 'cursor-pointer')}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onClick={interactive ? handleCardClick : undefined}
       >
-        {/* Header do card */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="absolute top-2 right-3">
+          {getStatusBadge()}
+        </div>
+
+        <div className="flex items-center mb-4">
           {isEmpty ? (
-            <>
-              <div className="flex items-start gap-4 flex-1">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-slate-900/90 flex items-center justify-center">
-                    <PrimaryIcon className="w-7 h-7 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900 dark:text-white">
-                    {config.label}
-                  </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                    {config.description}
-                  </p>
-                  {renderTips()}
+            <div className="flex items-center gap-4 flex-1">
+              <div className="flex-shrink-0 flex items-center">
+                <div className="w-16 h-16 rounded-full bg-slate-900/90 flex items-center justify-center">
+                  <PrimaryIcon className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <div className="ml-3">{getStatusBadge()}</div>
-            </>
+              <div className="flex-1">
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  {config.label}
+                </h3>
+                {renderTips()}
+              </div>
+            </div>
           ) : (
-            <>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg flex items-center gap-1.5">
-                  <PrimaryIcon className="w-5 h-5 text-primary" />
-                  {SecondaryIcon && <SecondaryIcon className="w-4 h-4 text-primary/80" />}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">
-                    {config.label}
-                  </h3>
-                  {status !== 'approved' && (
-                    <>
-                      <p className="text-xs text-slate-600 dark:text-slate-300">
-                        {config.description}
-                      </p>
-                      {renderTips()}
-                    </>
-                  )}
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg flex items-center gap-1.5">
+                <PrimaryIcon className="w-5 h-5 text-primary" />
+                {SecondaryIcon && <SecondaryIcon className="w-4 h-4 text-primary/80" />}
               </div>
-              {getStatusBadge()}
-            </>
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white">
+                  {config.label}
+                </h3>
+                {status !== 'approved' && renderTips()}
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Selo de aprovado no fundo do card */}
         {status === 'approved' && (
           <div className="pointer-events-none absolute inset-0 flex justify-end items-start pr-4 pt-4 opacity-10">
             <CheckCircle className="w-16 h-16 text-sky-700" />
           </div>
         )}
 
-        {/* Área de upload ou preview */}
         {isUploading ? (
           <div className="mt-4">
             <Progress value={progress} className="h-2" />
@@ -702,23 +615,10 @@ export default function UploadDocumentos() {
             <img 
               src={preview} 
               alt="Preview" 
-              className={cn(
-                "object-cover rounded-lg mx-auto",
-                "w-full h-40"
-              )}
+              className="object-cover rounded-lg mx-auto w-full h-40"
             />
-            <div
-              className={cn(
-                "mt-2 flex items-center",
-                status === 'approved' ? "justify-center" : "justify-between"
-              )}
-            >
-              <p
-                className={cn(
-                  "text-sm text-slate-600 dark:text-slate-300 truncate",
-                  status === 'approved' ? "text-center" : "flex-1"
-                )}
-              >
+            <div className={cn("mt-2 flex items-center", status === 'approved' ? "justify-center" : "justify-between")}>
+              <p className={cn("text-sm text-slate-600 dark:text-slate-300 truncate", status === 'approved' ? "text-center" : "flex-1")}>
                 {doc.file_name}
               </p>
               {status !== 'approved' && status !== 'rejected' && !isSelfie && (
@@ -731,7 +631,7 @@ export default function UploadDocumentos() {
                   Trocar
                 </Button>
               )}
-              {status !== 'approved' && isSelfie && (
+              {status === 'rejected' && isSelfie && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -784,10 +684,7 @@ export default function UploadDocumentos() {
           <div className="mt-6 space-y-3">
             {isSelfie ? (
               <>
-                <Button
-                  onClick={() => setShowCamera(true)}
-                  className="w-full py-3"
-                >
+                <Button onClick={() => setShowCamera(true)} className="w-full py-3">
                   <Camera className="w-4 h-4 mr-2" />
                   Tirar Selfie Agora
                 </Button>
@@ -834,7 +731,6 @@ export default function UploadDocumentos() {
           </div>
         )}
         
-        {/* Motivo de rejeição */}
         {doc?.status === 'rejected' && doc.rejection_reason && (
           <Alert variant="destructive" className="mt-4 bg-red-500/10 border-red-500/30">
             <AlertCircle className="h-4 w-4" />
@@ -844,8 +740,7 @@ export default function UploadDocumentos() {
           </Alert>
         )}
         
-        {/* Botão destacado para reenviar documento rejeitado */}
-        {doc?.status === 'rejected' && (
+        {doc?.status === 'rejected' && !isSelfie && (
           <Button 
             onClick={() => inputRef.current?.click()}
             className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 border border-red-500/30"
@@ -858,10 +753,7 @@ export default function UploadDocumentos() {
     );
   };
 
-  const uploadedCount = Object.keys(documents).length;
-  const allDocsUploaded = documentConfigs.every((config) => {
-    return !!documents[config.type];
-  });
+const allDocsUploaded = documentConfigs.every((config) => !!documents[config.type]);
   const allDocsApproved = documentConfigs.every((config) => {
     const doc = documents[config.type];
     return doc && doc.status === "approved";
@@ -870,48 +762,56 @@ export default function UploadDocumentos() {
   const termsOk = termsAccepted || termsAlreadyAccepted;
   const faceOk = !!profile?.face_validated;
   const canGenerateCard = allDocsApproved && faceOk && termsOk;
+  const canSubmit = allDocsUploaded && allDocsApproved && termsOk;
 
-  const canSubmit =
-    allDocsUploaded &&
-    allDocsApproved &&
-    termsOk;
+  console.log('[DEBUG] canSubmit?', {
+    allDocsUploaded,
+    allDocsApproved,
+    termsAccepted,
+    termsAlreadyAccepted,
+    canSubmit,
+  });
 
   const handleSubmit = async () => {
+    console.log('[TERMOS] handleSubmit chamado', {
+      termsAccepted,
+      termsAlreadyAccepted,
+      profileId: profile?.id,
+      userId: user?.id,
+    });
     if (!termsAccepted && !termsAlreadyAccepted) {
       toast.error('Você precisa aceitar a declaração de veracidade');
       return;
     }
 
-    // Se já aceitou antes, só atualiza step/rota
-    if (termsAlreadyAccepted) {
-      if (profile?.id) {
-        const { error: stepError } = await supabase
-          .from('student_profiles')
-          .update({ current_onboarding_step: 'pending_validation' })
-          .eq('id', profile.id);
-
-        if (stepError) {
-          console.warn('Erro ao atualizar current_onboarding_step (não crítico):', stepError);
-        }
-      }
-
-      navigate('/status-validacao');
+if (termsAlreadyAccepted) {
+  if (profile?.id) {
+    const { error } = await supabase
+      .from('student_profiles')
+      .update({ current_onboarding_step: 'pending_validation' })
+      .eq('id', profile.id);
+    
+    if (error) {
+      console.error('Erro ao atualizar step:', error);
+      toast.error('Erro ao atualizar status. Tente novamente.');
       return;
     }
+  }
+  navigate('/status-validacao');
+  return;
+}
 
     try {
-      // Pegar IP do usuário
       let ip = 'unknown';
       try {
         const ipResponse = await fetch('https://api.ipify.org?format=json');
         const ipData = await ipResponse.json();
         ip = ipData.ip;
-      } catch (e) {
-        // Silently ignore IP fetch error
-      }
+      } catch (e) {}
 
-      // Salvar aceitação dos termos no banco
-      const { error } = await supabase
+      console.log('[TERMOS] Tentando salvar para profile.id:', profile!.id);
+
+      const { data, error } = await supabase
         .from('student_profiles')
         .update({
           terms_accepted: true,
@@ -919,22 +819,21 @@ export default function UploadDocumentos() {
           terms_ip_address: ip,
           terms_version: '1.0'
         })
+        .select('id, user_id, terms_accepted, current_onboarding_step')
         .eq('id', profile!.id);
 
+      console.log('[TERMOS] update result:', { data, error });
+
       if (error) {
+        console.error('Erro ao salvar termos:', error);
         toast.error('Erro ao salvar aceitação do termo');
         return;
       }
 
-      // Atualizar step de onboarding para pending_validation
-      const { error: stepError } = await supabase
+      await supabase
         .from('student_profiles')
         .update({ current_onboarding_step: 'pending_validation' })
         .eq('id', profile!.id);
-
-      if (stepError) {
-        console.warn('Erro ao atualizar current_onboarding_step (não crítico):', stepError);
-      }
 
       toast.success('Termo aceito com sucesso!');
       navigate('/status-validacao');
@@ -979,7 +878,6 @@ export default function UploadDocumentos() {
       <main className="relative z-10 px-4 py-6 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <ProgressBar currentStep="documents" />
-          {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               Vamos Preparar Sua Carteirinha URE
@@ -999,20 +897,67 @@ export default function UploadDocumentos() {
           ))}
         </div>
 
-        <Alert className="bg-blue-50 border-blue-200 py-2 mb-6">
-          <AlertDescription className="text-sm text-gray-700 flex items-center gap-2">
+        <Alert className="mb-4 max-w-2xl mx-auto bg-green-200 border-green-400 py-2 mb-6">
+          <AlertDescription className="text-sm text-gray-700 flex items-center justify-center gap-2 text-center">
             <span>🔍</span>
-            <span>Validação facial após aprovação da documentação. Acompanhe o status na página de validação.</span>
+            <span>Validação facial após aprovação da documentação.</span>
           </AlertDescription>
         </Alert>
 
-        {allDocsUploaded && !termsAlreadyAccepted && (
+        {allDocsApproved && !termsAlreadyAccepted && (
           <div className="mb-6 max-w-2xl mx-auto">
             <div className="flex items-start gap-2">
               <Checkbox
                 id="terms"
                 checked={termsAccepted}
-                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                onCheckedChange={async (checked) => {
+                  const isChecked = checked === true;
+                  setTermsAccepted(isChecked);
+
+                  if (!isChecked || !profile?.id || !user?.id) {
+                    return;
+                  }
+
+                  try {
+                    let ip = 'unknown';
+                    try {
+                      const ipResponse = await fetch('https://api.ipify.org?format=json');
+                      const ipData = await ipResponse.json();
+                      ip = ipData.ip;
+                    } catch (e) {}
+
+                    console.log('[TERMOS] onCheckedChange – salvando aceite imediato para profile.id:', profile.id);
+
+                    const { data, error } = await supabase
+                      .from('student_profiles')
+                      .update({
+                        terms_accepted: true,
+                        terms_accepted_at: new Date().toISOString(),
+                        terms_ip_address: ip,
+                        terms_version: '1.0',
+                      })
+                      .select('id, user_id, terms_accepted, terms_accepted_at, terms_ip_address')
+                      .eq('id', profile.id);
+
+                    console.log('[TERMOS] onCheckedChange update result:', { data, error });
+
+                    if (error) {
+                      console.error('[TERMOS] Erro ao salvar aceite imediato:', error);
+                      toast.error('Erro ao salvar aceitação do termo');
+                      setTermsAccepted(false);
+                      return;
+                    }
+
+                    setTermsAlreadyAccepted(true);
+                    setTermsAccepted(true);
+                    setTermsAcceptedDate(new Date().toISOString());
+                    setTermsVersion('1.0');
+                  } catch (err) {
+                    console.error('[TERMOS] Erro inesperado ao salvar aceite imediato:', err);
+                    toast.error('Erro ao salvar aceitação do termo');
+                    setTermsAccepted(false);
+                  }
+                }}
               />
               <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer">
                 Declaro que li e concordo com o{' '}
@@ -1085,7 +1030,7 @@ export default function UploadDocumentos() {
           <>
             <Alert className="mb-4 max-w-2xl mx-auto bg-green-500/20 border-green-500/50">
               <AlertDescription className="text-sm text-slate-800">
-                Documentos, validação facial e Termo de Tesponsabilidade aprovados.
+                Documentos, validação facial e Termo de Responsabilidade aprovados.
                 Você já aceitou o Termo em{' '}
                 {termsAcceptedDate
                   ? new Date(termsAcceptedDate).toLocaleString('pt-BR')
@@ -1111,15 +1056,14 @@ export default function UploadDocumentos() {
             {termsAlreadyAccepted ? 'Ver status da validação' : 'Aceitar termo e enviar para validação'}
           </Button>
         )}
+
         {showCamera && (
           <CameraCapture
             onCapture={(file) => {
               handleUpload(file, 'selfie');
               setShowCamera(false);
             }}
-            onCancel={() => {
-              setShowCamera(false);
-            }}
+            onCancel={() => setShowCamera(false)}
           />
         )}
         </div>

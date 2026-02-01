@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { formatBirthDate } from '@/lib/dateUtils';
+import { formatEnrollmentNumber } from '@/lib/validators';
 import { Header } from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -292,10 +293,14 @@ export default function Carteirinha() {
                   educationLabel={formatEducationLevel(profile.education_level)}
                   period={profile.period}
                   course={profile.course}
-                  enrollmentNumber={profile.enrollment_number}
+                  enrollmentNumber={
+                    profile.enrollment_number
+                      ? formatEnrollmentNumber(String(profile.enrollment_number))
+                      : null
+                  }
                   usageCode={card.usage_code || card.card_number}
                   validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
-              photoUrl={profilePhotoUrl}
+                  photoUrl={profilePhotoUrl}
                   qrData={card.qr_code || card.usage_code || card.card_number}
                 />
               </div>

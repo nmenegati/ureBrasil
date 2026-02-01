@@ -330,7 +330,6 @@ export default function Checkout() {
 
       // === FLUXO NORMAL (não-upsell) ===
       if (paymentMethod === "pix") {
-        // Manter lógica PIX existente
         const payload = {
           plan_id: plan.id,
           payment_method: "pix",
@@ -342,9 +341,18 @@ export default function Checkout() {
 
         if (error) throw error;
 
-        if (data.pix_data) {
-          navigate("/pagamento", {
-            state: { pixData: data.pix_data, paymentId: data.payment_id },
+        // Em sandbox, create-payment já aprova e retorna pix_code/pix_qr_code
+        if (data?.pix_code) {
+          navigate("/pagamento/pix", { state: { paymentData: data } });
+        } else {
+          // fallback: considerar pago e ir para sucesso genérico
+          navigate("/pagamento/sucesso", {
+            state: {
+              planName: plan.name,
+              amount: plan.price,
+              paymentId: data?.payment_id,
+              paymentMethod: "pix",
+            },
           });
         }
       } else {
@@ -547,7 +555,7 @@ export default function Checkout() {
                   Escolha a forma de pagamento
                 </h3>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("pix")}

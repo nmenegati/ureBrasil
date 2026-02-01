@@ -73,6 +73,22 @@ export function formatCEP(value: string): string {
   return !match[2] ? match[1] : `${match[1]}-${match[2]}`;
 }
 
+// Formatar número de matrícula em blocos com ponto (ex: 1.234.567.890)
+export function formatEnrollmentNumber(value: string): string {
+  const cleaned = value.replace(/\D/g, '');
+  if (!cleaned) return '';
+  if (cleaned.length <= 3) return cleaned;
+
+  const firstGroupLength = cleaned.length % 3 || 3;
+  const groups = [cleaned.slice(0, firstGroupLength)];
+
+  for (let i = firstGroupLength; i < cleaned.length; i += 3) {
+    groups.push(cleaned.slice(i, i + 3));
+  }
+
+  return groups.join('.');
+}
+
 // Formatar data de nascimento (dd/mm/aaaa)
 export function formatBirthDateBR(value: string): string {
   const cleaned = value.replace(/\D/g, '').slice(0, 8);
@@ -105,8 +121,10 @@ const DISPOSABLE_DOMAINS = new Set([
   'yopmail.com',
   'fakeinbox.com',
   'moakt.com',
+  'tempmail.com',
   'tempmail.plus',
   'temporary-mail.net',
+  'throwaway.email',
   'dispostable.com',
   'getnada.com',
   'anonbox.net',
@@ -133,4 +151,75 @@ export function isDisposableEmailDomain(email: string): boolean {
     if (DISPOSABLE_DOMAINS.has(base)) return true;
   }
   return false;
+}
+
+// Validação de senha forte
+export interface PasswordStrength {
+  isValid: boolean;
+  score: number; // 0-4
+  feedback: string[];
+}
+
+export function validatePassword(password: string): PasswordStrength {
+  const feedback: string[] = [];
+  let score = 0;
+
+  // Mínimo 8 caracteres
+  if (password.length < 8) {
+    feedback.push('Mínimo 8 caracteres');
+  } else {
+    score++;
+  }
+
+  // Letra maiúscula
+  if (!/[A-Z]/.test(password)) {
+    feedback.push('Pelo menos 1 letra maiúscula');
+  } else {
+    score++;
+  }
+
+  // Letra minúscula
+  if (!/[a-z]/.test(password)) {
+    feedback.push('Pelo menos 1 letra minúscula');
+  } else {
+    score++;
+  }
+
+  // Número
+  if (!/[0-9]/.test(password)) {
+    feedback.push('Pelo menos 1 número');
+  } else {
+    score++;
+  }
+
+  // Caractere especial (opcional - bônus)
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    score++;
+  }
+
+  // Senhas comuns
+  const commonPasswords = [
+    '12345678',
+    'password',
+    'qwerty123',
+    'abc12345',
+    'senha123',
+    'admin123',
+    '11111111',
+    '00000000',
+  ];
+
+  if (commonPasswords.includes(password.toLowerCase())) {
+    return {
+      isValid: false,
+      score: 0,
+      feedback: ['Senha muito usada. Tente uma mais única!'],
+    };
+  }
+
+  return {
+    isValid: feedback.length === 0,
+    score: Math.min(score, 4),
+    feedback,
+  };
 }
