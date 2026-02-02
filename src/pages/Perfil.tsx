@@ -94,7 +94,7 @@ const formatEducationLevel = (level: string | null | undefined) => {
     tecnico: 'Técnico',
     graduacao: 'Graduação',
     pos_lato: 'Pós-graduação',
-    stricto_sensu: 'Mestrado/Doutorado',
+    stricto_sensu: 'Pós-graduação',
   };
   return map[level] || level;
 };

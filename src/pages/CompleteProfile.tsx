@@ -10,26 +10,36 @@ import { useViaCep } from '@/hooks/useViaCep';
 import { formatCEP, formatEnrollmentNumber } from '@/lib/validators';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Info, AlertTriangle } from 'lucide-react';
+import {
+  Loader2,
+  Info,
+  AlertTriangle,
+  Scale,
+  NotebookPen,
+  BookOpen,
+  Book,
+  Briefcase,
+  GraduationCap,
+  ScrollText,
+  MapPin,
+} from 'lucide-react';
 import { Header } from '@/components/Header';
 import { ProgressBar } from '@/components/ProgressBar';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 const educationLevels = [
-  { id: 'fundamental', label: 'Ensino Fundamental' },
-  { id: 'medio', label: 'Ensino Médio' },
-  { id: 'tecnico', label: 'Curso Técnico' },
-  { id: 'graduacao', label: 'Graduação' },
-  { id: 'pos_lato', label: 'Pós-graduação' },
-  { id: 'stricto_sensu', label: 'Mestrado/Doutorado' },
-];
+  { id: 'fundamental', label: 'Fundamental', icon: BookOpen },
+  { id: 'medio', label: 'Médio', icon: Book },
+  { id: 'tecnico', label: 'Técnico', icon: Briefcase },
+  { id: 'graduacao', label: 'Graduação', icon: GraduationCap },
+  { id: 'pos_lato', label: 'Pós-graduação', icon: ScrollText },
+] as const;
 
 const fieldConfiguration = {
   fundamental: {
     showCourseField: false,
     seriesLabel: 'Série *',
-    seriesPlaceholder: 'Selecione a série',
+    seriesPlaceholder: 'Selecione',
     seriesOptions: [
       '1º ano',
       '2º ano',
@@ -45,15 +55,15 @@ const fieldConfiguration = {
   medio: {
     showCourseField: false,
     seriesLabel: 'Série *',
-    seriesPlaceholder: 'Selecione a série',
+    seriesPlaceholder: 'Selecione',
     seriesOptions: ['1º ano', '2º ano', '3º ano'],
   },
   tecnico: {
     showCourseField: true,
     courseLabel: 'Curso *',
-    coursePlaceholder: 'Ex: Técnico em Enfermagem',
+    coursePlaceholder: 'Ex: Técnico em Eletrotécnica',
     periodLabel: 'Módulo *',
-    periodPlaceholder: 'Selecione o módulo',
+    periodPlaceholder: 'Selecione',
     periodOptions: ['1º módulo', '2º módulo', '3º módulo', '4º módulo'],
   },
   graduacao: {
@@ -61,7 +71,7 @@ const fieldConfiguration = {
     courseLabel: 'Curso *',
     coursePlaceholder: 'Ex: Odontologia',
     periodLabel: 'Semestre *',
-    periodPlaceholder: 'Selecione o semestre',
+    periodPlaceholder: 'Selecione',
     periodOptions: [
       '1º semestre',
       '2º semestre',
@@ -77,27 +87,10 @@ const fieldConfiguration = {
   },
   pos_lato: {
     showCourseField: true,
-    courseLabel: 'Nome da Especialização *',
-    coursePlaceholder: 'Ex: Especialização em Gestão Escolar',
+    courseLabel: 'Curso, Programa de Pós-graduação ou Especialização *',
+    coursePlaceholder: 'Ex: MBA em Gestão, Mestrado em Educação',
     periodLabel: 'Semestre *',
-    periodPlaceholder: 'Selecione o semestre',
-    periodOptions: [
-      '1º semestre',
-      '2º semestre',
-      '3º semestre',
-      '4º semestre',
-      '5º semestre',
-      '6º semestre',
-      '7º semestre',
-      '8º semestre',
-    ],
-  },
-  stricto_sensu: {
-    showCourseField: true,
-    courseLabel: 'Programa de Pós-graduação Stricto Sensu *',
-    coursePlaceholder: 'Ex: Mestrado em Educação',
-    periodLabel: 'Semestre *',
-    periodPlaceholder: 'Selecione o semestre',
+    periodPlaceholder: 'Selecione',
     periodOptions: [
       '1º semestre',
       '2º semestre',
@@ -130,7 +123,7 @@ export default function CompleteProfile() {
   const [period, setPeriod] = useState('');
   const [enrollmentNumber, setEnrollmentNumber] = useState('');
   const [educationLevel, setEducationLevel] = useState<
-    'fundamental' | 'medio' | 'tecnico' | 'graduacao' | 'pos_lato' | 'stricto_sensu'
+    'fundamental' | 'medio' | 'tecnico' | 'graduacao' | 'pos_lato'
   >('graduacao');
   const [loading, setLoading] = useState(false);
   const [isCepResolved, setIsCepResolved] = useState(false);
@@ -142,8 +135,22 @@ export default function CompleteProfile() {
     (config.showCourseField ? config.periodOptions : config.seriesOptions) || [];
   const canBeLawStudent =
     educationLevel === 'graduacao' ||
-    educationLevel === 'pos_lato' ||
-    educationLevel === 'stricto_sensu';
+    educationLevel === 'pos_lato';
+  const institutionPlaceholder =
+    educationLevel === 'tecnico'
+      ? 'Ex: CEFET-MG'
+      : educationLevel === 'fundamental' || educationLevel === 'medio'
+      ? 'Instituto de Educação de Minas Gerais'
+      : 'Ex: Universidade Federal de Juiz de Fora';
+  const coursePlaceholder = !config.showCourseField
+    ? ''
+    : !canBeLawStudent
+    ? config.coursePlaceholder
+    : courseType === 'direito'
+    ? 'Curso de Direito'
+    : educationLevel === 'graduacao'
+    ? 'Ex: Odontologia, Medicina, Engenharia Civil...'
+    : 'Ex: MBA em Gestão, Especialização em Educação...';
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -164,7 +171,9 @@ export default function CompleteProfile() {
       if (data) {
         setCep(data.cep ? formatCEP(data.cep) : '');
         setStreet(data.street || '');
-        setNumber(data.number || '');
+        setNumber(
+          data.number ? formatEnrollmentNumber(String(data.number)) : ''
+        );
         setComplement(data.complement || '');
         setNeighborhood(data.neighborhood || '');
         setCity(data.city || '');
@@ -182,10 +191,11 @@ export default function CompleteProfile() {
           data.education_level === 'medio' ||
           data.education_level === 'tecnico' ||
           data.education_level === 'graduacao' ||
-          data.education_level === 'pos_lato' ||
-          data.education_level === 'stricto_sensu'
+          data.education_level === 'pos_lato'
         ) {
           setEducationLevel(data.education_level);
+        } else if (data.education_level === 'stricto_sensu') {
+          setEducationLevel('pos_lato');
         }
 
         const isGradOrPost =
@@ -299,7 +309,7 @@ export default function CompleteProfile() {
       .update({
         cep: cleanCep,
         street,
-        number,
+        number: number.replace(/\D/g, ''),
         complement: complement || null,
         neighborhood,
         city,
@@ -370,16 +380,17 @@ export default function CompleteProfile() {
 
               {/* Formulário */}
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Seção Endereço */}
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                    Endereço Residencial
-                  </h2>
+                {/* Bloco Endereço */}
+                <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 space-y-4">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    <span>Endereço Residencial</span>
+                  </h3>
 
                   {/* CEP com mensagem informativa */}
                   <div className="flex flex-row items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
                     <div className="w-32 sm:w-36">
-                      <Label htmlFor="cep" className="text-foreground">CEP</Label>
+                      <Label htmlFor="cep" className="text-foreground">CEP *</Label>
                       <div className="relative">
                         <Input
                           id="cep"
@@ -416,7 +427,7 @@ export default function CompleteProfile() {
 
                   {/* Rua */}
                   <div className="space-y-2">
-                    <Label htmlFor="street" className="text-foreground">Rua</Label>
+                    <Label htmlFor="street" className="text-foreground">Rua *</Label>
                     <Input
                       id="street"
                       type="text"
@@ -427,28 +438,27 @@ export default function CompleteProfile() {
                       className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       required
                     />
-                    <span className="text-xs text-muted-foreground block text-right">{street.length}/70</span>
                   </div>
 
                   {/* Número + Complemento */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-1 space-y-2">
-                      <Label htmlFor="number" className="text-foreground">Número</Label>
+                      <Label htmlFor="number" className="text-foreground">Número *</Label>
                       <Input
                         id="number"
                         type="text"
                         inputMode="numeric"
-                        placeholder="Ex: 123, 54, 1002"
+                        placeholder="Ex: 345, 89"
                         value={number}
                         onChange={(e) => {
-                          const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10);
-                          setNumber(digitsOnly);
+                          const cleaned = e.target.value.replace(/\D/g, '').slice(0, 5);
+                          setNumber(formatEnrollmentNumber(cleaned));
                         }}
-                        maxLength={10}
+                        maxLength={6}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                         required
                       />
-                      <span className="text-xs text-muted-foreground block text-right">{number.length}/10</span>
+
                     </div>
                     <div className="col-span-2 space-y-2">
                       <Label htmlFor="complement" className="text-foreground">Complemento</Label>
@@ -461,13 +471,12 @@ export default function CompleteProfile() {
                         maxLength={50}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       />
-                      <span className="text-xs text-muted-foreground block text-right">{complement.length}/50</span>
                     </div>
                   </div>
 
                   {/* Bairro */}
                   <div className="space-y-2">
-                    <Label htmlFor="neighborhood" className="text-foreground">Bairro</Label>
+                    <Label htmlFor="neighborhood" className="text-foreground">Bairro *</Label>
                     <Input
                       id="neighborhood"
                       type="text"
@@ -478,14 +487,11 @@ export default function CompleteProfile() {
                       className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       required
                     />
-                    <span className="text-xs text-muted-foreground block text-right">
-                      {neighborhood.length}/70
-                    </span>
                   </div>
 
                   <div className="grid grid-cols-4 gap-4">
                     <div className="space-y-2 col-span-3">
-                      <Label htmlFor="city" className="text-foreground">Cidade</Label>
+                      <Label htmlFor="city" className="text-foreground">Cidade *</Label>
                       <Input
                         id="city"
                         type="text"
@@ -500,7 +506,7 @@ export default function CompleteProfile() {
                       </span>
                     </div>
                     <div className="space-y-2 col-span-1">
-                      <Label htmlFor="state" className="text-foreground">Estado</Label>
+                      <Label htmlFor="state" className="text-foreground">Estado *</Label>
                       <Select
                         value={state}
                         onValueChange={(value) => setState(value)}
@@ -548,21 +554,25 @@ export default function CompleteProfile() {
                   </div>
                 </div>
 
-                {/* Seção Acadêmica */}
-                <div className="space-y-4">
-                  <h2 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                    Dados Acadêmicos
-                  </h2>
+                {/* Bloco Acadêmico */}
+                <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 space-y-4">
+                  <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5" />
+                    <span>Dados Acadêmicos</span>
+                  </h3>
 
                   <div className="space-y-2">
-                    <Label className="text-foreground">Nível de ensino</Label>
+                    <Label className="text-foreground">Nível de ensino *</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {educationLevels.map((level) => (
                         <Button
                           key={level.id}
                           type="button"
                           variant={educationLevel === level.id ? 'default' : 'outline'}
-                          className="justify-start"
+                          className={
+                            'justify-start flex items-center gap-2 ' +
+                            (educationLevel === level.id ? '' : 'bg-sky-200 hover:bg-sky-300')
+                          }
                           onClick={() => {
                             setEducationLevel(level.id as typeof educationLevel);
                             setCourse('');
@@ -571,80 +581,91 @@ export default function CompleteProfile() {
                             setCustomCourseName('');
                           }}
                         >
-                          {level.label}
+                          <level.icon className="h-5 w-5" />
+                          <span>{level.label}</span>
                         </Button>
                       ))}
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="institution" className="text-foreground">Instituição de ensino</Label>
+                    <Label htmlFor="institution" className="text-foreground">Instituição de ensino *</Label>
                     <Input
                       id="institution"
                       type="text"
-                      placeholder="Ex: Universidade Federal de Juiz de Fora"
+                      placeholder={institutionPlaceholder}
                       value={institution}
                       onChange={(e) => setInstitution(e.target.value)}
                       maxLength={70}
                       className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       required
                     />
-                    <span className="text-xs text-muted-foreground block text-right">{institution.length}/70</span>
                   </div>
 
                   {config.showCourseField && (
                     canBeLawStudent ? (
                       <div className="space-y-3">
                         <Label className="text-foreground">Tipo de curso *</Label>
-                        <RadioGroup
-                          value={courseType}
-                          onValueChange={(value: 'direito' | 'outro') => {
-                            setCourseType(value);
-                            if (value === 'direito') {
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            type="button"
+                            variant={courseType === 'direito' ? 'default' : 'outline'}
+                            className={
+                              'justify-start flex items-center gap-2 ' +
+                              (courseType === 'direito' ? '' : 'bg-sky-200 hover:bg-sky-300')
+                            }
+                            onClick={() => {
+                              setCourseType('direito');
                               setCourse('Direito');
                               setCustomCourseName('');
-                            } else {
-                              setCourse('');
+                            }}
+                          >
+                            <Scale className="h-4 w-4" />
+                            <span>Curso de Direito</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={courseType === 'outro' ? 'default' : 'outline'}
+                            className={
+                              'justify-start flex items-center gap-2 ' +
+                              (courseType === 'outro' ? '' : 'bg-sky-200 hover:bg-sky-300')
                             }
-                          }}
-                          className="space-y-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="direito" id="direito" />
-                            <Label htmlFor="direito" className="font-normal cursor-pointer">
-                              Curso de Direito
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="outro" id="outro" />
-                            <Label htmlFor="outro" className="font-normal cursor-pointer">
-                              Outro curso
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                        {courseType === 'outro' && (
-                          <div className="space-y-2">
-                            <Label htmlFor="course" className="text-foreground">
-                              {config.courseLabel}
-                            </Label>
-                            <Input
-                              id="course"
-                              type="text"
-                              placeholder={config.coursePlaceholder}
-                              value={customCourseName}
-                              onChange={(e) => {
+                            onClick={() => {
+                              setCourseType('outro');
+                              setCourse(customCourseName);
+                            }}
+                          >
+                            <NotebookPen className="h-4 w-4" />
+                            <span>Outros cursos</span>
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="course" className="text-foreground">
+                            {config.courseLabel}
+                          </Label>
+                          <Input
+                            id="course"
+                            type="text"
+                            placeholder={coursePlaceholder}
+                            value={courseType === 'direito' ? 'Curso de Direito' : customCourseName}
+                            onChange={(e) => {
+                              if (courseType === 'outro') {
                                 setCustomCourseName(e.target.value);
                                 setCourse(e.target.value);
-                              }}
-                              maxLength={150}
-                              className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                              required
-                            />
-                            <span className="text-xs text-muted-foreground block text-right">
-                              {customCourseName.length}/150
-                            </span>
-                          </div>
-                        )}
+                              }
+                            }}
+                            readOnly={courseType === 'direito'}
+                            tabIndex={courseType === 'direito' ? -1 : 0}
+                            maxLength={100}
+                            className={
+                              'border-input focus:border-primary focus:ring-primary/20 h-11 text-base ' +
+                              (courseType === 'direito'
+                                ? 'bg-sky-200 text-foreground cursor-default pointer-events-none'
+                                : 'bg-background text-foreground placeholder:text-muted-foreground')
+                            }
+                            required
+                          />
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -654,16 +675,13 @@ export default function CompleteProfile() {
                         <Input
                           id="course"
                           type="text"
-                          placeholder={config.coursePlaceholder}
+                          placeholder={coursePlaceholder}
                           value={course}
                           onChange={(e) => setCourse(e.target.value)}
                           maxLength={70}
                           className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                           required
                         />
-                        <span className="text-xs text-muted-foreground block text-right">
-                          {course.length}/70
-                        </span>
                       </div>
                     )
                   )}
@@ -696,7 +714,7 @@ export default function CompleteProfile() {
                       </Select>
                     </div>
                     <div className="space-y-2 w-1/2">
-                      <Label htmlFor="enrollmentNumber" className="text-foreground">Nº de matrícula</Label>
+                      <Label htmlFor="enrollmentNumber" className="text-foreground">Nº de matrícula *</Label>
                       <Input
                         id="enrollmentNumber"
                         type="text"
@@ -706,13 +724,10 @@ export default function CompleteProfile() {
                         onChange={(e) => {
                           setEnrollmentNumber(formatEnrollmentNumber(e.target.value));
                         }}
-                        maxLength={14}
+                        maxLength={10}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                         required
                       />
-                      <span className="text-xs text-muted-foreground block text-right">
-                        {enrollmentNumber.length}/14
-                      </span>
                     </div>
                   </div>
 

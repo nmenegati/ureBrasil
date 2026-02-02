@@ -959,7 +959,7 @@ const Index = () => {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
                 RG ou CNH, comprovante de matrícula ou declaração da
-                instituição, uma foto 3x4 com fundo neutro e uma selfie com o documento em mãos.
+                instituição, uma foto 3x4 com fundo neutro e uma selfie.
               </AccordionContent>
             </AccordionItem>
 
