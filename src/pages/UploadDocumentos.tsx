@@ -229,6 +229,22 @@ export default function UploadDocumentos() {
     setPreviews(newPreviews);
   }, [profile]);
 
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const hasPending = Object.values(documents).some(
+      (doc) => doc && doc.status === 'pending'
+    );
+
+    if (!hasPending) return;
+
+    const interval = setInterval(() => {
+      fetchDocuments();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [profile?.id, documents, fetchDocuments]);
+
 const handleUpload = async (file: File, type: DocumentType) => {
     if (uploading[type]) return;
 
@@ -1017,7 +1033,7 @@ if (termsAlreadyAccepted) {
         {allDocsUploaded && termsAlreadyAccepted && !canGenerateCard && (
           <div className="mb-6 max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
             <p className="text-sm text-green-900 dark:text-green-200">
-              ✅ Você já aceitou o Termo de Responsabilidade
+              ✅ Você aceitou o Termo de Responsabilidade
               <br />
               <span className="text-xs text-green-800/80 dark:text-green-300/80">
                 Data: {termsAcceptedDate ? new Date(termsAcceptedDate).toLocaleString('pt-BR') : 'N/A'} • Versão: {termsVersion || '1.0'}
