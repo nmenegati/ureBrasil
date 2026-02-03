@@ -637,16 +637,6 @@ return (
               <p className={cn("text-sm text-slate-600 dark:text-slate-300 truncate", status === 'approved' ? "text-center" : "flex-1")}>
                 {doc.file_name}
               </p>
-              {status !== 'approved' && status !== 'rejected' && !isSelfie && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => inputRef.current?.click()}
-                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
-                >
-                  Trocar
-                </Button>
-              )}
               {status === 'rejected' && isSelfie && (
                 <Button
                   variant="ghost"
@@ -674,18 +664,6 @@ return (
               <File className="w-8 h-8 text-slate-500 dark:text-slate-400" />
               <p className="text-sm text-slate-900 dark:text-white truncate flex-1">{doc.file_name}</p>
             </div>
-            {status !== 'approved' && status !== 'rejected' && !isSelfie && (
-              <div className="flex justify-end mt-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => inputRef.current?.click()}
-                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
-                >
-                  Trocar
-                </Button>
-              </div>
-            )}
             {!isSelfie && (
               <input
                 ref={inputRef}
@@ -913,7 +891,7 @@ if (termsAlreadyAccepted) {
           ))}
         </div>
 
-        <Alert className="mb-4 max-w-2xl mx-auto bg-green-200 border-green-400 py-2 mb-6">
+        <Alert className="mb-4 max-w-2xl mx-auto bg-green-300 border-green-500 py-2 mb-6">
           <AlertDescription className="text-sm text-gray-700 flex items-center justify-center gap-2 text-center">
             <span>🔍</span>
             <span>Validação facial após aprovação da documentação.</span>

@@ -184,25 +184,61 @@ export default function StatusValidacao() {
     return () => clearInterval(interval);
   }, [profileId, loadDocuments]);
 
-  // Quando todos os documentos forem aprovados, atualizar step e seguir para geração da carteirinha
+  // Quando todos os documentos forem aprovados, atualizar step (se necessário) e seguir para a próxima etapa
   useEffect(() => {
     if (!profileId) return;
     if (documents.length === 0) return;
 
     const allApproved = documents.every(d => d.status === 'approved');
-    if (allApproved) {
-      supabase
-        .from('student_profiles')
-        .update({ current_onboarding_step: 'review_data' })
-        .eq('id', profileId)
-        .then(() => {
-          navigate('/gerar-carteirinha');
-        })
-        .catch((error) => {
-          console.error('Erro ao atualizar current_onboarding_step para review_data:', error);
-          navigate('/gerar-carteirinha');
-        });
-    }
+    if (!allApproved) return;
+
+    const handleStepAfterApproval = async () => {
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from('student_profiles')
+          .select('current_onboarding_step')
+          .eq('id', profileId)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Erro ao buscar current_onboarding_step:', profileError);
+        }
+
+        const currentStep = profileData?.current_onboarding_step as string | null;
+
+        if (currentStep === 'completed') {
+          navigate('/carteirinha');
+          return;
+        }
+
+        if (currentStep !== 'review_data') {
+          const allowedPreviousSteps = [
+            'upload_documents',
+            'pending_validation',
+            null,
+          ];
+
+          if (!currentStep || allowedPreviousSteps.includes(currentStep as any)) {
+            const { error: updateError } = await supabase
+              .from('student_profiles')
+              .update({ current_onboarding_step: 'review_data' })
+              .eq('id', profileId)
+              .in('current_onboarding_step', allowedPreviousSteps as any);
+
+            if (updateError) {
+              console.error('Erro ao atualizar current_onboarding_step para review_data:', updateError);
+            }
+          }
+        }
+
+        navigate('/gerar-carteirinha');
+      } catch (err) {
+        console.error('Erro ao atualizar fluxo após aprovação dos documentos:', err);
+        navigate('/gerar-carteirinha');
+      }
+    };
+
+    handleStepAfterApproval();
   }, [documents, profileId, navigate]);
 
   const handleRefresh = async () => {

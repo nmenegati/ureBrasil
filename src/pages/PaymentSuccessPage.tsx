@@ -66,62 +66,145 @@ const PaymentSuccessPage = () => {
   }, [navigate]);
 
   useEffect(() => {
-    const state = (location.state as {
-      paymentId?: string;
-      planName?: string;
-      amount?: number;
-      paymentMethod?: string;
-      isPhysicalPlan?: boolean;
-      isStandalonePhysical?: boolean;
-    }) || {};
+    const handleNavigation = async () => {
+      const state = (location.state as {
+        paymentId?: string;
+        planName?: string;
+        amount?: number;
+        paymentMethod?: string;
+        isPhysicalPlan?: boolean;
+        isStandalonePhysical?: boolean;
+      }) || {};
 
-    if (state.paymentId) {
-      setPaymentId(state.paymentId);
-      setPlanName(state.planName ?? null);
-      setAmount(state.amount ?? null);
-      setPaymentMethod(state.paymentMethod ?? null);
-      setIsPhysicalPlan(!!state.isPhysicalPlan);
-      setIsStandalonePhysical(!!state.isStandalonePhysical);
-      localStorage.setItem("recent_payment_id", state.paymentId);
-
-      if (state.isPhysicalPlan) {
-        setIsPhysicalCard(true);
-        setShowUpsellModal(false);
-
-        const target = state.isStandalonePhysical ? "/carteirinha" : "/upload-documentos";
-        setTimeout(() => {
-          navigate(target, { replace: true });
-        }, 2000);
-      } else {
-        checkIfPhysicalCard(state.paymentId);
-      }
-    } else {
       const recentPaymentId = localStorage.getItem("recent_payment_id");
+
+      let step: string | null = null;
+
+      if (user) {
+        try {
+          const { data } = await supabase
+            .from("student_profiles")
+            .select("current_onboarding_step")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          step = (data?.current_onboarding_step as string | null) ?? null;
+        } catch (err) {
+          console.error("Erro ao buscar current_onboarding_step em PaymentSuccessPage:", err);
+        }
+      }
+
+      if (step === "completed") {
+        navigate("/carteirinha", { replace: true });
+        return;
+      }
+
+      if (step === "review_data") {
+        navigate("/gerar-carteirinha", { replace: true });
+        return;
+      }
+
+      if (step === "pending_validation") {
+        navigate("/status-validacao", { replace: true });
+        return;
+      }
+
+      if (step === "upload_documents") {
+        navigate("/upload-documentos", { replace: true });
+        return;
+      }
+
+      if (state.paymentId) {
+        setPaymentId(state.paymentId);
+        setPlanName(state.planName ?? null);
+        setAmount(state.amount ?? null);
+        setPaymentMethod(state.paymentMethod ?? null);
+        setIsPhysicalPlan(!!state.isPhysicalPlan);
+        setIsStandalonePhysical(!!state.isStandalonePhysical);
+        localStorage.setItem("recent_payment_id", state.paymentId);
+
+        if (state.isPhysicalPlan) {
+          setIsPhysicalCard(true);
+          setShowUpsellModal(false);
+
+          const target = state.isStandalonePhysical ? "/carteirinha" : "/upload-documentos";
+          setTimeout(() => {
+            navigate(target, { replace: true });
+          }, 2000);
+        } else {
+          checkIfPhysicalCard(state.paymentId);
+        }
+        return;
+      }
 
       if (recentPaymentId) {
         setPaymentId(recentPaymentId);
         checkIfPhysicalCard(recentPaymentId);
-      } else if (user) {
+        return;
+      }
+
+      if (user) {
         supabase
           .from("student_profiles")
-          .select("id")
+          .select("id, current_onboarding_step")
           .eq("user_id", user.id)
           .maybeSingle()
-          .then(({ data }) => {
-            if (data?.id) {
-              return supabase
+          .then(async ({ data }) => {
+            if (!data?.id) {
+              navigate("/complete-profile", { replace: true });
+              return;
+            }
+
+            const currentStep = (data.current_onboarding_step as string | null) ?? null;
+
+            if (currentStep === "completed") {
+              navigate("/carteirinha", { replace: true });
+              return;
+            }
+
+            if (currentStep === "review_data") {
+              navigate("/gerar-carteirinha", { replace: true });
+              return;
+            }
+
+            if (currentStep === "pending_validation") {
+              navigate("/status-validacao", { replace: true });
+              return;
+            }
+
+            if (currentStep === "upload_documents") {
+              navigate("/upload-documentos", { replace: true });
+              return;
+            }
+
+            const STEPS_BEFORE_UPLOAD = [
+              "complete_profile",
+              "choose_plan",
+              "payment",
+              "upsell_physical",
+              "payment_upsell",
+            ] as const;
+
+            if (!currentStep || STEPS_BEFORE_UPLOAD.includes(currentStep)) {
+              await supabase
                 .from("student_profiles")
                 .update({ current_onboarding_step: "upload_documents" })
                 .eq("id", data.id);
+              navigate("/upload-documentos", { replace: true });
+              return;
             }
+
+            navigate("/upload-documentos", { replace: true });
           })
-          .finally(() => {
+          .catch(() => {
             navigate("/upload-documentos", { replace: true });
           });
       } else {
         navigate("/upload-documentos", { replace: true });
       }
-    }
+    };
+
+    handleNavigation();
   }, [location.state, navigate, checkIfPhysicalCard, user]);
 
   const handleAcceptUpsell = async () => {
@@ -145,6 +228,18 @@ const PaymentSuccessPage = () => {
             console.warn("Erro ao atualizar current_onboarding_step (não crítico):", stepError);
           }
         }
+      }
+
+      if (paymentId) {
+        localStorage.setItem(
+          "upsell_data",
+          JSON.stringify({
+            originalPaymentId: paymentId,
+            amount: 15,
+            isUpsell: true,
+            timestamp: Date.now(),
+          }),
+        );
       }
 
       navigate("/checkout", {

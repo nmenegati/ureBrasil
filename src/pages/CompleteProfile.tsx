@@ -410,7 +410,7 @@ export default function CompleteProfile() {
                     <div className="flex-1 flex items-center gap-1.5 pt-6">
                       <Info className="h-4 w-4 text-primary shrink-0" />
                       <span className="text-sm text-muted-foreground">
-                        Insira seu CEP para preencher o endereço automaticamente.
+                        Insira seu CEP para preenchimento automatico.
                       </span>
                     </div>
                   </div>

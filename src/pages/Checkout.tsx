@@ -51,6 +51,12 @@ interface UpsellState {
   planType?: string;
 }
 
+interface ResolvedUpsell {
+  isUpsell: boolean;
+  amount: number;
+  originalPaymentId: string;
+}
+
 // Máscaras de input
 const maskCardNumber = (v: string) => {
   return v.replace(/\D/g, "").replace(/(\d{4})(?=\d)/g, "$1 ").slice(0, 19);
@@ -108,13 +114,62 @@ export default function Checkout() {
   } | null>(null);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [isValidLawStudent, setIsValidLawStudent] = useState(false);
+  const [resolvedUpsell, setResolvedUpsell] = useState<ResolvedUpsell | null>(null);
+  const [resolvingUpsell, setResolvingUpsell] = useState(true);
+
+  useEffect(() => {
+    const resolveUpsell = () => {
+      if (upsellState?.isUpsell && upsellState.originalPaymentId) {
+        setResolvedUpsell({
+          isUpsell: true,
+          amount: upsellState.amount ?? 15,
+          originalPaymentId: upsellState.originalPaymentId,
+        });
+        setPaymentMethod("card");
+        setResolvingUpsell(false);
+        return;
+      }
+
+      const savedUpsell = localStorage.getItem("upsell_data");
+      if (savedUpsell) {
+        try {
+          const data = JSON.parse(savedUpsell) as {
+            originalPaymentId?: string;
+            amount?: number;
+            isUpsell?: boolean;
+            timestamp?: number;
+          };
+
+          const timestamp = typeof data.timestamp === "number" ? data.timestamp : 0;
+          const expired = Date.now() - timestamp > 30 * 60 * 1000;
+
+          if (data.isUpsell && data.originalPaymentId && !expired) {
+            setResolvedUpsell({
+              isUpsell: true,
+              amount: data.amount ?? 15,
+              originalPaymentId: data.originalPaymentId,
+            });
+            setPaymentMethod("card");
+            setResolvingUpsell(false);
+            return;
+          }
+        } catch {
+        }
+      }
+
+      setResolvingUpsell(false);
+      toast.error("Fluxo de upsell inválido.");
+      navigate("/upload-documentos", { replace: true });
+    };
+
+    resolveUpsell();
+  }, [upsellState, navigate]);
 
   useEffect(() => {
     const fetchPlanAndProfile = async () => {
       if (!user) return;
 
       try {
-        // Buscar perfil COM dados necessários para PagBank
         const { data: profile, error: profileError } = await supabase
           .from("student_profiles")
           .select("plan_id, cpf, phone, birth_date, is_law_student, education_level")
@@ -127,7 +182,6 @@ export default function Checkout() {
           return;
         }
 
-        // Guardar dados do perfil para o PagBank
         setStudentProfile({
           cpf: profile.cpf,
           phone: profile.phone,
@@ -141,54 +195,31 @@ export default function Checkout() {
             profile.education_level === "stricto_sensu");
         setIsValidLawStudent(validLaw);
 
-        // === MODO UPSELL ===
-        if (isUpsell && originalPaymentId) {
-          // Buscar nome do plano original para mostrar no checkout
-          const { data: originalPayment } = await supabase
-            .from("payments")
-            .select("plan_id, plans(name)")
-            .eq("id", originalPaymentId)
-            .single();
-
-          const originalPlanName = originalPayment?.plans 
-            ? (originalPayment.plans as { name: string }).name 
-            : "sua carteirinha";
-
-          setPlan({
-            id: 'physical_addon',
-            name: 'Carteirinha Física',
-            description: `Adicional para ${originalPlanName}`,
-            price: upsellAmount,
-            is_physical: true,
-            is_direito: false,
-          });
-
-          setLoading(false);
+        if (!resolvedUpsell || !resolvedUpsell.isUpsell || !resolvedUpsell.originalPaymentId) {
+          toast.error("Fluxo de upsell inválido.");
+          navigate("/upload-documentos", { replace: true });
           return;
         }
 
-        // === MODO NORMAL ===
-        if (!profile?.plan_id) {
-          toast.error("Nenhum plano selecionado");
-          navigate("/escolher-plano");
-          return;
-        }
-
-        const { data: planData, error: planError } = await supabase
-          .from("plans")
-          .select("*")
-          .eq("id", profile.plan_id)
+        const { data: originalPayment } = await supabase
+          .from("payments")
+          .select("plan_id, plans(name)")
+          .eq("id", resolvedUpsell.originalPaymentId)
           .single();
 
-        if (planError || !planData) {
-          toast.error("Plano não encontrado");
-          navigate("/escolher-plano");
-          return;
-        }
+        const originalPlanName = originalPayment?.plans
+          ? (originalPayment.plans as { name: string }).name
+          : "sua carteirinha";
 
-        setPlan(planData);
-        
-        // Gerar sessão PagBank após carregar dados
+        setPlan({
+          id: "physical_addon",
+          name: "Carteirinha Física",
+          description: `Adicional para ${originalPlanName}`,
+          price: resolvedUpsell.amount,
+          is_physical: true,
+          is_direito: false,
+        });
+
         await generateSession();
       } catch (error) {
         console.error("Erro ao carregar:", error);
@@ -198,8 +229,10 @@ export default function Checkout() {
       }
     };
 
-    fetchPlanAndProfile();
-  }, [user, navigate, generateSession, isUpsell, originalPaymentId, upsellAmount]);
+    if (!resolvingUpsell) {
+      fetchPlanAndProfile();
+    }
+  }, [user, navigate, generateSession, resolvingUpsell, resolvedUpsell]);
 
   const validateCardForm = () => {
     if (paymentMethod !== "card") return true;
@@ -227,6 +260,12 @@ export default function Checkout() {
   const handleSubmit = async () => {
     if (!plan || !studentProfile) return;
 
+    if (!resolvedUpsell || !resolvedUpsell.isUpsell || !resolvedUpsell.originalPaymentId) {
+      toast.error("Fluxo de upsell inválido. Tente novamente a partir da tela de pagamento.");
+      navigate("/upload-documentos", { replace: true });
+      return;
+    }
+
     if (!validateCardForm()) return;
 
     setProcessing(true);
@@ -240,8 +279,7 @@ export default function Checkout() {
         throw new Error("Sessão expirada. Faça login novamente.");
       }
 
-      // === UPSELL: Carteirinha física usando PagBank (pagbank-payment-v2) ===
-      if (isUpsell && originalPaymentId) {
+      if (resolvedUpsell.isUpsell && resolvedUpsell.originalPaymentId) {
         console.log("💳 Processando upsell via PagBank (pagbank-payment-v2)...");
 
         const [month, year] = cardExpiry.split("/");
@@ -251,7 +289,7 @@ export default function Checkout() {
           "pagbank-payment-v2",
           {
             body: {
-              amount: upsellAmount,
+              amount: resolvedUpsell.amount,
               installments: 1,
               card: {
                 number: cardNumber.replace(/\s/g, ""),
@@ -262,7 +300,7 @@ export default function Checkout() {
               },
               metadata: {
                 is_upsell: true,
-                original_payment_id: originalPaymentId,
+                original_payment_id: resolvedUpsell.originalPaymentId,
               },
             },
             headers: {
@@ -286,7 +324,7 @@ export default function Checkout() {
             is_physical: true,
             updated_at: new Date().toISOString(),
           })
-          .eq("payment_id", originalPaymentId);
+          .eq("payment_id", resolvedUpsell.originalPaymentId);
 
         if (updateError) {
           console.error("Erro ao atualizar carteirinha:", updateError);
@@ -317,8 +355,8 @@ export default function Checkout() {
           }
         }
 
-        // Limpar flag para não mostrar modal novamente
         localStorage.removeItem("recent_payment_id");
+        localStorage.removeItem("upsell_data");
 
         toast.success(
           "🎉 Carteirinha física adicionada! Você receberá em 7-10 dias úteis.",
@@ -428,7 +466,7 @@ export default function Checkout() {
     );
   };
 
-  if (loading) {
+  if (loading || resolvingUpsell) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -461,7 +499,7 @@ export default function Checkout() {
     imagemCarteirinha = images[hash % images.length];
   }
 
-  const displayAmount = isUpsell ? upsellAmount : plan.price;
+  const displayAmount = resolvedUpsell ? resolvedUpsell.amount : plan.price;
 
   return (
     <div className="min-h-screen bg-background">

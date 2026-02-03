@@ -27,6 +27,19 @@ interface ProfileData {
   profile_completed: boolean | null;
 }
 
+function formatEducationLevel(level: string | null) {
+  if (!level) return 'Não informado';
+  const map: Record<string, string> = {
+    fundamental: 'Fundamental',
+    medio: 'Médio',
+    tecnico: 'Técnico',
+    graduacao: 'Graduação',
+    pos_lato: 'Pós-graduação',
+    stricto_sensu: 'Mestrado/Doutorado',
+  };
+  return map[level] || level;
+}
+
 function getPeriodLabel(educationLevel: string | null, period: string | null) {
   if (!period) return 'Período';
   const lower = period.toLowerCase();
@@ -187,7 +200,7 @@ export default function GerarCarteirinha() {
               <p><strong>Instituição:</strong> {profile.institution || 'Não informado'}</p>
               <p>
                 <strong>Nível:</strong>{' '}
-                {profile.education_level || 'Não informado'}
+                {formatEducationLevel(profile.education_level)}
               </p>
               <p>
                 <strong>{getPeriodLabel(profile.education_level, profile.period)}:</strong>{' '}

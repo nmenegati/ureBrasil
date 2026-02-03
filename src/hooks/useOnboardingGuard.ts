@@ -32,6 +32,7 @@ const CRITICAL_STEPS = [
   'payment',
   'upsell_physical',
   'payment_upsell',
+  'review_data',
 ] as const;
 
 export function useOnboardingGuard(requiredStep: string) {
