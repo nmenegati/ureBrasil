@@ -68,7 +68,7 @@ serve(async (req) => {
       })
     }
 
-    console.log('Baixando imagens...')
+      console.log('Baixando imagens...')
 
     try {
       const downloadPromises = [
@@ -112,6 +112,10 @@ serve(async (req) => {
               .update({ status: 'approved' })
               .in('id', docIdsToApprove)
               .eq('status', 'pending')
+
+          if (foto?.file_url) {
+            await copyPhotoToPublicBucket(supabase, student_id, foto.file_url)
+          }
 
           await logAudit(supabase, student_id, 'approved', details)
       } else {
@@ -231,4 +235,49 @@ async function logAudit(supabase: SupabaseClient, studentId: string, result: str
     } catch (e) {
         console.error('Audit log error:', e)
     }
+}
+
+async function copyPhotoToPublicBucket(supabase: SupabaseClient, studentId: string, filePath: string) {
+  try {
+    console.log('[PROFILE PHOTO] Copiando foto aprovada para bucket profile-photos...', {
+      studentId,
+      filePath,
+    })
+
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .download(filePath)
+
+    if (error || !data) {
+      console.error('[PROFILE PHOTO] Erro ao baixar foto do bucket documents:', error)
+      return
+    }
+
+    const contentType = (data as any).type || 'image/jpeg'
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-photos')
+      .upload(filePath, data, {
+        upsert: true,
+        contentType,
+      })
+
+    if (uploadError) {
+      console.error('[PROFILE PHOTO] Erro ao enviar foto para bucket profile-photos:', uploadError)
+      return
+    }
+
+    const { error: updateError } = await supabase
+      .from('student_profiles')
+      .update({ profile_photo_url: filePath })
+      .eq('id', studentId)
+
+    if (updateError) {
+      console.error('[PROFILE PHOTO] Erro ao atualizar profile_photo_url:', updateError)
+    } else {
+      console.log('[PROFILE PHOTO] Foto copiada para bucket público e profile_photo_url atualizado')
+    }
+  } catch (e) {
+    console.error('[PROFILE PHOTO] Erro inesperado ao copiar foto para bucket público:', e)
+  }
 }

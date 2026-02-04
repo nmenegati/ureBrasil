@@ -116,8 +116,62 @@ export default function Checkout() {
   const [isValidLawStudent, setIsValidLawStudent] = useState(false);
   const [resolvedUpsell, setResolvedUpsell] = useState<ResolvedUpsell | null>(null);
   const [resolvingUpsell, setResolvingUpsell] = useState(true);
+  const [stepChecked, setStepChecked] = useState(false);
 
   useEffect(() => {
+    const checkCurrentStep = async () => {
+      if (!user) return;
+
+      try {
+        let redirected = false;
+
+        const { data } = await supabase
+          .from("student_profiles")
+          .select("current_onboarding_step")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        const step = (data?.current_onboarding_step as string | null) ?? null;
+
+        if (step === "completed") {
+          navigate("/carteirinha", { replace: true });
+          redirected = true;
+          return;
+        }
+
+        if (step === "review_data") {
+          navigate("/gerar-carteirinha", { replace: true });
+          redirected = true;
+          return;
+        }
+
+        if (step === "pending_validation") {
+          navigate("/status-validacao", { replace: true });
+          redirected = true;
+          return;
+        }
+
+        if (step === "upload_documents") {
+          navigate("/upload-documentos", { replace: true });
+          redirected = true;
+          return;
+        }
+
+        if (!redirected) {
+          setStepChecked(true);
+        }
+      } catch (err) {
+        console.error("Erro ao verificar current_onboarding_step em Checkout:", err);
+        setStepChecked(true);
+      }
+    };
+
+    checkCurrentStep();
+  }, [user?.id, navigate]);
+
+  useEffect(() => {
+    if (!stepChecked) return;
+
     const resolveUpsell = () => {
       if (upsellState?.isUpsell && upsellState.originalPaymentId) {
         setResolvedUpsell({
@@ -163,7 +217,7 @@ export default function Checkout() {
     };
 
     resolveUpsell();
-  }, [upsellState, navigate]);
+  }, [upsellState, navigate, stepChecked]);
 
   useEffect(() => {
     const fetchPlanAndProfile = async () => {
@@ -229,10 +283,10 @@ export default function Checkout() {
       }
     };
 
-    if (!resolvingUpsell) {
+    if (!stepChecked || resolvingUpsell) {
       fetchPlanAndProfile();
     }
-  }, [user, navigate, generateSession, resolvingUpsell, resolvedUpsell]);
+  }, [user, navigate, generateSession, resolvingUpsell, resolvedUpsell, stepChecked]);
 
   const validateCardForm = () => {
     if (paymentMethod !== "card") return true;

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { CheckCircle, Loader2, CreditCard, Truck, Shield, X, Info } from "lucide-react";
@@ -33,40 +33,38 @@ const PaymentSuccessPage = () => {
     }).format(price ?? 0);
   };
 
-  const checkIfPhysicalCard = useCallback(async (paymentId: string) => {
-    try {
-      // Buscar carteirinha associada ao pagamento
-      const { data: card } = await supabase
-        .from('student_cards')
-        .select('is_physical')
-        .eq('payment_id', paymentId)
-        .maybeSingle();
+  useEffect(() => {
+    const checkIfPhysicalCard = async (paymentId: string) => {
+      try {
+        const { data: card } = await supabase
+          .from("student_cards")
+          .select("is_physical")
+          .eq("payment_id", paymentId)
+          .maybeSingle();
 
-      if (card?.is_physical) {
-        // Já é física, redirecionar direto
-        setIsPhysicalCard(true);
-        setTimeout(() => {
-          navigate('/upload-documentos', { replace: true });
-        }, 2000);
-      } else {
-        // É digital, mostrar upsell após 2 segundos
+        if (card?.is_physical) {
+          setIsPhysicalCard(true);
+          setTimeout(() => {
+            navigate("/upload-documentos", { replace: true });
+          }, 2000);
+        } else {
+          setIsPhysicalCard(false);
+          setTimeout(() => {
+            setShowUpsellModal(true);
+          }, 2000);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar carteirinha:", error);
         setIsPhysicalCard(false);
         setTimeout(() => {
           setShowUpsellModal(true);
         }, 2000);
       }
-    } catch (error) {
-      console.error('Erro ao verificar carteirinha:', error);
-      // Em caso de erro, mostrar upsell como fallback
-      setIsPhysicalCard(false);
-      setTimeout(() => {
-        setShowUpsellModal(true);
-      }, 2000);
-    }
-  }, [navigate]);
+    };
 
-  useEffect(() => {
     const handleNavigation = async () => {
+      if (!user) return;
+
       const state = (location.state as {
         paymentId?: string;
         planName?: string;
@@ -93,6 +91,12 @@ const PaymentSuccessPage = () => {
           console.error("Erro ao buscar current_onboarding_step em PaymentSuccessPage:", err);
         }
       }
+
+      console.log("🔍 [PaymentSuccess DEBUG]");
+      console.log("Step no banco:", step);
+      console.log("State:", state);
+      console.log("Recent payment:", recentPaymentId);
+      console.log("User:", user?.id);
 
       if (step === "completed") {
         navigate("/carteirinha", { replace: true });
@@ -205,7 +209,8 @@ const PaymentSuccessPage = () => {
     };
 
     handleNavigation();
-  }, [location.state, navigate, checkIfPhysicalCard, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, user?.id]);
 
   const handleAcceptUpsell = async () => {
     setLoading(true);

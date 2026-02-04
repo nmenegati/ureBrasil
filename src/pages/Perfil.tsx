@@ -181,6 +181,15 @@ export default function Perfil() {
   useEffect(() => {
     const genSigned = async () => {
       if (profile?.profile_photo_url) {
+        const { data: publicData } = supabase.storage
+          .from('profile-photos')
+          .getPublicUrl(profile.profile_photo_url);
+
+        if (publicData?.publicUrl) {
+          setProfilePhotoSignedUrl(publicData.publicUrl);
+          return;
+        }
+
         const { data, error } = await supabase.storage
           .from('documents')
           .createSignedUrl(profile.profile_photo_url, 300);

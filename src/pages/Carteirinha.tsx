@@ -89,6 +89,15 @@ export default function Carteirinha() {
         return;
       }
 
+      const { data: publicData } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(profile.profile_photo_url);
+
+      if (publicData?.publicUrl) {
+        setProfilePhotoUrl(publicData.publicUrl);
+        return;
+      }
+
       const { data, error } = await supabase.storage
         .from('documents')
         .createSignedUrl(profile.profile_photo_url, 600);
