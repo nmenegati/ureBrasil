@@ -105,8 +105,7 @@ const fieldConfiguration = {
 } as const;
 
 export default function CompleteProfile() {
-  useOnboardingGuard('complete_profile');
-
+  const { isChecking } = useOnboardingGuard('complete_profile');
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { fetchAddress, loading: cepLoading, error: cepError } = useViaCep();
@@ -219,7 +218,7 @@ export default function CompleteProfile() {
   }, [user]);
 
   // Mostrar loading enquanto verifica autenticação
-  if (authLoading) {
+  if (authLoading || isChecking) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -365,8 +364,10 @@ export default function CompleteProfile() {
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       <main className="py-8 px-4">
-        <div className="container mx-auto max-w-4xl mb-4">
-          <ProgressBar currentStep="profile" />
+        <div className="flex items-center justify-center mb-4">
+          <div className="w-full max-w-2xl">
+            <ProgressBar currentStep="profile" />
+          </div>
         </div>
         <div className="flex items-center justify-center">
           <div className="w-full max-w-2xl">
@@ -381,14 +382,14 @@ export default function CompleteProfile() {
               {/* Formulário */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Bloco Endereço */}
-                <div className="bg-slate-100 p-6 rounded-lg border border-slate-300 space-y-4">
+                <div className="bg-green-100 p-6 rounded-lg border border-green/300 space-y-4">
                   <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
                     <span>Endereço Residencial</span>
                   </h3>
 
                   {/* CEP com mensagem informativa */}
-                  <div className="flex flex-row items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                  <div className="flex flex-row items-start gap-3 rounded-lg border border-primary/100 bg-primary/5 px-3 py-2">
                     <div className="w-32 sm:w-36">
                       <Label htmlFor="cep" className="text-foreground">CEP *</Label>
                       <div className="relative">
@@ -555,7 +556,7 @@ export default function CompleteProfile() {
                 </div>
 
                 {/* Bloco Acadêmico */}
-                <div className="bg-slate-100 p-6 rounded-lg border border-slate-300 space-y-4">
+                <div className="bg-green-100 p-6 rounded-lg border border-green/200 space-y-4">
                   <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
                     <GraduationCap className="w-5 h-5" />
                     <span>Dados Acadêmicos</span>
@@ -609,6 +610,21 @@ export default function CompleteProfile() {
                         <div className="grid grid-cols-2 gap-2">
                           <Button
                             type="button"
+                            variant={courseType === 'outro' ? 'default' : 'outline'}
+                            className={
+                              'justify-start flex items-center gap-2 ' +
+                              (courseType === 'outro' ? '' : 'bg-sky-200 hover:bg-sky-300')
+                            }
+                            onClick={() => {
+                              setCourseType('outro');
+                              setCourse(customCourseName);
+                            }}
+                          >
+                            <NotebookPen className="h-4 w-4" />
+                            <span>Outros cursos</span>
+                          </Button>
+                          <Button
+                            type="button"
                             variant={courseType === 'direito' ? 'default' : 'outline'}
                             className={
                               'justify-start flex items-center gap-2 ' +
@@ -622,21 +638,6 @@ export default function CompleteProfile() {
                           >
                             <Scale className="h-4 w-4" />
                             <span>Curso de Direito</span>
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={courseType === 'outro' ? 'default' : 'outline'}
-                            className={
-                              'justify-start flex items-center gap-2 ' +
-                              (courseType === 'outro' ? '' : 'bg-sky-200 hover:bg-sky-300')
-                            }
-                            onClick={() => {
-                              setCourseType('outro');
-                              setCourse(customCourseName);
-                            }}
-                          >
-                            <NotebookPen className="h-4 w-4" />
-                            <span>Outros cursos</span>
                           </Button>
                         </div>
                         <div className="space-y-2">

@@ -1065,7 +1065,7 @@ export default function SignUp() {
                   onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                   className="mt-1 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
-                <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer text-foreground">
                   Ao continuar, concordo e aceito os{' '}
                   <button
                     type="button"

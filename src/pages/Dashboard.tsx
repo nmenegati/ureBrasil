@@ -719,10 +719,10 @@ export default function Dashboard() {
             <HelpCircle className="w-6 h-6 text-primary mb-2" />
             <h3 className="text-slate-900 dark:text-white font-bold">Precisa de Ajuda?</h3>
             <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">Nossa equipe está pronta!</p>
-            <Button 
+            <Button
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               size="sm"
-              onClick={() => toast.info('Em breve!')}
+              onClick={() => navigate('/meus-tickets')}
             >
               Abrir Ticket
             </Button>

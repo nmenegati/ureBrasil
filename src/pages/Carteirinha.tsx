@@ -37,8 +37,7 @@ interface CardData {
 }
 
 export default function Carteirinha() {
-  useOnboardingGuard('completed');
-
+  const { isChecking } = useOnboardingGuard('completed');
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -72,6 +71,8 @@ export default function Carteirinha() {
         .select('card_number, usage_code, qr_code, valid_until, status, digital_card_url, card_type, digital_card_generated')
         .eq('student_id', profileData.id)
         .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       setProfile(profileData as StudentProfile);
@@ -220,7 +221,7 @@ export default function Carteirinha() {
     generateAndSaveCard();
   }, [profile, card, generatingImage, generateAndSaveCard]);
 
-  if (loading) {
+  if (isChecking || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

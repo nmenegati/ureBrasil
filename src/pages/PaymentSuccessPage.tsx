@@ -11,8 +11,7 @@ import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 import { useAuth } from "@/hooks/useAuth";
 
 const PaymentSuccessPage = () => {
-  useOnboardingGuard("upsell_physical");
-
+  const { isChecking } = useOnboardingGuard("upsell_physical");
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -34,183 +33,38 @@ const PaymentSuccessPage = () => {
   };
 
   useEffect(() => {
-    const checkIfPhysicalCard = async (paymentId: string) => {
-      try {
-        const { data: card } = await supabase
-          .from("student_cards")
-          .select("is_physical")
-          .eq("payment_id", paymentId)
-          .maybeSingle();
+    if (isChecking) return;
 
-        if (card?.is_physical) {
-          setIsPhysicalCard(true);
-          setTimeout(() => {
-            navigate("/upload-documentos", { replace: true });
-          }, 2000);
-        } else {
-          setIsPhysicalCard(false);
-          setTimeout(() => {
-            setShowUpsellModal(true);
-          }, 2000);
-        }
-      } catch (error) {
-        console.error("Erro ao verificar carteirinha:", error);
-        setIsPhysicalCard(false);
-        setTimeout(() => {
-          setShowUpsellModal(true);
-        }, 2000);
-      }
-    };
+    const state = (location.state as {
+      paymentId?: string;
+      planName?: string;
+      amount?: number;
+      paymentMethod?: string;
+      isPhysicalPlan?: boolean;
+      isStandalonePhysical?: boolean;
+    }) || {};
 
-    const handleNavigation = async () => {
-      if (!user) return;
-
-      const state = (location.state as {
-        paymentId?: string;
-        planName?: string;
-        amount?: number;
-        paymentMethod?: string;
-        isPhysicalPlan?: boolean;
-        isStandalonePhysical?: boolean;
-      }) || {};
-
+    if (state.paymentId) {
+      setPaymentId(state.paymentId);
+      setPlanName(state.planName ?? null);
+      setAmount(state.amount ?? null);
+      setPaymentMethod(state.paymentMethod ?? null);
+      setIsPhysicalPlan(!!state.isPhysicalPlan);
+      setIsStandalonePhysical(!!state.isStandalonePhysical);
+      localStorage.setItem("recent_payment_id", state.paymentId);
+    } else {
       const recentPaymentId = localStorage.getItem("recent_payment_id");
-
-      let step: string | null = null;
-
-      if (user) {
-        try {
-          const { data } = await supabase
-            .from("student_profiles")
-            .select("current_onboarding_step")
-            .eq("user_id", user.id)
-            .maybeSingle();
-
-          step = (data?.current_onboarding_step as string | null) ?? null;
-        } catch (err) {
-          console.error("Erro ao buscar current_onboarding_step em PaymentSuccessPage:", err);
-        }
-      }
-
-      console.log("🔍 [PaymentSuccess DEBUG]");
-      console.log("Step no banco:", step);
-      console.log("State:", state);
-      console.log("Recent payment:", recentPaymentId);
-      console.log("User:", user?.id);
-
-      if (step === "completed") {
-        navigate("/carteirinha", { replace: true });
-        return;
-      }
-
-      if (step === "review_data") {
-        navigate("/gerar-carteirinha", { replace: true });
-        return;
-      }
-
-      if (step === "pending_validation") {
-        navigate("/status-validacao", { replace: true });
-        return;
-      }
-
-      if (step === "upload_documents") {
-        navigate("/upload-documentos", { replace: true });
-        return;
-      }
-
-      if (state.paymentId) {
-        setPaymentId(state.paymentId);
-        setPlanName(state.planName ?? null);
-        setAmount(state.amount ?? null);
-        setPaymentMethod(state.paymentMethod ?? null);
-        setIsPhysicalPlan(!!state.isPhysicalPlan);
-        setIsStandalonePhysical(!!state.isStandalonePhysical);
-        localStorage.setItem("recent_payment_id", state.paymentId);
-
-        if (state.isPhysicalPlan) {
-          setIsPhysicalCard(true);
-          setShowUpsellModal(false);
-
-          const target = state.isStandalonePhysical ? "/carteirinha" : "/upload-documentos";
-          setTimeout(() => {
-            navigate(target, { replace: true });
-          }, 2000);
-        } else {
-          checkIfPhysicalCard(state.paymentId);
-        }
-        return;
-      }
-
       if (recentPaymentId) {
         setPaymentId(recentPaymentId);
-        checkIfPhysicalCard(recentPaymentId);
-        return;
       }
+    }
 
-      if (user) {
-        supabase
-          .from("student_profiles")
-          .select("id, current_onboarding_step")
-          .eq("user_id", user.id)
-          .maybeSingle()
-          .then(async ({ data }) => {
-            if (!data?.id) {
-              navigate("/complete-profile", { replace: true });
-              return;
-            }
+    const timeout = setTimeout(() => {
+      setShowUpsellModal(true);
+    }, 2000);
 
-            const currentStep = (data.current_onboarding_step as string | null) ?? null;
-
-            if (currentStep === "completed") {
-              navigate("/carteirinha", { replace: true });
-              return;
-            }
-
-            if (currentStep === "review_data") {
-              navigate("/gerar-carteirinha", { replace: true });
-              return;
-            }
-
-            if (currentStep === "pending_validation") {
-              navigate("/status-validacao", { replace: true });
-              return;
-            }
-
-            if (currentStep === "upload_documents") {
-              navigate("/upload-documentos", { replace: true });
-              return;
-            }
-
-            const STEPS_BEFORE_UPLOAD = [
-              "complete_profile",
-              "choose_plan",
-              "payment",
-              "upsell_physical",
-              "payment_upsell",
-            ] as const;
-
-            if (!currentStep || STEPS_BEFORE_UPLOAD.includes(currentStep)) {
-              await supabase
-                .from("student_profiles")
-                .update({ current_onboarding_step: "upload_documents" })
-                .eq("id", data.id);
-              navigate("/upload-documentos", { replace: true });
-              return;
-            }
-
-            navigate("/upload-documentos", { replace: true });
-          })
-          .catch(() => {
-            navigate("/upload-documentos", { replace: true });
-          });
-      } else {
-        navigate("/upload-documentos", { replace: true });
-      }
-    };
-
-    handleNavigation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state, user?.id]);
+    return () => clearTimeout(timeout);
+  }, [isChecking, location.state]);
 
   const handleAcceptUpsell = async () => {
     setLoading(true);
@@ -285,6 +139,14 @@ const PaymentSuccessPage = () => {
 
     navigate("/upload-documentos", { replace: true });
   };
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-ure-gradient-start to-ure-gradient-end relative">

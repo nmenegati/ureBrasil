@@ -49,8 +49,7 @@ const digitalPlans = [
 ];
 
 export default function EscolherPlano() {
-  useOnboardingGuard('choose_plan');
-
+  const { isChecking } = useOnboardingGuard('choose_plan');
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [planIds, setPlanIds] = useState<Record<string, string>>({});
@@ -116,8 +115,10 @@ export default function EscolherPlano() {
       setLoading(false);
     };
 
-    checkEligibilityAndLoadPlans();
-  }, [user, navigate]);
+    if (!isChecking) {
+      checkEligibilityAndLoadPlans();
+    }
+  }, [user, navigate, isChecking]);
 
   const handleSelectPlan = async (planType: string, planName: string) => {
     const planId = planIds[planType];
@@ -166,7 +167,7 @@ export default function EscolherPlano() {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading || isChecking || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

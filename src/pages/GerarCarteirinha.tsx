@@ -11,6 +11,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { formatBirthDate } from '@/lib/dateUtils';
 import { formatEnrollmentNumber } from '@/lib/validators';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
+import { toast } from 'sonner';
 
 interface ProfileData {
   id: string;
@@ -53,8 +54,7 @@ function getPeriodLabel(educationLevel: string | null, period: string | null) {
 }
 
 export default function GerarCarteirinha() {
-  useOnboardingGuard('review_data');
-
+  const { isChecking } = useOnboardingGuard('review_data');
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -124,10 +124,10 @@ export default function GerarCarteirinha() {
       }
     };
 
-    if (!authLoading) {
+    if (!authLoading && !isChecking) {
       load();
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, isChecking, navigate]);
 
   const handleConfirmGenerate = async () => {
     if (!user || !profile || generating) return;
@@ -150,7 +150,7 @@ export default function GerarCarteirinha() {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading || isChecking || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -183,6 +183,9 @@ export default function GerarCarteirinha() {
             <CardTitle className="text-lg font-semibold text-foreground">
               Confirme os dados para emissão da sua Carteirinha do Estudante URE
             </CardTitle>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Alterações posteriores somente por análise manual do suporte.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-foreground">
 
@@ -220,12 +223,6 @@ export default function GerarCarteirinha() {
               </p>
             </div>
 
-            <Alert className="mt-2">
-              <AlertDescription className="text-xs text-muted-foreground">
-                Alterações posteriores podem exigir análise manual pelo suporte.
-              </AlertDescription>
-            </Alert>
-
             {error && (
               <Alert variant="destructive">
                 <AlertDescription className="text-xs">
@@ -252,10 +249,12 @@ export default function GerarCarteirinha() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
-                onClick={() => navigate('/perfil')}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white border-none"
+                onClick={() => {
+                  toast.info('Em breve você poderá abrir um chamado de suporte com todos os dados necessários.');
+                }}
               >
-                Ir para meu perfil
+                Pedir ajuda ao suporte
               </Button>
             </div>
           </CardContent>

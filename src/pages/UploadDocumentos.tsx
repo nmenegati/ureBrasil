@@ -100,8 +100,7 @@ const documentConfigs: DocumentConfig[] = [
 ];
 
 export default function UploadDocumentos() {
-  useOnboardingGuard('upload_documents');
-
+  const { isChecking } = useOnboardingGuard('upload_documents');
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
@@ -124,60 +123,6 @@ export default function UploadDocumentos() {
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (profile) {
-      fetchDocuments();
-    }
-  }, [profile]);
-
-  useEffect(() => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setHasCameraSupport(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const checkTerms = async () => {
-      if (!profile?.id) return;
-      
-      const { data } = await supabase
-        .from('student_profiles')
-        .select('terms_accepted, terms_accepted_at, terms_version')
-        .eq('id', profile.id)
-        .maybeSingle();
-      
-      if (data?.terms_accepted) {
-        setTermsAccepted(true);
-        setTermsAlreadyAccepted(true);
-        setTermsAcceptedDate(data.terms_accepted_at);
-        setTermsVersion(data.terms_version || '1.0');
-      }
-    };
-    
-    checkTerms();
-  }, [profile]);
-
-  useEffect(() => {
-    const checkIfLocked = async () => {
-      if (!profile?.id) return;
-      const { data: card } = await supabase
-        .from('student_cards')
-        .select('status')
-        .eq('student_id', profile.id)
-        .maybeSingle();
-      if (card?.status === 'active') {
-        toast.error('Documentos não podem ser alterados com carteirinha ativa. Entre em contato com suporte.');
-      }
-    };
-    checkIfLocked();
-  }, [profile?.id]);
 
   const fetchProfile = useCallback(async () => {
     if (!user) return;
@@ -228,6 +173,62 @@ export default function UploadDocumentos() {
     setDocuments(docsMap);
     setPreviews(newPreviews);
   }, [profile]);
+
+  useEffect(() => {
+    if (isChecking) return;
+    if (user) {
+      fetchProfile();
+    }
+  }, [user, isChecking, fetchProfile]);
+
+  useEffect(() => {
+    if (isChecking) return;
+    if (profile) {
+      fetchDocuments();
+    }
+  }, [profile, isChecking, fetchDocuments]);
+
+  useEffect(() => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setHasCameraSupport(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const checkTerms = async () => {
+      if (!profile?.id) return;
+      
+      const { data } = await supabase
+        .from('student_profiles')
+        .select('terms_accepted, terms_accepted_at, terms_version')
+        .eq('id', profile.id)
+        .maybeSingle();
+      
+      if (data?.terms_accepted) {
+        setTermsAccepted(true);
+        setTermsAlreadyAccepted(true);
+        setTermsAcceptedDate(data.terms_accepted_at);
+        setTermsVersion(data.terms_version || '1.0');
+      }
+    };
+    
+    checkTerms();
+  }, [profile]);
+
+  useEffect(() => {
+    const checkIfLocked = async () => {
+      if (!profile?.id) return;
+      const { data: card } = await supabase
+        .from('student_cards')
+        .select('status')
+        .eq('student_id', profile.id)
+        .maybeSingle();
+      if (card?.status === 'active') {
+        toast.error('Documentos não podem ser alterados com carteirinha ativa. Entre em contato com suporte.');
+      }
+    };
+    checkIfLocked();
+  }, [profile?.id]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -837,7 +838,7 @@ if (termsAlreadyAccepted) {
     }
   };
 
-  if (authLoading || loadingProfile) {
+  if (authLoading || isChecking || loadingProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -871,7 +872,9 @@ if (termsAlreadyAccepted) {
       <Header variant="app" />
       <main className="relative z-10 px-4 py-6 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          <ProgressBar currentStep="documents" />
+          <div className="max-w-md sm:max-w-none mx-auto mb-4">
+            <ProgressBar currentStep="documents" />
+          </div>
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               Vamos Preparar Sua Carteirinha URE
@@ -962,7 +965,7 @@ if (termsAlreadyAccepted) {
                 >
                   Termo de Responsabilidade
                 </button>
-                . Os documentos fornecidos são verdadeiros e de minha responsabilidade.
+                 e que os documentos fornecidos são verdadeiros e de minha responsabilidade.
               </label>
             </div>
 

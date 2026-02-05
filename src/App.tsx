@@ -31,6 +31,15 @@ import Termos from "./pages/Termos";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { ChatWrapper } from "./components/ChatWrapper";
+import MeusTickets from "./pages/MeusTickets";
+import AdminLogin from "./admin/pages/AdminLogin";
+import AdminDashboardPage from "./admin/pages/Dashboard";
+import AdminTicketsPage from "./admin/pages/Tickets";
+import AdminDocumentsPage from "./admin/pages/Documents";
+import AdminPaymentsPage from "./admin/pages/Payments";
+import AdminCardsPage from "./admin/pages/Cards";
+import LogsPage from "./admin/pages/Logs";
+import AdminUsersPage from "./admin/pages/AdminUsers";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +60,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/termos" element={<Termos />} />
             <Route path="/privacidade" element={<Privacidade />} />
@@ -113,6 +123,11 @@ const App = () => (
                 <MeusPagamentos />
               </ProtectedRoute>
             } />
+            <Route path="/meus-tickets" element={
+              <ProtectedRoute>
+                <MeusTickets />
+              </ProtectedRoute>
+            } />
             <Route path="/checkout" element={
               <ProtectedRoute>
                 <Checkout />
@@ -128,6 +143,13 @@ const App = () => (
                 <Carteirinha />
               </ProtectedRoute>
             } />
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/tickets" element={<AdminTicketsPage />} />
+            <Route path="/admin/documents" element={<AdminDocumentsPage />} />
+            <Route path="/admin/payments" element={<AdminPaymentsPage />} />
+            <Route path="/admin/cards" element={<AdminCardsPage />} />
+            <Route path="/admin/logs" element={<LogsPage />} />
+            <Route path="/admin/admin-users" element={<AdminUsersPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

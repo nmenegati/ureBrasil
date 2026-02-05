@@ -103,8 +103,7 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
 };
 
 export default function StatusValidacao() {
-  useOnboardingGuard('pending_validation');
-
+  const { isChecking } = useOnboardingGuard('pending_validation');
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
@@ -168,78 +167,23 @@ export default function StatusValidacao() {
 
   // Carregar perfil e documentos
   useEffect(() => {
+    if (isChecking) return;
     if (user) {
       loadData();
     }
-  }, [user, loadData]);
+  }, [user, loadData, isChecking]);
 
   // Polling a cada 5 segundos
   useEffect(() => {
     if (!profileId) return;
+    if (isChecking) return;
     
     const interval = setInterval(() => {
       loadDocuments(profileId);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [profileId, loadDocuments]);
-
-  // Quando todos os documentos forem aprovados, atualizar step (se necessário) e seguir para a próxima etapa
-  useEffect(() => {
-    if (!profileId) return;
-    if (documents.length === 0) return;
-
-    const allApproved = documents.every(d => d.status === 'approved');
-    if (!allApproved) return;
-
-    const handleStepAfterApproval = async () => {
-      try {
-        const { data: profileData, error: profileError } = await supabase
-          .from('student_profiles')
-          .select('current_onboarding_step')
-          .eq('id', profileId)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('Erro ao buscar current_onboarding_step:', profileError);
-        }
-
-        const currentStep = profileData?.current_onboarding_step as string | null;
-
-        if (currentStep === 'completed') {
-          navigate('/carteirinha');
-          return;
-        }
-
-        if (currentStep !== 'review_data') {
-          const allowedPreviousSteps = [
-            'upload_documents',
-            'pending_validation',
-            null,
-          ];
-
-          if (!currentStep || allowedPreviousSteps.includes(currentStep as any)) {
-            const { error: updateError } = await supabase
-              .from('student_profiles')
-              .update({ current_onboarding_step: 'review_data' })
-              .eq('id', profileId)
-              .in('current_onboarding_step', allowedPreviousSteps as any);
-
-            if (updateError) {
-              console.error('Erro ao atualizar current_onboarding_step para review_data:', updateError);
-            }
-          }
-        }
-
-        navigate('/gerar-carteirinha');
-      } catch (err) {
-        console.error('Erro ao atualizar fluxo após aprovação dos documentos:', err);
-        navigate('/gerar-carteirinha');
-      }
-    };
-
-    handleStepAfterApproval();
-  }, [documents, profileId, navigate]);
+  }, [profileId, loadDocuments, isChecking]);
 
   const handleRefresh = async () => {
     if (!profileId) return;
@@ -256,7 +200,7 @@ export default function StatusValidacao() {
   const images = isLawStudentView ? direitoImages : geralImages;
   const imagemCarteirinha = images[imageIndex] || images[0];
 
-  if (authLoading || loadingDocs) {
+  if (authLoading || isChecking || loadingDocs) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -270,7 +214,7 @@ export default function StatusValidacao() {
       
       <main className="container mx-auto px-4 pt-4 pb-8 max-w-2xl">
         <div className="mb-4">
-          <ProgressBar currentStep="documents" />
+          <ProgressBar currentStep="card" />
         </div>
         <div>
         <div className="mb-8">
@@ -381,7 +325,18 @@ export default function StatusValidacao() {
           
           {documents.length === 4 && documents.every(d => d.status === 'approved') && (
             <Button
-              onClick={() => navigate('/gerar-carteirinha')}
+              onClick={async () => {
+                if (profileId) {
+                  const { error } = await supabase
+                    .from('student_profiles')
+                    .update({ current_onboarding_step: 'review_data' })
+                    .eq('id', profileId);
+                  if (error) {
+                    console.error('Erro ao atualizar current_onboarding_step para review_data:', error);
+                  }
+                }
+                navigate('/gerar-carteirinha');
+              }}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white"
             >
               Conferir dados e gerar carteirinha →

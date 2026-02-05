@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { usePagBank } from "@/hooks/usePagBank";
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -33,7 +32,7 @@ import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
 import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
 import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
+import { useOnboardingGuard, STEP_ROUTES } from "@/hooks/useOnboardingGuard";
 
 interface Plan {
   id: string;
@@ -79,17 +78,10 @@ const getValidityDate = () => {
 };
 
 export default function Checkout() {
-  useOnboardingGuard("payment_upsell");
-
+  const { isChecking } = useOnboardingGuard("payment_upsell");
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { 
-    generateSession, 
-    createCardToken, 
-    processCardPayment,
-    loading: pagbankLoading 
-  } = usePagBank();
 
   // Extrair state de upsell
   const upsellState = location.state as UpsellState | null;
@@ -116,63 +108,21 @@ export default function Checkout() {
   const [isValidLawStudent, setIsValidLawStudent] = useState(false);
   const [resolvedUpsell, setResolvedUpsell] = useState<ResolvedUpsell | null>(null);
   const [resolvingUpsell, setResolvingUpsell] = useState(true);
-  const [stepChecked, setStepChecked] = useState(false);
+  const [upsellResolved, setUpsellResolved] = useState(false);
 
   useEffect(() => {
-    const checkCurrentStep = async () => {
-      if (!user) return;
-
-      try {
-        let redirected = false;
-
-        const { data } = await supabase
-          .from("student_profiles")
-          .select("current_onboarding_step")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        const step = (data?.current_onboarding_step as string | null) ?? null;
-
-        if (step === "completed") {
-          navigate("/carteirinha", { replace: true });
-          redirected = true;
-          return;
-        }
-
-        if (step === "review_data") {
-          navigate("/gerar-carteirinha", { replace: true });
-          redirected = true;
-          return;
-        }
-
-        if (step === "pending_validation") {
-          navigate("/status-validacao", { replace: true });
-          redirected = true;
-          return;
-        }
-
-        if (step === "upload_documents") {
-          navigate("/upload-documentos", { replace: true });
-          redirected = true;
-          return;
-        }
-
-        if (!redirected) {
-          setStepChecked(true);
-        }
-      } catch (err) {
-        console.error("Erro ao verificar current_onboarding_step em Checkout:", err);
-        setStepChecked(true);
-      }
-    };
-
-    checkCurrentStep();
-  }, [user?.id, navigate]);
+    console.log("[Checkout] isChecking:", isChecking);
+    console.log("[Checkout] resolvedUpsell:", resolvedUpsell);
+    console.log("[Checkout] resolvingUpsell:", resolvingUpsell);
+  }, [isChecking, resolvedUpsell, resolvingUpsell]);
 
   useEffect(() => {
-    if (!stepChecked) return;
+    if (isChecking) return;
+    if (upsellResolved) return;
 
-    const resolveUpsell = () => {
+    const resolveUpsell = async () => {
+      console.log("[Checkout] resolveUpsell start. upsellState:", upsellState);
+
       if (upsellState?.isUpsell && upsellState.originalPaymentId) {
         setResolvedUpsell({
           isUpsell: true,
@@ -212,16 +162,35 @@ export default function Checkout() {
       }
 
       setResolvingUpsell(false);
-      toast.error("Fluxo de upsell inválido.");
-      navigate("/upload-documentos", { replace: true });
+      console.log("[Checkout] resolveUpsell fallback, no valid upsell. Fetching step for redirect...");
+      if (!user) {
+        navigate("/complete-profile", { replace: true });
+        return;
+      }
+
+      const { data } = await supabase
+        .from("student_profiles")
+        .select("current_onboarding_step")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const step = (data?.current_onboarding_step as string | null) ?? "complete_profile";
+      const redirectTo = STEP_ROUTES[step] || STEP_ROUTES["complete_profile"];
+      navigate(redirectTo, { replace: true });
+
+      setUpsellResolved(true);
     };
 
     resolveUpsell();
-  }, [upsellState, navigate, stepChecked]);
+  }, [isChecking, upsellResolved, user]);
 
   useEffect(() => {
+    if (isChecking) return;
+    if (!user?.id) return;
+    if (!resolvedUpsell || !resolvedUpsell.isUpsell || !resolvedUpsell.originalPaymentId) return;
+
     const fetchPlanAndProfile = async () => {
-      if (!user) return;
+      console.log("[Checkout] fetching studentProfile and plan...");
 
       try {
         const { data: profile, error: profileError } = await supabase
@@ -230,11 +199,13 @@ export default function Checkout() {
           .eq("user_id", user.id)
           .single();
 
-        if (profileError) {
+        if (profileError || !profile) {
           toast.error("Erro ao carregar perfil");
           navigate("/dashboard");
           return;
         }
+
+        console.log("[Checkout] studentProfile loaded:", profile);
 
         setStudentProfile({
           cpf: profile.cpf,
@@ -248,12 +219,6 @@ export default function Checkout() {
             profile.education_level === "pos_lato" ||
             profile.education_level === "stricto_sensu");
         setIsValidLawStudent(validLaw);
-
-        if (!resolvedUpsell || !resolvedUpsell.isUpsell || !resolvedUpsell.originalPaymentId) {
-          toast.error("Fluxo de upsell inválido.");
-          navigate("/upload-documentos", { replace: true });
-          return;
-        }
 
         const { data: originalPayment } = await supabase
           .from("payments")
@@ -274,7 +239,7 @@ export default function Checkout() {
           is_direito: false,
         });
 
-        await generateSession();
+        console.log("[Checkout] plan set with originalPlanName:", originalPlanName);
       } catch (error) {
         console.error("Erro ao carregar:", error);
         toast.error("Erro ao carregar informações");
@@ -283,10 +248,8 @@ export default function Checkout() {
       }
     };
 
-    if (!stepChecked || resolvingUpsell) {
-      fetchPlanAndProfile();
-    }
-  }, [user, navigate, generateSession, resolvingUpsell, resolvedUpsell, stepChecked]);
+    fetchPlanAndProfile();
+  }, [isChecking, user?.id, resolvedUpsell?.originalPaymentId, navigate, resolvedUpsell]);
 
   const validateCardForm = () => {
     if (paymentMethod !== "card") return true;
@@ -315,8 +278,20 @@ export default function Checkout() {
     if (!plan || !studentProfile) return;
 
     if (!resolvedUpsell || !resolvedUpsell.isUpsell || !resolvedUpsell.originalPaymentId) {
-      toast.error("Fluxo de upsell inválido. Tente novamente a partir da tela de pagamento.");
-      navigate("/upload-documentos", { replace: true });
+      if (!user) {
+        navigate("/complete-profile", { replace: true });
+        return;
+      }
+
+      const { data } = await supabase
+        .from("student_profiles")
+        .select("current_onboarding_step")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const step = (data?.current_onboarding_step as string | null) ?? "complete_profile";
+      const redirectTo = STEP_ROUTES[step] || STEP_ROUTES["complete_profile"];
+      navigate(redirectTo, { replace: true });
       return;
     }
 
@@ -420,62 +395,6 @@ export default function Checkout() {
         return;
       }
 
-      // === FLUXO NORMAL (não-upsell) ===
-      if (paymentMethod === "pix") {
-        const payload = {
-          plan_id: plan.id,
-          payment_method: "pix",
-        };
-
-        const { data, error } = await supabase.functions.invoke("create-payment", {
-          body: payload,
-        });
-
-        if (error) throw error;
-
-        // Em sandbox, create-payment já aprova e retorna pix_code/pix_qr_code
-        if (data?.pix_code) {
-          navigate("/pagamento/pix", { state: { paymentData: data } });
-        } else {
-          // fallback: considerar pago e ir para sucesso genérico
-          navigate("/pagamento/sucesso", {
-            state: {
-              planName: plan.name,
-              amount: plan.price,
-              paymentId: data?.payment_id,
-              paymentMethod: "pix",
-            },
-          });
-        }
-      } else {
-        // Usar PagBank para cartão com tokenização segura
-        const cardToken = await createCardToken({
-          cardNumber,
-          cardholderName: cardName,
-          expirationMonth: cardExpiry.split('/')[0],
-          expirationYear: '20' + cardExpiry.split('/')[1],
-          cvv: cardCvv,
-        });
-
-        const result = await processCardPayment({
-          cardToken,
-          cardholderName: cardName,
-          cardholderCPF: studentProfile.cpf,
-          cardholderPhone: studentProfile.phone,
-          cardholderBirthDate: studentProfile.birth_date,
-          installments: cardType === "credit" ? parseInt(installments) : 1,
-          amount: plan.price,
-          planId: plan.id,
-        });
-
-        if (result.success) {
-          // Fluxo normal: salvar payment_id para modal de upsell
-          localStorage.setItem('recent_payment_id', result.payment.id);
-          navigate('/pagamento/sucesso', { 
-            state: { paymentId: result.payment.id } 
-          });
-        }
-      }
     } catch (error: unknown) {
       console.error("Erro no pagamento:", error);
       const errorMessage = error instanceof Error ? error.message : "Erro ao processar pagamento";
@@ -520,7 +439,24 @@ export default function Checkout() {
     );
   };
 
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (loading || resolvingUpsell) {
+    console.log("[Checkout] render check:", {
+      isChecking,
+      resolvingUpsell,
+      upsellResolved,
+      studentProfile: !!studentProfile,
+      plan: !!plan,
+      resolvedUpsell: !!resolvedUpsell,
+    });
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -811,7 +747,7 @@ export default function Checkout() {
                   <Button
                     className="w-full py-6 text-lg"
                     onClick={handleSubmit}
-                    disabled={processing || pagbankLoading || !isFormValid()}
+                    disabled={processing || !isFormValid()}
                   >
                     {processing ? (
                       <>

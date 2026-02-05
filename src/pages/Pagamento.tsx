@@ -74,8 +74,7 @@ const getValidityDate = () => {
 };
 
 export default function Pagamento() {
-  useOnboardingGuard("payment");
-
+  const { isChecking } = useOnboardingGuard("payment");
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
@@ -111,7 +110,7 @@ export default function Pagamento() {
   const isStandalonePhysical = !!standaloneSelectedPlan?.is_standalone;
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || isChecking) return;
     
     const loadPlan = async () => {
       if (!user) {
@@ -170,7 +169,7 @@ export default function Pagamento() {
     };
 
     loadPlan();
-  }, [user, authLoading, navigate, standaloneSelectedPlan]);
+  }, [user, authLoading, isChecking, navigate, standaloneSelectedPlan]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("pt-BR", {
