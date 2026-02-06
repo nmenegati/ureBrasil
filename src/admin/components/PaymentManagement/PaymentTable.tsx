@@ -137,7 +137,7 @@ export function PaymentTable({ payments, onReload }: PaymentTableProps) {
                 </td>
                 <td className="px-3 py-2 align-top">
                   <span className="text-slate-900 font-semibold">
-                    {(payment.amount / 100).toLocaleString('pt-BR', {
+                    {payment.amount.toLocaleString('pt-BR', {
                       style: 'currency',
                       currency: 'BRL',
                     })}
@@ -240,7 +240,7 @@ export function PaymentTable({ payments, onReload }: PaymentTableProps) {
               </p>
               <p>
                 <span className="font-semibold">Valor:</span>{' '}
-                {(selectedPayment.amount / 100).toLocaleString('pt-BR', {
+                {selectedPayment.amount.toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
                 })}

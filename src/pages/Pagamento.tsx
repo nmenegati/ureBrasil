@@ -431,16 +431,15 @@ export default function Pagamento() {
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       <main className="py-8 px-4">
-        {!isStandalonePhysical && (
-          <div className="container mx-auto max-w-4xl mb-4">
+        <div className="max-w-2xl mx-auto space-y-4">
+          {!isStandalonePhysical && (
             <ProgressBar currentStep="payment" />
-          </div>
-        )}
-        <Card className="max-w-2xl mx-auto">
-          <CardContent className="p-6 space-y-5">
-            <div className="flex items-center gap-1.5 mb-1 text-green-600">
-              <Shield className="h-4 w-4" />
-              <span className="text-xs font-medium tracking-wide">COMPRA 100% SEGURA</span>
+          )}
+        <Card>  
+          <CardContent className="p-6 space-y-5">  
+            <div className="flex items-center gap-1.5 mb-1 text-green-600">  
+              <Shield className="h-4 w-4" />  
+              <span className="text-xs font-medium tracking-wide">COMPRA 100% SEGURA</span>  
             </div>
 
             {/* Bloco do produto: imagem + texto lado a lado */}
@@ -513,24 +512,6 @@ export default function Pagamento() {
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("pix")}
-                    className={`border-2 rounded-lg p-4 transition w-full text-center ${
-                      paymentMethod === "pix"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary"
-                    }`}
-                  >
-                    <QrCode className="h-8 w-8 mx-auto mb-2" />
-                    <div className="font-semibold">PIX</div>
-                    <div className="text-xs text-green-600 mb-2">
-                      Aprovação instantânea
-                    </div>
-                    <div className="text-lg font-bold">
-                      {formatPrice(plan.price)}
-                    </div>
-                  </button>
 
                   <button
                     type="button"
@@ -550,6 +531,26 @@ export default function Pagamento() {
                       {formatPrice(plan.price)}
                     </div>
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("pix")}
+                    className={`border-2 rounded-lg p-4 transition w-full text-center ${
+                      paymentMethod === "pix"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary"
+                    }`}
+                  >
+                    <QrCode className="h-8 w-8 mx-auto mb-2" />
+                    <div className="font-semibold">PIX</div>
+                    <div className="text-xs text-green-600 mb-2">
+                      Aprovação instantânea
+                    </div>
+                    <div className="text-lg font-bold">
+                      {formatPrice(plan.price)}
+                    </div>
+                  </button>
+
                 </div>
 
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -823,6 +824,7 @@ export default function Pagamento() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </main>
     </div>
   );

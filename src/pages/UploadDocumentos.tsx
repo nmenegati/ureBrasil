@@ -868,37 +868,36 @@ if (termsAlreadyAccepted) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header variant="app" />
-      <main className="relative z-10 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="max-w-md sm:max-w-none mx-auto mb-4">
-            <ProgressBar currentStep="documents" />
-          </div>
-          <div className="text-center mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Vamos Preparar Sua Carteirinha URE
-            </h1>
-            <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-              Envie seus documentos para aprovação. O processo é rápido e seguro.
-              <br />
-              <span className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1 mt-2">
-                <CheckCircle className="w-4 h-4" /> Seus dados estão protegidos pela LGPD
-              </span>
-            </p>
-          </div>
+    <div className="min-h-screen bg-background">  
+      <Header variant="app" />  
+      <main className="relative z-10 px-4 py-6 sm:px-6 lg:px-8">  
+        <div className="max-w-4xl mx-auto space-y-6">  
+          <ProgressBar currentStep="documents" />  
+          
+          <div className="text-center">  
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">  
+              Vamos Preparar Sua Carteirinha URE  
+            </h1>  
+            <p className="text-sm md:text-base text-muted-foreground">  
+              Envie seus documentos para aprovação. O processo é rápido e seguro.  
+              <br />  
+              <span className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1 mt-2">  
+                <CheckCircle className="w-4 h-4" /> Seus dados estão protegidos pela LGPD  
+              </span>  
+            </p>  
+          </div>  
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 max-w-md sm:max-w-none mx-auto">
-          {documentConfigs.map(config => (
-            <DocumentCard key={config.type} config={config} />
-          ))}
-        </div>
-
-        <Alert className="mb-4 max-w-2xl mx-auto bg-green-300 border-green-500 py-2 mb-6">
-          <AlertDescription className="text-sm text-gray-700 flex items-center justify-center gap-2 text-center">
-            <span>🔍</span>
-            <span>Validação facial após aprovação da documentação.</span>
-          </AlertDescription>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">  
+          {documentConfigs.map(config => (  
+            <DocumentCard key={config.type} config={config} />  
+          ))}  
+        </div>  
+  
+        <Alert className="bg-green-300 border-green-500 py-2">  
+          <AlertDescription className="text-sm text-gray-700 flex items-center justify-center gap-2 text-center">  
+            <span>🔍</span>  
+            <span>Validação facial após aprovação da documentação.</span>  
+          </AlertDescription>  
         </Alert>
 
         {allDocsApproved && !termsAlreadyAccepted && (
@@ -1044,27 +1043,28 @@ if (termsAlreadyAccepted) {
           </>
         )}
 
-        {!canGenerateCard && (
-          <Button
-            disabled={!canSubmit}
-            onClick={handleSubmit}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
-          >
-            {termsAlreadyAccepted ? 'Ver status da validação' : 'Aceitar termo e enviar para validação'}
-          </Button>
-        )}
+        {!canGenerateCard && (  
+                  <Button  
+                    disabled={!canSubmit}  
+                    onClick={handleSubmit}  
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"  
+                  >  
+                    {termsAlreadyAccepted ? 'Ver status da validação' : 'Aceitar termo e enviar para validação'}  
+                  </Button>  
+                )}  
+  
+                {showCamera && (  
+                  <CameraCapture  
+                    onCapture={(file) => {  
+                      handleUpload(file, 'selfie');  
+                      setShowCamera(false);  
+                    }}  
+                    onCancel={() => setShowCamera(false)}  
+                  />  
+                )}  
+              </div>  
+            </main>  
+          </div>  
+        );
 
-        {showCamera && (
-          <CameraCapture
-            onCapture={(file) => {
-              handleUpload(file, 'selfie');
-              setShowCamera(false);
-            }}
-            onCancel={() => setShowCamera(false)}
-          />
-        )}
-        </div>
-      </main>
-    </div>
-  );
 }

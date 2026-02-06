@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, FileText, CreditCard, Printer, Bell, LifeBuoy } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, CreditCard, Printer, Bell, LifeBuoy, Megaphone } from 'lucide-react';
 import { useAdminAuth } from '@/admin/hooks/useAdminAuth';
 
 interface AdminLayoutProps {
@@ -105,6 +105,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {isSuperAdmin && (
             <>
               <NavLink
+                to="/admin/notifications"
+                className={({ isActive }) =>
+                  [
+                    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
+                    isActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/60',
+                  ].join(' ')
+                }
+              >
+                <Megaphone className="w-4 h-4" />
+                <span>Notificações</span>
+              </NavLink>
+              <NavLink
                 to="/admin/logs"
                 className={({ isActive }) =>
                   [
@@ -148,16 +160,112 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       <div className="flex-1 flex flex-col">
-        <header className="md:hidden flex items-center justify-between px-4 h-14 border-b bg-white">
-          <span className="font-semibold text-slate-900">URE Console</span>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sair</span>
-          </button>
+        <header className="md:hidden flex flex-col border-b bg-white">
+          <div className="flex items-center justify-between px-4 h-14">
+            <span className="font-semibold text-slate-900">URE Console</span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sair</span>
+            </button>
+          </div>
+          <nav className="md:hidden flex gap-1 px-2 pb-2 overflow-x-auto text-xs text-slate-600">
+            <NavLink
+              to="/admin/dashboard"
+              className={({ isActive }) =>
+                [
+                  'px-2 py-1 rounded-full whitespace-nowrap',
+                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                ].join(' ')
+              }
+            >
+              Dashboard
+            </NavLink>
+            <NavLink
+              to="/admin/tickets"
+              className={({ isActive }) =>
+                [
+                  'px-2 py-1 rounded-full whitespace-nowrap',
+                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                ].join(' ')
+              }
+            >
+              Tickets
+            </NavLink>
+            <NavLink
+              to="/admin/documents"
+              className={({ isActive }) =>
+                [
+                  'px-2 py-1 rounded-full whitespace-nowrap',
+                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                ].join(' ')
+              }
+            >
+              Documentos
+            </NavLink>
+            <NavLink
+              to="/admin/payments"
+              className={({ isActive }) =>
+                [
+                  'px-2 py-1 rounded-full whitespace-nowrap',
+                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                ].join(' ')
+              }
+            >
+              Pagamentos
+            </NavLink>
+            <NavLink
+              to="/admin/cards"
+              className={({ isActive }) =>
+                [
+                  'px-2 py-1 rounded-full whitespace-nowrap',
+                  isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                ].join(' ')
+              }
+            >
+              Carteirinhas
+            </NavLink>
+            {isSuperAdmin && (
+              <>
+                <NavLink
+                  to="/admin/notifications"
+                  className={({ isActive }) =>
+                    [
+                      'px-2 py-1 rounded-full whitespace-nowrap',
+                      isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                    ].join(' ')
+                  }
+                >
+                  Notificações
+                </NavLink>
+                <NavLink
+                  to="/admin/logs"
+                  className={({ isActive }) =>
+                    [
+                      'px-2 py-1 rounded-full whitespace-nowrap',
+                      isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                    ].join(' ')
+                  }
+                >
+                  Logs
+                </NavLink>
+                <NavLink
+                  to="/admin/admin-users"
+                  className={({ isActive }) =>
+                    [
+                      'px-2 py-1 rounded-full whitespace-nowrap',
+                      isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                    ].join(' ')
+                  }
+                >
+                  Admins
+                </NavLink>
+              </>
+            )}
+          </nav>
         </header>
 
         <main className="flex-1 p-4 md:p-6 bg-slate-50">

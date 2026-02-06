@@ -184,13 +184,13 @@ export default function EscolherPlano() {
           <ProgressBar currentStep="payment" />
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               Escolha seu Plano
             </h1>
             <div className="flex justify-center mb-3">
               <div className="h-1 w-40 bg-ure-yellow rounded-full" />
             </div>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               {isLawStudent
                 ? 'Benefícios exclusivos para estudantes de Direito com a LexPraxis'
                 : 'Carteira digital com QR Code de verificação e meia‑entrada'}

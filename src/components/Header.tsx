@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Menu, X, Sun, Moon, User, LogOut, Home, CreditCard, Bell, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const resolvedTheme = (typeof theme === 'string' ? theme : 'light');
   const [scrolled, setScrolled] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [hasActiveCard, setHasActiveCard] = useState(false);
   const [hasPhysicalCard, setHasPhysicalCard] = useState(false);
@@ -63,9 +65,26 @@ export function Header({ variant = 'app' }: HeaderProps) {
     const fetchNotifications = async () => {
       if (!user) {
         setNotificationCount(0);
+        setNotifications([]);
         return;
       }
-      setNotificationCount(0);
+
+      const client = supabase as any;
+      const { data, error } = await client
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error || !data) {
+        setNotificationCount(0);
+        setNotifications([]);
+        return;
+      }
+
+      setNotifications(data);
+      setNotificationCount(data.filter((n: any) => !n.read).length);
     };
     fetchNotifications();
   }, [user]);
@@ -285,19 +304,68 @@ export function Header({ variant = 'app' }: HeaderProps) {
           {/* Right Section */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             {user && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`relative ${scrolled ? 'text-secondary-foreground hover:text-primary hover:bg-secondary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
-                onClick={() => navigate('/notificacoes')}
-              >
-                <Bell className="h-5 w-5" />
-                {notificationCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-0">
-                    {notificationCount}
-                  </Badge>
-                )}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`relative ${scrolled ? 'text-secondary-foreground hover:text-primary hover:bg-secondary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+                  >
+                    <Bell className="h-5 w-5" />
+                    {notificationCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-0">
+                        {notificationCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuLabel className="text-xs">
+                    Notificações
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {notifications.length === 0 && (
+                    <DropdownMenuItem className="text-xs text-slate-500">
+                      Nenhuma notificação.
+                    </DropdownMenuItem>
+                  )}
+                  {notifications.map((notification: any) => (
+                    <DropdownMenuItem
+                      key={notification.id}
+                      className="flex flex-col items-start gap-1 text-xs"
+                      onClick={async () => {
+                        const client = supabase as any;
+                        if (!notification.read) {
+                          await client
+                            .from('notifications')
+                            .update({ read: true })
+                            .eq('id', notification.id);
+                          setNotifications(prev =>
+                            prev.map(item =>
+                              item.id === notification.id
+                                ? { ...item, read: true }
+                                : item
+                            )
+                          );
+                          setNotificationCount(count =>
+                            Math.max(0, count - 1)
+                          );
+                        }
+                        if (notification.link) {
+                          window.open(notification.link, '_blank');
+                        }
+                      }}
+                    >
+                      <span className="font-semibold text-slate-900">
+                        {notification.title}
+                      </span>
+                      <span className="text-slate-600 truncate w-full">
+                        {notification.message}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
             {/* Auth Section */}

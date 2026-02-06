@@ -648,7 +648,7 @@ export default function CompleteProfile() {
                             id="course"
                             type="text"
                             placeholder={coursePlaceholder}
-                            value={courseType === 'direito' ? 'Curso de Direito' : customCourseName}
+                            value={courseType === 'direito' ? 'Direito' : customCourseName}
                             onChange={(e) => {
                               if (courseType === 'outro') {
                                 setCustomCourseName(e.target.value);
