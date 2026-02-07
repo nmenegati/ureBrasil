@@ -376,12 +376,27 @@ export default function Pagamento() {
           },
         });
       }
-    } catch (error) {
-      console.error("Erro no pagamento:", error);
+    } catch (err: any) {
+      console.error("Erro no pagamento:", err);
 
-      const context = error?.context;
+      const context = err?.context;
       if (context) {
         console.error("Contexto do erro de função Supabase:", context);
+      }
+
+      try {
+        const resp: Response | undefined =
+          context instanceof Response ? context : context?.response;
+        if (resp) {
+          const clone = resp.clone();
+          const errorBody = await clone.json().catch(async () => {
+            const text = await clone.text();
+            return { raw: text };
+          });
+          console.error("Detalhes do erro:", errorBody);
+        }
+      } catch (logError) {
+        console.warn("[Pagamento] Falha ao ler body da resposta:", logError);
       }
 
       if (context?.status === 401) {

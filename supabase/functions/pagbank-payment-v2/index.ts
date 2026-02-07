@@ -3,8 +3,56 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
+
+// ✅ Retry com backoff + jitter
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3,
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // jitter entre 100 e 300 ms
+    const jitter = Math.floor(Math.random() * 200) + 100;
+
+    try {
+      const response = await fetch(url, options);
+
+      // Não faz retry para erros < 500 (validação, bloqueio etc.)
+      if (response.status < 500) {
+        return response;
+      }
+
+      console.log(
+        `⚠️ PagBank ${response.status}, tentativa ${attempt}/${maxRetries}`,
+      );
+
+      if (attempt < maxRetries) {
+        const backoff = 1000 * attempt + jitter;
+        await new Promise((r) => setTimeout(r, backoff));
+      } else {
+        return response;
+      }
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      console.log(
+        `⚠️ Erro de rede, tentativa ${attempt}/${maxRetries}:`,
+        lastError.message,
+      );
+
+      if (attempt < maxRetries) {
+        const backoff = 1000 * attempt + jitter;
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    }
+  }
+
+  throw lastError || new Error("Falha após tentativas de retry");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -33,7 +81,10 @@ serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Não autorizado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -42,8 +93,13 @@ serve(async (req) => {
 
     if (!supabaseUrl || !serviceRoleKey) {
       return new Response(
-        JSON.stringify({ error: "Variáveis de ambiente do Supabase não configuradas" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        JSON.stringify({
+          error: "Variáveis de ambiente do Supabase não configuradas",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -55,19 +111,21 @@ serve(async (req) => {
       error: userError,
     } = await supabase.auth.getUser(token);
 
-// ← ADICIONAR AQUI
     console.log("🔍 Debug auth:", {
       hasToken: !!token,
       hasUser: !!user,
       userError: userError?.message,
       userId: user?.id,
-      userEmail: user?.email
+      userEmail: user?.email,
     });
 
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: "Usuário não encontrado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -87,12 +145,16 @@ serve(async (req) => {
     if (!body || typeof body.amount !== "number" || !body.card) {
       return new Response(
         JSON.stringify({ error: "Parâmetros inválidos" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
     const amount = body.amount;
-    const installments = body.installments && body.installments > 0 ? body.installments : 1;
+    const installments =
+      body.installments && body.installments > 0 ? body.installments : 1;
     const amountInCents = Math.round(amount * 100);
     const card = body.card;
     const metadata = body.metadata || {};
@@ -116,7 +178,10 @@ serve(async (req) => {
     if (!profile) {
       return new Response(
         JSON.stringify({ error: "Perfil não encontrado" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -139,7 +204,10 @@ serve(async (req) => {
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: "Chave PagBank não configurada" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -155,8 +223,13 @@ serve(async (req) => {
           ? [
               {
                 country: "55",
-                area: (profile.phone as string).replace(/\D/g, "").substring(0, 2),
-                number: (profile.phone as string).replace(/\D/g, "").substring(2),
+                area: (profile.phone as string).replace(/\D/g, "").substring(
+                  0,
+                  2,
+                ),
+                number: (profile.phone as string).replace(/\D/g, "").substring(
+                  2,
+                ),
                 type: "MOBILE",
               },
             ]
@@ -177,13 +250,13 @@ serve(async (req) => {
         {
           name: "Carteirinha URE Brasil",
           quantity: 1,
-          unit_amount: amountInCents,  // ← TROCAR AQUI
+          unit_amount: amountInCents,
         },
       ],
       charges: [
         {
           amount: {
-            value: amountInCents,  // ← E AQUI
+            value: amountInCents,
             currency: "BRL",
           },
           payment_method: {
@@ -214,7 +287,8 @@ serve(async (req) => {
       amountInCents,
     });
 
-    const response = await fetch(`${baseUrl}/orders`, {
+    // ✅ uso de fetchWithRetry
+    const response = await fetchWithRetry(`${baseUrl}/orders`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
@@ -232,16 +306,38 @@ serve(async (req) => {
       responseJson = { raw: responseText };
     }
 
+    // 🔎 tratamento especial Cloudflare / bloqueio do provedor
+    const cfRay = response.headers.get("cf-ray");
+    const isProviderBlock =
+      response.status === 403 ||
+      response.status === 429 ||
+      (responseJson && responseJson?.code === 1020);
+
     if (!response.ok) {
+      let errorMessage =
+        responseJson?.message || "Erro ao processar pagamento no PagBank";
+
+      if (isProviderBlock) {
+        errorMessage =
+          "Acesso bloqueado pelo provedor (Cloudflare/PagBank). Tente novamente mais tarde.";
+      }
+
       console.error("PagBank /orders error:", response.status, responseJson);
+
+      const httpStatus = response.status >= 400 ? response.status : 502;
+
       return new Response(
         JSON.stringify({
           success: false,
           status: response.status,
-          error: responseJson?.message || "Erro ao processar pagamento no PagBank",
+          error: errorMessage,
           details: responseJson,
+          cf_ray: cfRay || undefined,
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        {
+          status: httpStatus,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
       );
     }
 
@@ -266,14 +362,16 @@ serve(async (req) => {
       const cardNumberClean = card.number.replace(/\s/g, "");
       const lastDigits = cardNumberClean.slice(-4) || null;
 
-      const orderIdString = typeof orderId === "string" ? orderId : String(orderId ?? "");
+      const orderIdString = typeof orderId === "string"
+        ? orderId
+        : String(orderId ?? "");
 
       console.log("🔍 [PRE-INSERT]:", {
         orderId_value: orderIdString,
         orderId_length: orderIdString.length,
-        orderId_charCodes: Array.from(orderIdString.substring(0, 10)).map((c) =>
-          c.charCodeAt(0)
-        ),
+        orderId_charCodes: Array.from(
+          orderIdString.substring(0, 10),
+        ).map((c) => c.charCodeAt(0)),
         gateway_reference_id: orderIdString,
       });
 
@@ -309,14 +407,20 @@ serve(async (req) => {
         status: chargeStatus,
         raw: responseJson,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   } catch (error: unknown) {
     console.error("pagbank-payment-v2 error:", error);
     const message = error instanceof Error ? error.message : "Erro inesperado";
     return new Response(
       JSON.stringify({ success: false, error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   }
 });
