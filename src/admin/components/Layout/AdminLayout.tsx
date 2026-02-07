@@ -140,6 +140,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <FileText className="w-4 h-4" />
                 <span>Admins</span>
               </NavLink>
+              <NavLink
+                to="/admin/settings"
+                className={({ isActive }) =>
+                  [
+                    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium',
+                    isActive ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/60',
+                  ].join(' ')
+                }
+              >
+                <FileText className="w-4 h-4" />
+                <span>Configurações</span>
+              </NavLink>
             </>
           )}
         </nav>
@@ -262,6 +274,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   }
                 >
                   Admins
+                </NavLink>
+                <NavLink
+                  to="/admin/settings"
+                  className={({ isActive }) =>
+                    [
+                      'px-2 py-1 rounded-full whitespace-nowrap',
+                      isActive ? 'bg-slate-900 text-white' : 'bg-slate-100',
+                    ].join(' ')
+                  }
+                >
+                  Configurações
                 </NavLink>
               </>
             )}

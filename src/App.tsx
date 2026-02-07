@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { ChatWrapper } from "./components/ChatWrapper";
@@ -54,6 +54,7 @@ const AdminCardsPage = React.lazy(() => import("./admin/pages/Cards"));
 const NotificationsPage = React.lazy(() => import("./admin/pages/Notifications"));
 const LogsPage = React.lazy(() => import("./admin/pages/Logs"));
 const AdminUsersPage = React.lazy(() => import("./admin/pages/AdminUsers"));
+const AdminSettingsPage = React.lazy(() => import("./admin/pages/Settings"));
 
 const queryClient = new QueryClient();
 
@@ -64,22 +65,32 @@ const PageLoader = () => (
   </div>
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} storageKey="ure-theme">
-      <TooltipProvider>
-        <ProfileProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter 
-            future={{ 
-              v7_startTransition: true, 
-              v7_relativeSplatPath: true 
-            }}
-          >
-          <ChatWrapper />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+const App = () => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hostname = window.location.hostname;
+    const isAdminDomain = hostname.startsWith("console.");
+    if (isAdminDomain && !window.location.pathname.startsWith("/admin")) {
+      window.location.replace("/admin/login");
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} storageKey="ure-theme">
+        <TooltipProvider>
+          <ProfileProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter 
+              future={{ 
+                v7_startTransition: true, 
+                v7_relativeSplatPath: true 
+              }}
+            >
+            <ChatWrapper />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               {/* FLUXO DE AQUISIÇÃO (Carregamento Imediato) */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
@@ -177,17 +188,19 @@ const App = () => (
               <Route path="/admin/cards" element={<AdminCardsPage />} />
               <Route path="/admin/notifications" element={<NotificationsPage />} />
               <Route path="/admin/logs" element={<LogsPage />} />
-              <Route path="/admin/admin-users" element={<AdminUsersPage />} />
+                <Route path="/admin/admin-users" element={<AdminUsersPage />} />
+                <Route path="/admin/settings" element={<AdminSettingsPage />} />
 
-              {/* CATCH-ALL */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-        </ProfileProvider>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+                {/* CATCH-ALL */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+          </ProfileProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

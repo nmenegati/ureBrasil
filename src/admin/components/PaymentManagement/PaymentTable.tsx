@@ -110,6 +110,7 @@ export function PaymentTable({ payments, onReload }: PaymentTableProps) {
               <th className="px-3 py-2 text-left font-semibold text-slate-600">Aluno</th>
               <th className="px-3 py-2 text-left font-semibold text-slate-600">Valor</th>
               <th className="px-3 py-2 text-left font-semibold text-slate-600">Método</th>
+              <th className="px-3 py-2 text-left font-semibold text-slate-600">Gateway</th>
               <th className="px-3 py-2 text-left font-semibold text-slate-600">Status</th>
               <th className="px-3 py-2 text-left font-semibold text-slate-600">Data</th>
               <th className="px-3 py-2 text-right font-semibold text-slate-600">Ações</th>
@@ -147,6 +148,15 @@ export function PaymentTable({ payments, onReload }: PaymentTableProps) {
                   <span className="text-[11px] text-slate-700">
                     {methodLabel(payment.payment_method)}
                   </span>
+                </td>
+                <td className="px-3 py-2 align-top">
+                  {payment.gateway_name ? (
+                    <Badge className="text-[10px] bg-slate-800 text-white">
+                      {payment.gateway_name}
+                    </Badge>
+                  ) : (
+                    <span className="text-[11px] text-slate-400">-</span>
+                  )}
                 </td>
                 <td className="px-3 py-2 align-top">
                   <Badge
@@ -208,7 +218,7 @@ export function PaymentTable({ payments, onReload }: PaymentTableProps) {
             {formatted.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-3 py-4 text-center text-sm text-slate-500"
                 >
                   Nenhum pagamento encontrado.
@@ -248,6 +258,10 @@ export function PaymentTable({ payments, onReload }: PaymentTableProps) {
               <p>
                 <span className="font-semibold">Método:</span>{' '}
                 {methodLabel(selectedPayment.payment_method)}
+              </p>
+              <p>
+                <span className="font-semibold">Gateway:</span>{' '}
+                {selectedPayment.gateway_name || '-'}
               </p>
               <p>
                 <span className="font-semibold">Status:</span>{' '}

@@ -73,6 +73,45 @@ const getValidityDate = () => {
   return `31/03/${validityYear}`;
 };
 
+declare global {
+  interface Window {
+    EfiJs?: any;
+  }
+}
+
+const EFI_SCRIPT_SRC =
+  "https://cdn.jsdelivr.net/gh/efipay/js-payment-token-efi/dist/payment-token-efi.min.js";
+
+const EFI_ACCOUNT_ID = import.meta.env.VITE_EFI_ACCOUNT_ID as string | undefined;
+const EFI_ENV = (import.meta.env.VITE_EFI_ENV as string | undefined) || "sandbox";
+
+const loadEfiScript = () => {
+  return new Promise<void>((resolve, reject) => {
+    if (typeof window === "undefined") {
+      reject(new Error("Janela não disponível"));
+      return;
+    }
+    if (window.EfiJs) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = EFI_SCRIPT_SRC;
+    script.type = "text/javascript";
+    script.onload = () => resolve();
+    script.onerror = () =>
+      reject(new Error("Falha ao carregar SDK de pagamento da Efi"));
+    document.body.appendChild(script);
+  });
+};
+
+const detectCardBrand = (cardNumber: string) => {
+  const bin = cardNumber.replace(/\D/g, "").slice(0, 1);
+  if (bin === "4") return "visa";
+  if (bin === "5") return "mastercard";
+  return "visa";
+};
+
 export default function Pagamento() {
   const { isChecking } = useOnboardingGuard("payment");
   const navigate = useNavigate();
@@ -311,18 +350,58 @@ export default function Pagamento() {
         const expYear =
           year && year.length === 2 ? `20${year}` : year;
 
-        const { data, error } = await supabase.functions.invoke(
-          "pagbank-payment-v2",
-          {
+        const adminClient = supabase as any;
+        const { data: gatewayRow } = await adminClient
+          .from("payment_gateway_config")
+          .select("gateway_name, sandbox_mode")
+          .eq("is_active", true)
+          .maybeSingle();
+
+        const activeGateway: string = gatewayRow?.gateway_name || "pagbank";
+        const installmentsCount =
+          cardType === "credit" ? parseInt(installments) : 1;
+
+        let data: any;
+        let error: any;
+
+        if (activeGateway === "efi") {
+          if (!EFI_ACCOUNT_ID) {
+            throw new Error(
+              "Configuração da conta Efi não encontrada (VITE_EFI_ACCOUNT_ID)."
+            );
+          }
+
+          await loadEfiScript();
+
+          const cleanNumber = cardNumber.replace(/\s/g, "");
+          const brand = detectCardBrand(cleanNumber);
+          const efiEnv =
+            gatewayRow?.sandbox_mode === false ? "production" : EFI_ENV;
+
+          const tokenResponse = await window.EfiJs.CreditCard
+            .setAccount(EFI_ACCOUNT_ID)
+            .setEnvironment(efiEnv)
+            .setCreditCardData({
+              brand,
+              number: cleanNumber,
+              cvv: cardCvv,
+              expirationMonth: month,
+              expirationYear: expYear,
+              reuse: false,
+            })
+            .getPaymentToken();
+
+          const paymentToken = tokenResponse?.payment_token;
+          if (!paymentToken) {
+            throw new Error("Falha ao gerar token de cartão Efi.");
+          }
+
+          ({ data, error } = await supabase.functions.invoke("efi-payment", {
             body: {
               amount: paymentAmount,
-              installments:
-                cardType === "credit" ? parseInt(installments) : 1,
+              installments: installmentsCount,
               card: {
-                number: cardNumber.replace(/\s/g, ""),
-                exp_month: month,
-                exp_year: expYear,
-                security_code: cardCvv,
+                payment_token: paymentToken,
                 holder_name: cardName,
               },
               metadata,
@@ -330,8 +409,29 @@ export default function Pagamento() {
             headers: {
               Authorization: `Bearer ${session.access_token}`,
             },
-          }
-        );
+          }));
+        } else {
+          ({ data, error } = await supabase.functions.invoke(
+            "pagbank-payment-v2",
+            {
+              body: {
+                amount: paymentAmount,
+                installments: installmentsCount,
+                card: {
+                  number: cardNumber.replace(/\s/g, ""),
+                  exp_month: month,
+                  exp_year: expYear,
+                  security_code: cardCvv,
+                  holder_name: cardName,
+                },
+                metadata,
+              },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            }
+          ));
+        }
 
         if (error) throw error;
 
