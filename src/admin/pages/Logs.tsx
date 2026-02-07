@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LogsTable, NormalizedLogItem } from '@/admin/components/Logs/LogsTable';
+import { LogsTable, NormalizedLogItem } from '@/admin/components/Logs/LogsTable.tsx';
 import { supabase } from '@/integrations/supabase/client';
 
 type TabKey = 'admin' | 'activity' | 'audit';
@@ -290,4 +290,3 @@ export default function LogsPage() {
     </AdminLayout>
   );
 }
-
