@@ -1,0 +1,269 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+// Tipos
+interface CardFormData {
+  token?: string;
+  paymentMethodId?: string;
+  payment_method_id?: string;
+  issuerId?: string;
+  issuer_id?: string;
+  installments?: string | number;
+}
+
+interface PaymentResult {
+  success: boolean;
+  payment_id?: string;
+  status?: string;
+  mp_status?: string;
+  mp_status_detail?: string;
+  pix_qr_code?: string;
+  pix_qr_code_base64?: string;
+  pix_expires_at?: string;
+  error?: string;
+}
+
+// Carregar SDK do Mercado Pago
+const loadMercadoPagoSDK = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (document.getElementById('mp-sdk')) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'mp-sdk';
+    script.src = 'https://sdk.mercadopago.com/js/v2';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Falha ao carregar SDK Mercado Pago'));
+    document.head.appendChild(script);
+  });
+};
+
+export function useMercadoPago() {
+  const [mp, setMp] = useState<any>(null);
+  const [cardForm, setCardForm] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sdkReady, setSdkReady] = useState(false);
+
+  const paymentResolverRef = useRef<{
+    resolve: (data: any) => void;
+    reject: (err: any) => void;
+    params: any;
+  } | null>(null);
+  const cardFormInitializedRef = useRef(false);
+
+  // Inicializar SDK
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await loadMercadoPagoSDK();
+        // PUBLIC_KEY - trocar pela env var do seu projeto
+        const publicKey = import.meta.env.VITE_MP_PUBLIC_KEY || 'TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+        const mpInstance = new (window as any).MercadoPago(publicKey, {
+          locale: 'pt-BR',
+        });
+        setMp(mpInstance);
+        setSdkReady(true);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+    init();
+  }, []);
+
+  // Inicializar CardForm (formulário de cartão com iframe seguro)
+  const initCardForm = useCallback((formConfig: {
+    amount: string;
+    cardNumberId: string;
+    expirationDateId: string;
+    securityCodeId: string;
+    cardholderNameId: string;
+    installmentsId: string;
+    identificationTypeId: string;
+    identificationNumberId: string;
+    onReady?: () => void;
+    onError?: (error: any) => void;
+  }) => {
+    if (!mp) return null;
+
+    if (cardFormInitializedRef.current) {
+      console.log('[MP] CardForm já inicializado, ignorando');
+      return cardForm;
+    }
+
+    try {
+      const form = mp.cardForm({
+        amount: formConfig.amount,
+        iframe: true,
+        form: {
+          id: 'form-checkout',
+          cardNumber: { id: formConfig.cardNumberId, placeholder: 'Número do cartão' },
+          expirationDate: { id: formConfig.expirationDateId, placeholder: 'MM/AA' },
+          securityCode: { id: formConfig.securityCodeId, placeholder: 'CVV' },
+          cardholderName: { id: formConfig.cardholderNameId, placeholder: 'Nome como no cartão' },
+          installments: { id: formConfig.installmentsId },
+          identificationType: { id: formConfig.identificationTypeId },
+          identificationNumber: { id: formConfig.identificationNumberId, placeholder: 'CPF' },
+          issuer: { id: 'mp-issuer' },
+        },
+        callbacks: {
+          onFormMounted: (error: any) => {
+            if (error) {
+              console.warn('CardForm mount error:', error);
+              formConfig.onError?.(error);
+            } else {
+              console.log('CardForm montado com sucesso');
+              formConfig.onReady?.();
+            }
+          },
+          onSubmit: async (event: Event) => {
+            event.preventDefault();
+
+            const cardFormData: CardFormData = form.getCardFormData();
+            console.log('[MP onSubmit] token:', cardFormData.token);
+            console.log('[MP onSubmit] data:', JSON.stringify(cardFormData));
+
+            if (!paymentResolverRef.current) return;
+
+            const { resolve, reject, params } = paymentResolverRef.current;
+
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session) throw new Error('Sessão expirada');
+
+              const { data, error: fnError } = await supabase.functions.invoke('mercadopago-payment', {
+                body: {
+                  payment_method: 'credit_card',
+                  amount: params.amount,
+                  plan_id: params.plan_id,
+                  card_token: cardFormData.token,
+                  payment_method_id: (cardFormData as any).paymentMethodId,
+                  issuer_id: (cardFormData as any).issuerId,
+                  installments: Number(cardFormData.installments) || 1,
+                  payer_email: params.payer_email,
+                  is_upsell: params.is_upsell || false,
+                  original_payment_id: params.original_payment_id || null,
+                },
+              });
+
+              if (fnError) throw new Error(fnError.message);
+              if (!data.success) throw new Error(data.error);
+
+              resolve(data);
+            } catch (err: any) {
+              reject(err);
+            }
+          },
+          onFetching: (resource: string) => {
+            console.log('[MP] Fetching:', resource);
+          },
+        },
+      });
+
+      setCardForm(form);
+      cardFormInitializedRef.current = true;
+      return form;
+    } catch (error: any) {
+      console.error('[MercadoPago] Erro ao inicializar cardForm:', error);
+      setError(error?.message || 'Erro ao inicializar formulário de cartão');
+      formConfig.onError?.(error);
+      return null;
+    }
+  }, [mp, cardForm]);
+
+  // Processar pagamento com CARTÃO
+  const processCardPayment = useCallback(async (params: {
+    plan_id: string;
+    amount: number;
+    payer_email: string;
+    is_upsell?: boolean;
+    original_payment_id?: string;
+  }): Promise<PaymentResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await new Promise<PaymentResult>((resolve, reject) => {
+        paymentResolverRef.current = { resolve, reject, params };
+
+        const formEl = document.getElementById('form-checkout') as HTMLFormElement | null;
+        if (formEl) {
+          formEl.requestSubmit();
+        } else {
+          reject(new Error('Formulário não encontrado'));
+        }
+      });
+
+      return result;
+    } catch (err: any) {
+      const msg = err.message || 'Erro desconhecido';
+      setError(msg);
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+      paymentResolverRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      cardFormInitializedRef.current = false;
+      if (cardForm) {
+        try {
+          cardForm.unmount();
+        } catch {
+        }
+      }
+    };
+  }, [cardForm]);
+
+  // Processar pagamento com PIX
+  const processPixPayment = useCallback(async (params: {
+    plan_id: string;
+    amount: number;
+    payer_email: string;
+    is_upsell?: boolean;
+    original_payment_id?: string;
+  }): Promise<PaymentResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão expirada. Faça login novamente.');
+
+      const { data, error: fnError } = await supabase.functions.invoke('mercadopago-payment', {
+        body: {
+          payment_method: 'pix',
+          amount: params.amount,
+          plan_id: params.plan_id,
+          payer_email: params.payer_email,
+          is_upsell: params.is_upsell || false,
+          original_payment_id: params.original_payment_id || null,
+        },
+      });
+
+      if (fnError) throw new Error(fnError.message);
+      if (!data.success) throw new Error(data.error || 'Erro ao gerar PIX');
+
+      return data as PaymentResult;
+    } catch (err: any) {
+      const msg = err.message || 'Erro desconhecido';
+      setError(msg);
+      return { success: false, error: msg };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    mp,
+    sdkReady,
+    loading,
+    error,
+    initCardForm,
+    processCardPayment,
+    processPixPayment,
+  };
+}

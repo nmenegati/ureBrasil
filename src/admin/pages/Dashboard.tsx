@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminLayout from '@/admin/components/Layout/AdminLayout';
+import { Users, FileText as FileTextIcon, CreditCard as CreditCardIcon, LifeBuoy as LifeBuoyIcon, IdCard } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -138,38 +139,43 @@ export default function AdminDashboardPage() {
   return (
     <AdminLayout>
       <div className="max-w-6xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <header className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
           <p className="text-sm text-slate-500">
             Visão geral dos indicadores operacionais da URE.
           </p>
-        </div>
+        </header>
 
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard
             title="Estudantes"
             value={metrics?.total_students ?? 0}
             loading={loading}
+            icon={Users}
           />
           <MetricCard
             title="Docs pendentes"
             value={metrics?.pending_documents ?? 0}
             loading={loading}
+            icon={FileTextIcon}
           />
           <MetricCard
             title="Pagamentos pendentes"
             value={metrics?.pending_payments ?? 0}
             loading={loading}
+            icon={CreditCardIcon}
           />
           <MetricCard
             title="Tickets abertos"
             value={metrics?.open_tickets ?? 0}
             loading={loading}
+            icon={LifeBuoyIcon}
           />
           <MetricCard
             title="Carteiras ativas"
             value={metrics?.active_cards ?? 0}
             loading={loading}
+            icon={IdCard}
           />
         </div>
 
@@ -179,21 +185,27 @@ export default function AdminDashboardPage() {
               <CardTitle className="text-sm">Carteirinhas emitidas (30 dias)</CardTitle>
             </CardHeader>
             <CardContent className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={cardsSeries}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="count"
-                    stroke="#0ea5e9"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {cardsSeries.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                  Nenhum dado de emissão nos últimos 30 dias.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={cardsSeries}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="date" tickLine={false} axisLine={false} />
+                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#0ea5e9"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
@@ -202,29 +214,35 @@ export default function AdminDashboardPage() {
               <CardTitle className="text-sm">Status dos documentos</CardTitle>
             </CardHeader>
             <CardContent className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={docStatus}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={80}
-                    label
-                  >
-                    {docStatus.map((entry, index) => {
-                      const colors = ['#22c55e', '#eab308', '#ef4444'];
-                      return (
-                        <Cell
-                          key={entry.name}
-                          fill={colors[index % colors.length]}
-                        />
-                      );
-                    })}
-                  </Pie>
-                  <Legend />
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {docStatus.every(item => item.value === 0) ? (
+                <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                  Nenhum documento processado ainda.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={docStatus}
+                      dataKey="value"
+                      nameKey="name"
+                      outerRadius={80}
+                      label
+                    >
+                      {docStatus.map((entry, index) => {
+                        const colors = ['#22c55e', '#eab308', '#ef4444'];
+                        return (
+                          <Cell
+                            key={entry.name}
+                            fill={colors[index % colors.length]}
+                          />
+                        );
+                      })}
+                    </Pie>
+                    <Legend />
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -234,15 +252,21 @@ export default function AdminDashboardPage() {
             <CardTitle className="text-sm">Pagamentos por método</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={paymentsByMethod}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="method" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#6366f1" />
-              </BarChart>
-            </ResponsiveContainer>
+            {paymentsByMethod.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-slate-400">
+                Nenhum pagamento registrado.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={paymentsByMethod}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="method" tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -254,15 +278,21 @@ interface MetricCardProps {
   title: string;
   value: number;
   loading: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
-function MetricCard({ title, value, loading }: MetricCardProps) {
+function MetricCard({ title, value, loading, icon: Icon }: MetricCardProps) {
   return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
+    <Card className="h-full border-slate-200 bg-white/60 backdrop-blur">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-xs font-medium text-slate-500">
           {title}
         </CardTitle>
+        {Icon && (
+          <div className="h-7 w-7 rounded-full bg-slate-900 text-slate-50 flex items-center justify-center">
+            <Icon className="w-3.5 h-3.5" />
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <p className="text-2xl font-semibold text-slate-900">

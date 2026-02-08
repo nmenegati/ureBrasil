@@ -1199,7 +1199,6 @@ const Index = () => {
                 © 2026 URE Brasil - União Representativa dos Estudantes do Brasil. Todos os direitos
                 reservados.
               </p>
-              <p className="text-muted-foreground/60 text-xs">CNPJ: 04.942.797/0001-05</p>
               <p className="text-muted-foreground/60 text-xs">
                 Desenvolvido por{" "}
                 <a

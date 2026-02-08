@@ -65,7 +65,7 @@ export function GatewaySelector() {
 
     try {
       const { error } = await adminClient.rpc('switch_active_gateway', {
-        gateway_name: target.gateway_name,
+        new_gateway: target.gateway_name,
       });
 
       if (error) {

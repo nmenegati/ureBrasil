@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,13 +26,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { QrCode, CreditCard, Loader2, Check, Shield, Lock, CheckCircle } from "lucide-react";
-import pagseguroLogo from "@/assets/pagseguro-logo.png";
+import gatewayMpLogo from "@/assets/gateway-mp.png";
+import gatewayPagseguroLogo from "@/assets/gateway-pagseguro.png";
+import gatewayEfiLogo from "@/assets/pagseguro-logo.png";
 import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.jpg";
 import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
 import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
 import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useOnboardingGuard, STEP_ROUTES } from "@/hooks/useOnboardingGuard";
+import { useMercadoPago } from "@/hooks/useMercadoPago";
 
 interface Plan {
   id: string;
@@ -109,12 +112,83 @@ export default function Checkout() {
   const [resolvedUpsell, setResolvedUpsell] = useState<ResolvedUpsell | null>(null);
   const [resolvingUpsell, setResolvingUpsell] = useState(true);
   const [upsellResolved, setUpsellResolved] = useState(false);
+  const [activeGateway, setActiveGateway] = useState<string>("pagbank");
+  const mpFormInitializedRef = useRef(false);
+  const {
+    sdkReady,
+    initCardForm,
+    processCardPayment,
+    processPixPayment,
+    loading: mpLoading,
+    error: mpError,
+  } = useMercadoPago();
 
   useEffect(() => {
     console.log("[Checkout] isChecking:", isChecking);
     console.log("[Checkout] resolvedUpsell:", resolvedUpsell);
     console.log("[Checkout] resolvingUpsell:", resolvingUpsell);
   }, [isChecking, resolvedUpsell, resolvingUpsell]);
+
+  useEffect(() => {
+    const fetchGateway = async () => {
+      const { data } = await supabase
+        .from("payment_gateway_config")
+        .select("gateway_name")
+        .eq("is_active", true)
+        .single();
+
+      if (data?.gateway_name) {
+        setActiveGateway(data.gateway_name);
+      }
+    };
+
+    fetchGateway();
+  }, []);
+
+  useEffect(() => {
+    if (activeGateway !== "mercadopago") return;
+    if (!sdkReady) return;
+    if (!resolvedUpsell?.amount) return;
+    if (paymentMethod !== "card") return;
+    if (!studentProfile?.cpf) return;
+    if (mpFormInitializedRef.current) {
+      console.log("[Checkout] CardForm MP já inicializado, ignorando");
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const formElement = document.getElementById("form-checkout");
+      console.log("[Checkout] form-checkout encontrado?", !!formElement);
+      if (!formElement) {
+        console.error("[Checkout] form-checkout NÃO encontrado no DOM");
+        return;
+      }
+
+      initCardForm({
+        amount: String(resolvedUpsell.amount),
+        cardNumberId: "mp-card-number",
+        expirationDateId: "mp-expiration-date",
+        securityCodeId: "mp-security-code",
+        cardholderNameId: "mp-cardholder-name",
+        installmentsId: "mp-installments",
+        identificationTypeId: "mp-identification-type",
+        identificationNumberId: "mp-identification-number",
+        onReady: () => console.log("[Checkout] CardForm MP pronto!"),
+        onError: (err) => console.error("[Checkout] CardForm MP erro:", err),
+      });
+
+      mpFormInitializedRef.current = true;
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [
+    activeGateway,
+    sdkReady,
+    resolvedUpsell?.amount,
+    paymentMethod,
+    initCardForm,
+    studentProfile?.cpf,
+  ]);
 
   useEffect(() => {
     if (isChecking) return;
@@ -231,7 +305,7 @@ export default function Checkout() {
           : "sua carteirinha";
 
         setPlan({
-          id: "physical_addon",
+          id: originalPayment?.plan_id || "physical_addon",
           name: "Carteirinha Física",
           description: `Adicional para ${originalPlanName}`,
           price: resolvedUpsell.amount,
@@ -253,6 +327,7 @@ export default function Checkout() {
 
   const validateCardForm = () => {
     if (paymentMethod !== "card") return true;
+    if (activeGateway === "mercadopago") return true;
 
     const cardNumberClean = cardNumber.replace(/\s/g, "");
     if (cardNumberClean.length < 13 || cardNumberClean.length > 19) {
@@ -309,34 +384,54 @@ export default function Checkout() {
       }
 
       if (resolvedUpsell.isUpsell && resolvedUpsell.originalPaymentId) {
-        console.log("💳 Processando upsell via PagBank (pagbank-payment-v2)...");
+        console.log("💳 Processando upsell via gateway:", activeGateway);
 
         const [month, year] = cardExpiry.split("/");
         const expYear = year && year.length === 2 ? `20${year}` : year;
 
-        const { data, error } = await supabase.functions.invoke(
-          "pagbank-payment-v2",
-          {
-            body: {
-              amount: resolvedUpsell.amount,
-              installments: 1,
-              card: {
-                number: cardNumber.replace(/\s/g, ""),
-                exp_month: month,
-                exp_year: expYear,
-                security_code: cardCvv,
-                holder_name: cardName,
+        let data: any;
+        let error: any;
+
+        if (activeGateway === "mercadopago") {
+          const result = await processCardPayment({
+            plan_id: plan.id,
+            amount: resolvedUpsell.amount,
+            payer_email: user!.email!,
+            is_upsell: true,
+            original_payment_id: resolvedUpsell.originalPaymentId,
+          });
+          if (!result.success) {
+            throw new Error(
+              result.error || "Erro ao processar pagamento do upsell",
+            );
+          }
+          data = result;
+          error = null;
+        } else {
+          ({ data, error } = await supabase.functions.invoke(
+            "pagbank-payment-v2",
+            {
+              body: {
+                amount: resolvedUpsell.amount,
+                installments: 1,
+                card: {
+                  number: cardNumber.replace(/\s/g, ""),
+                  exp_month: month,
+                  exp_year: expYear,
+                  security_code: cardCvv,
+                  holder_name: cardName,
+                },
+                metadata: {
+                  is_upsell: true,
+                  original_payment_id: resolvedUpsell.originalPaymentId,
+                },
               },
-              metadata: {
-                is_upsell: true,
-                original_payment_id: resolvedUpsell.originalPaymentId,
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
               },
             },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          },
-        );
+          ));
+        }
 
         if (error) throw error;
         if (!data?.success) {
@@ -430,6 +525,7 @@ export default function Checkout() {
 
   const isFormValid = () => {
     if (paymentMethod === "pix") return true;
+    if (activeGateway === "mercadopago") return true;
     const cardNumberClean = cardNumber.replace(/\s/g, "");
     return (
       cardNumberClean.length >= 13 &&
@@ -437,6 +533,18 @@ export default function Checkout() {
       /^\d{2}\/\d{2}$/.test(cardExpiry) &&
       cardCvv.length >= 3
     );
+  };
+
+  const currentGatewayLogo = () => {
+    if (activeGateway === "mercadopago") return gatewayMpLogo;
+    if (activeGateway === "efi") return gatewayEfiLogo;
+    return gatewayPagseguroLogo;
+  };
+
+  const currentGatewayName = () => {
+    if (activeGateway === "mercadopago") return "Mercado Pago";
+    if (activeGateway === "efi") return "Efí";
+    return "PagSeguro";
   };
 
   if (isChecking) {
@@ -627,7 +735,11 @@ export default function Checkout() {
 
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <span>Pagamento processado com</span>
-                  <img src={pagseguroLogo} alt="PagSeguro" className="h-6 w-auto" />
+                  <img
+                    src={currentGatewayLogo()}
+                    alt={currentGatewayName()}
+                    className="h-6 w-auto"
+                  />
                 </div>
               </div>
 
@@ -671,7 +783,7 @@ export default function Checkout() {
                     </RadioGroup>
                   </div>
 
-                  {cardType === "credit" && (
+                  {cardType === "credit" && activeGateway !== "mercadopago" && (
                     <div>
                       <Label htmlFor="installments">Parcelamento</Label>
                       <Select value={installments} onValueChange={setInstallments}>
@@ -689,58 +801,119 @@ export default function Checkout() {
                     </div>
                   )}
 
-                  <div>
-                    <Label htmlFor="cardNumber">Número do cartão</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="0000 0000 0000 0000"
-                      value={cardNumber}
-                      onChange={(e) =>
-                        setCardNumber(maskCardNumber(e.target.value))
-                      }
-                      maxLength={19}
-                    />
-                  </div>
+                  {activeGateway === "mercadopago" ? (
+                    <form
+                      id="form-checkout"
+                      className="space-y-3"
+                      onSubmit={(e) => e.preventDefault()}
+                    >
+                      <div>
+                        <Label>Número do cartão</Label>
+                        <div
+                          id="mp-card-number"
+                          className="h-10 border rounded px-3 py-2 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="mp-cardholder-name">Nome no cartão</Label>
+                        <input
+                          id="mp-cardholder-name"
+                          className="h-10 border rounded px-3 w-full"
+                          placeholder="Nome como no cartão"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Validade</Label>
+                          <div
+                            id="mp-expiration-date"
+                            className="h-10 border rounded px-3 py-2 bg-white"
+                          />
+                        </div>
+                        <div>
+                          <Label>CVV</Label>
+                          <div
+                            id="mp-security-code"
+                            className="h-10 border rounded px-3 py-2 bg-white"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="mp-installments">Parcelamento</Label>
+                        <select
+                          id="mp-installments"
+                          className="h-10 border rounded px-3 w-full"
+                        />
+                      </div>
+                      <div style={{ display: "none" }}>
+                        <select id="mp-identification-type" defaultValue="CPF">
+                          <option value="CPF">CPF</option>
+                        </select>
+                        <input
+                          id="mp-identification-number"
+                          defaultValue={
+                            studentProfile?.cpf?.replace(/\D/g, "") || ""
+                          }
+                        />
+                        <select id="mp-issuer" />
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div>
+                        <Label htmlFor="cardNumber">Número do cartão</Label>
+                        <Input
+                          id="cardNumber"
+                          placeholder="0000 0000 0000 0000"
+                          value={cardNumber}
+                          onChange={(e) =>
+                            setCardNumber(maskCardNumber(e.target.value))
+                          }
+                          maxLength={19}
+                        />
+                      </div>
 
-                  <div>
-                    <Label htmlFor="cardName">Nome no cartão</Label>
-                    <Input
-                      id="cardName"
-                      placeholder="Como está impresso no cartão"
-                      value={cardName}
-                      onChange={(e) =>
-                        setCardName(e.target.value.toUpperCase())
-                      }
-                    />
-                  </div>
+                      <div>
+                        <Label htmlFor="cardName">Nome no cartão</Label>
+                        <Input
+                          id="cardName"
+                          placeholder="Como está impresso no cartão"
+                          value={cardName}
+                          onChange={(e) =>
+                            setCardName(e.target.value.toUpperCase())
+                          }
+                        />
+                      </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="cardExpiry">Validade</Label>
-                      <Input
-                        id="cardExpiry"
-                        placeholder="MM/AA"
-                        value={cardExpiry}
-                        onChange={(e) =>
-                          setCardExpiry(maskExpiry(e.target.value))
-                        }
-                        maxLength={5}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cardCvv">CVV</Label>
-                      <Input
-                        id="cardCvv"
-                        placeholder="123"
-                        value={cardCvv}
-                        onChange={(e) =>
-                          setCardCvv(maskCvv(e.target.value))
-                        }
-                        maxLength={4}
-                        type="password"
-                      />
-                    </div>
-                  </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="cardExpiry">Validade</Label>
+                          <Input
+                            id="cardExpiry"
+                            placeholder="MM/AA"
+                            value={cardExpiry}
+                            onChange={(e) =>
+                              setCardExpiry(maskExpiry(e.target.value))
+                            }
+                            maxLength={5}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="cardCvv">CVV</Label>
+                          <Input
+                            id="cardCvv"
+                            placeholder="123"
+                            value={cardCvv}
+                            onChange={(e) =>
+                              setCardCvv(maskCvv(e.target.value))
+                            }
+                            maxLength={4}
+                            type="password"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -784,12 +957,21 @@ export default function Checkout() {
                 </span>
               </div>
 
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <span>Pagamento processado com</span>
+                <img
+                  src={currentGatewayLogo()}
+                  alt={currentGatewayName()}
+                  className="h-6 w-auto"
+                />
+              </div>
+
               <p className="text-xs text-muted-foreground text-center">
                 Ao continuar você concorda com nossos{" "}
                 <button
                   type="button"
                   onClick={() => setIsTermsModalOpen(true)}
-                  className="underline hover:text-foreground transition-colors"
+                  className="underline underline-offset-2 hover:text-foreground"
                 >
                   Termos de Uso
                 </button>
