@@ -5,6 +5,7 @@ import AdminLayout from '@/admin/components/Layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { usePagBankEncrypt } from '@/hooks/usePagBankEncrypt';
 import { PaymentTable } from '@/admin/components/PaymentManagement/PaymentTable';
 
 type PaymentRow = Tables<'payments'> & {
