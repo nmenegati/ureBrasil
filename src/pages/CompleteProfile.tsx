@@ -389,7 +389,7 @@ export default function CompleteProfile() {
                   </h3>
 
                   {/* CEP com mensagem informativa */}
-                  <div className="flex flex-row items-start gap-3 rounded-lg border border-primary/100 bg-primary/5 px-3 py-2">
+                  <div className="flex flex-row items-start gap-3 rounded-lg border border-sky-400 bg-slate-50 px-3 py-2">
                     <div className="w-32 sm:w-36">
                       <Label htmlFor="cep" className="text-foreground">CEP *</Label>
                       <div className="relative">
@@ -400,7 +400,7 @@ export default function CompleteProfile() {
                           value={cep}
                           onChange={(e) => handleCepChange(e.target.value)}
                           maxLength={9}
-                          className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                          className="bg-background text-foreground placeholder:text-muted-foreground border-sky-400 focus:border-primary focus:ring-primary/20 h-11 text-base"
                           required
                         />
                         {cepLoading && (
@@ -572,7 +572,7 @@ export default function CompleteProfile() {
                           variant={educationLevel === level.id ? 'default' : 'outline'}
                           className={
                             'justify-start flex items-center gap-2 ' +
-                            (educationLevel === level.id ? '' : 'bg-sky-200 hover:bg-sky-300')
+                            (educationLevel === level.id ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
                           }
                           onClick={() => {
                             setEducationLevel(level.id as typeof educationLevel);
@@ -613,7 +613,7 @@ export default function CompleteProfile() {
                             variant={courseType === 'outro' ? 'default' : 'outline'}
                             className={
                               'justify-start flex items-center gap-2 ' +
-                              (courseType === 'outro' ? '' : 'bg-sky-200 hover:bg-sky-300')
+                              (courseType === 'outro' ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
                             }
                             onClick={() => {
                               setCourseType('outro');
@@ -628,7 +628,7 @@ export default function CompleteProfile() {
                             variant={courseType === 'direito' ? 'default' : 'outline'}
                             className={
                               'justify-start flex items-center gap-2 ' +
-                              (courseType === 'direito' ? '' : 'bg-sky-200 hover:bg-sky-300')
+                              (courseType === 'direito' ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
                             }
                             onClick={() => {
                               setCourseType('direito');

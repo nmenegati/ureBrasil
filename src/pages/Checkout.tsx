@@ -36,6 +36,7 @@ import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useOnboardingGuard, STEP_ROUTES } from "@/hooks/useOnboardingGuard";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
+import { CardForm } from "@/components/payment/CardForm";
 
 interface Plan {
   id: string;
@@ -59,18 +60,7 @@ interface ResolvedUpsell {
   originalPaymentId: string;
 }
 
-// Máscaras de input
-const maskCardNumber = (v: string) => {
-  return v.replace(/\D/g, "").replace(/(\d{4})(?=\d)/g, "$1 ").slice(0, 19);
-};
-
-const maskExpiry = (v: string) => {
-  return v.replace(/\D/g, "").replace(/(\d{2})(\d)/, "$1/$2").slice(0, 5);
-};
-
-const maskCvv = (v: string) => {
-  return v.replace(/\D/g, "").slice(0, 4);
-};
+const CHECKOUT_RESOLVE_RETRY_KEY = "checkout_resolve_attempts";
 
 const getValidityDate = () => {
   const now = new Date();
@@ -203,6 +193,9 @@ export default function Checkout() {
           amount: upsellState.amount ?? 15,
           originalPaymentId: upsellState.originalPaymentId,
         });
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem(CHECKOUT_RESOLVE_RETRY_KEY);
+        }
         setPaymentMethod("card");
         setResolvingUpsell(false);
         return;
@@ -227,12 +220,55 @@ export default function Checkout() {
               amount: data.amount ?? 15,
               originalPaymentId: data.originalPaymentId,
             });
+              if (typeof window !== "undefined") {
+                sessionStorage.removeItem(CHECKOUT_RESOLVE_RETRY_KEY);
+              }
             setPaymentMethod("card");
             setResolvingUpsell(false);
             return;
           }
         } catch {
         }
+      }
+
+      if (typeof window !== "undefined") {
+        const attempts = parseInt(
+          sessionStorage.getItem(CHECKOUT_RESOLVE_RETRY_KEY) || "0",
+        );
+
+        if (attempts >= 3) {
+          sessionStorage.removeItem(CHECKOUT_RESOLVE_RETRY_KEY);
+
+          if (!user) {
+            navigate("/complete-profile", { replace: true });
+            setResolvingUpsell(false);
+            setUpsellResolved(true);
+            return;
+          }
+
+          const { data: profileRow } = await supabase
+            .from("student_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (profileRow?.id) {
+            await supabase
+              .from("student_profiles")
+              .update({ current_onboarding_step: "documents" })
+              .eq("id", profileRow.id);
+          }
+
+          setResolvingUpsell(false);
+          setUpsellResolved(true);
+          navigate("/upload-documentos", { replace: true });
+          return;
+        }
+
+        sessionStorage.setItem(
+          CHECKOUT_RESOLVE_RETRY_KEY,
+          String(attempts + 1),
+        );
       }
 
       setResolvingUpsell(false);
@@ -506,21 +542,11 @@ export default function Checkout() {
     }).format(price);
   };
 
-  const getInstallmentOptions = () => {
-    if (!plan) return [];
-    const options = [];
-    const maxInstallments = plan.price >= 100 ? 12 : plan.price >= 50 ? 6 : 3;
-    for (let i = 1; i <= maxInstallments; i++) {
-      const value = plan.price / i;
-      options.push({
-        value: i.toString(),
-        label:
-          i === 1
-            ? `À vista ${formatPrice(plan.price)}`
-            : `${i}x de ${formatPrice(value)}`,
-      });
-    }
-    return options;
+  const getMaxInstallments = () => {
+    if (!plan) return 1;
+    if (plan.price >= 100) return 12;
+    if (plan.price >= 50) return 6;
+    return 3;
   };
 
   const isFormValid = () => {
@@ -783,24 +809,6 @@ export default function Checkout() {
                     </RadioGroup>
                   </div>
 
-                  {cardType === "credit" && activeGateway !== "mercadopago" && (
-                    <div>
-                      <Label htmlFor="installments">Parcelamento</Label>
-                      <Select value={installments} onValueChange={setInstallments}>
-                        <SelectTrigger id="installments">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getInstallmentOptions().map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
                   {activeGateway === "mercadopago" ? (
                     <form
                       id="form-checkout"
@@ -859,60 +867,22 @@ export default function Checkout() {
                       </div>
                     </form>
                   ) : (
-                    <>
-                      <div>
-                        <Label htmlFor="cardNumber">Número do cartão</Label>
-                        <Input
-                          id="cardNumber"
-                          placeholder="0000 0000 0000 0000"
-                          value={cardNumber}
-                          onChange={(e) =>
-                            setCardNumber(maskCardNumber(e.target.value))
-                          }
-                          maxLength={19}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="cardName">Nome no cartão</Label>
-                        <Input
-                          id="cardName"
-                          placeholder="Como está impresso no cartão"
-                          value={cardName}
-                          onChange={(e) =>
-                            setCardName(e.target.value.toUpperCase())
-                          }
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="cardExpiry">Validade</Label>
-                          <Input
-                            id="cardExpiry"
-                            placeholder="MM/AA"
-                            value={cardExpiry}
-                            onChange={(e) =>
-                              setCardExpiry(maskExpiry(e.target.value))
-                            }
-                            maxLength={5}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="cardCvv">CVV</Label>
-                          <Input
-                            id="cardCvv"
-                            placeholder="123"
-                            value={cardCvv}
-                            onChange={(e) =>
-                              setCardCvv(maskCvv(e.target.value))
-                            }
-                            maxLength={4}
-                            type="password"
-                          />
-                        </div>
-                      </div>
-                    </>
+                    <CardForm
+                      cardNumber={cardNumber}
+                      setCardNumber={setCardNumber}
+                      cardName={cardName}
+                      setCardName={setCardName}
+                      cardExpiry={cardExpiry}
+                      setCardExpiry={setCardExpiry}
+                      cardCvv={cardCvv}
+                      setCardCvv={setCardCvv}
+                      installments={installments}
+                      setInstallments={setInstallments}
+                      maxInstallments={getMaxInstallments()}
+                      planPrice={displayAmount}
+                      cardType={cardType}
+                      activeGateway={activeGateway}
+                    />
                   )}
                 </div>
               )}

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { ProgressBar } from "@/components/ProgressBar";
+import { CardForm } from "@/components/payment/CardForm";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,13 @@ import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
 import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
 import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
+import {
+  maskCardNumber,
+  maskExpiry,
+  maskCvv,
+  getValidityDate,
+  formatPrice,
+} from "@/utils/payment-helpers";
 
 interface Plan {
   id: string;
@@ -50,31 +58,6 @@ interface Plan {
   is_physical: boolean;
   is_direito: boolean;
 }
-
-const maskCardNumber = (value: string) => {
-  const numbers = value.replace(/\D/g, "");
-  return numbers.replace(/(\d{4})(?=\d)/g, "$1 ").slice(0, 19);
-};
-
-const maskExpiry = (value: string) => {
-  const numbers = value.replace(/\D/g, "");
-  if (numbers.length >= 2) {
-    return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}`;
-  }
-  return numbers;
-};
-
-const maskCvv = (value: string) => {
-  return value.replace(/\D/g, "").slice(0, 4);
-};
-
-const getValidityDate = () => {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
-  const validityYear = currentMonth < 3 ? currentYear : currentYear + 1;
-  return `31/03/${validityYear}`;
-};
 
 declare global {
   interface Window {
@@ -290,24 +273,11 @@ export default function Pagamento() {
     initCardForm,
   ]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(price);
-  };
-
-  const getInstallmentOptions = () => {
-    if (!plan) return [];
-    const maxInstallments = plan.price >= 100 ? 12 : plan.price >= 50 ? 6 : 3;
-    return Array.from({ length: maxInstallments }, (_, i) => {
-      const num = i + 1;
-      const value = plan.price / num;
-      return {
-        value: num.toString(),
-        label: num === 1 ? `${formatPrice(plan.price)} à vista` : `${num}x de ${formatPrice(value)}`,
-      };
-    });
+  const getMaxInstallments = () => {
+    if (!plan) return 1;
+    if (plan.price >= 100) return 12;
+    if (plan.price >= 50) return 6;
+    return 3;
   };
 
   const isCardFormValid = () => {
@@ -833,24 +803,6 @@ export default function Pagamento() {
                     </RadioGroup>
                   </div>
 
-                  {cardType === "credit" && activeGateway !== "mercadopago" && (
-                    <div>
-                      <Label htmlFor="installments">Parcelamento</Label>
-                      <Select value={installments} onValueChange={setInstallments}>
-                        <SelectTrigger id="installments">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getInstallmentOptions().map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
                   {activeGateway === "mercadopago" ? (
                     <form
                       id="form-checkout"
@@ -909,60 +861,22 @@ export default function Pagamento() {
                       </div>
                     </form>
                   ) : (
-                    <>
-                      <div>
-                        <Label htmlFor="cardNumber">Número do cartão</Label>
-                        <Input
-                          id="cardNumber"
-                          placeholder="0000 0000 0000 0000"
-                          value={cardNumber}
-                          onChange={(e) =>
-                            setCardNumber(maskCardNumber(e.target.value))
-                          }
-                          maxLength={19}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="cardName">Nome no cartão</Label>
-                        <Input
-                          id="cardName"
-                          placeholder="Como está impresso no cartão"
-                          value={cardName}
-                          onChange={(e) =>
-                            setCardName(e.target.value.toUpperCase())
-                          }
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="cardExpiry">Validade</Label>
-                          <Input
-                            id="cardExpiry"
-                            placeholder="MM/AA"
-                            value={cardExpiry}
-                            onChange={(e) =>
-                              setCardExpiry(maskExpiry(e.target.value))
-                            }
-                            maxLength={5}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="cardCvv">CVV</Label>
-                          <Input
-                            id="cardCvv"
-                            placeholder="123"
-                            value={cardCvv}
-                            onChange={(e) =>
-                              setCardCvv(maskCvv(e.target.value))
-                            }
-                            maxLength={4}
-                            type="password"
-                          />
-                        </div>
-                      </div>
-                    </>
+                    <CardForm
+                      cardNumber={cardNumber}
+                      setCardNumber={setCardNumber}
+                      cardName={cardName}
+                      setCardName={setCardName}
+                      cardExpiry={cardExpiry}
+                      setCardExpiry={setCardExpiry}
+                      cardCvv={cardCvv}
+                      setCardCvv={setCardCvv}
+                      installments={installments}
+                      setInstallments={setInstallments}
+                      maxInstallments={getMaxInstallments()}
+                      planPrice={plan.price}
+                      cardType={cardType}
+                      activeGateway={activeGateway}
+                    />
                   )}
                 </div>
               )}

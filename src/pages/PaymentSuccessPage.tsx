@@ -70,6 +70,24 @@ const PaymentSuccessPage = () => {
     setLoading(true);
 
     try {
+      const state = (location.state as { paymentId?: string } | undefined) || {};
+      const incomingPaymentId =
+        state.paymentId || localStorage.getItem("recent_payment_id");
+
+      if (incomingPaymentId) {
+        const { data: payment } = await supabase
+          .from("payments")
+          .select("id, status")
+          .eq("id", incomingPaymentId)
+          .single();
+
+        if (!payment || payment.status !== "approved") {
+          console.warn("Payment not found or not approved:", incomingPaymentId);
+          navigate("/pagamento");
+          return;
+        }
+      }
+
       if (user) {
         const { data: profileRow } = await supabase
           .from("student_profiles")
