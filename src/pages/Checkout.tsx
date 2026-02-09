@@ -37,6 +37,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useOnboardingGuard, STEP_ROUTES } from "@/hooks/useOnboardingGuard";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
 import { CardForm } from "@/components/payment/CardForm";
+import { validateCardForm } from "@/utils/payment-helpers";
 
 interface Plan {
   id: string;
@@ -361,30 +362,6 @@ export default function Checkout() {
     fetchPlanAndProfile();
   }, [isChecking, user?.id, resolvedUpsell?.originalPaymentId, navigate, resolvedUpsell]);
 
-  const validateCardForm = () => {
-    if (paymentMethod !== "card") return true;
-    if (activeGateway === "mercadopago") return true;
-
-    const cardNumberClean = cardNumber.replace(/\s/g, "");
-    if (cardNumberClean.length < 13 || cardNumberClean.length > 19) {
-      toast.error("Número do cartão inválido");
-      return false;
-    }
-    if (cardName.trim().length < 3) {
-      toast.error("Nome no cartão inválido");
-      return false;
-    }
-    if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-      toast.error("Data de validade inválida");
-      return false;
-    }
-    if (cardCvv.length < 3) {
-      toast.error("CVV inválido");
-      return false;
-    }
-    return true;
-  };
-
   const handleSubmit = async () => {
     if (!plan || !studentProfile) return;
 
@@ -406,7 +383,22 @@ export default function Checkout() {
       return;
     }
 
-    if (!validateCardForm()) return;
+    if (paymentMethod === "card" && activeGateway !== "mercadopago") {
+      const validation = validateCardForm({
+        cardNumber,
+        cardName,
+        cardExpiry,
+        cardCvv,
+      });
+
+      if (!validation.valid) {
+        toast({
+          title: "Erro",
+          description: validation.message,
+        });
+        return;
+      }
+    }
 
     setProcessing(true);
 

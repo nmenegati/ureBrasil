@@ -69,7 +69,7 @@ export default function EscolherPlano() {
       // Buscar perfil com is_law_student
       const { data: profile } = await supabase
         .from('student_profiles')
-        .select('id, is_law_student, education_level')
+        .select('id, is_law_student, education_level, plan_id')
         .eq('user_id', user.id)
         .single();
 
@@ -84,15 +84,17 @@ export default function EscolherPlano() {
 
       // Se NÃO é estudante de Direito, redirecionar direto para pagamento
       if (!profile.is_law_student) {
-        localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
-        
-        // Atualizar plan_id no banco
-        await supabase
-          .from('student_profiles')
-          .update({ plan_id: PLAN_GERAL_DIGITAL_ID })
-          .eq('id', profile.id);
-        
-        toast.info('Plano Geral Digital selecionado automaticamente');
+        // Só atualiza plan_id se ainda não tiver um definido
+        if (!profile.plan_id) {
+          localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
+          
+          await supabase
+            .from('student_profiles')
+            .update({ plan_id: PLAN_GERAL_DIGITAL_ID })
+            .eq('id', profile.id);
+          
+          toast.info('Plano Geral Digital selecionado automaticamente');
+        }
         navigate('/pagamento');
         return;
       }

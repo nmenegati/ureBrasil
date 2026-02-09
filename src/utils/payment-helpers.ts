@@ -30,3 +30,29 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
+export function validateCardForm(input: {
+  cardNumber: string;
+  cardName: string;
+  cardExpiry: string;
+  cardCvv: string;
+}): { valid: boolean; message?: string } {
+  const cardNumberClean = input.cardNumber.replace(/\s/g, "");
+
+  if (cardNumberClean.length < 13 || cardNumberClean.length > 19) {
+    return { valid: false, message: "Número do cartão inválido" };
+  }
+
+  if (input.cardName.trim().length < 3) {
+    return { valid: false, message: "Nome no cartão inválido" };
+  }
+
+  if (!/^\d{2}\/\d{2}$/.test(input.cardExpiry)) {
+    return { valid: false, message: "Data de validade inválida" };
+  }
+
+  if (input.cardCvv.length < 3) {
+    return { valid: false, message: "CVV inválido" };
+  }
+
+  return { valid: true };
+}

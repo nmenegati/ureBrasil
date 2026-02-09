@@ -48,6 +48,7 @@ import {
   maskCvv,
   getValidityDate,
   formatPrice,
+  validateCardForm,
 } from "@/utils/payment-helpers";
 
 interface Plan {
@@ -283,13 +284,15 @@ export default function Pagamento() {
   const isCardFormValid = () => {
     if (paymentMethod !== "card") return true;
     if (activeGateway === "mercadopago") return true;
-    const cleanCardNumber = cardNumber.replace(/\s/g, "");
-    return (
-      cleanCardNumber.length >= 13 &&
-      cardName.trim().length >= 3 &&
-      cardExpiry.length === 5 &&
-      cardCvv.length >= 3
-    );
+
+    const validation = validateCardForm({
+      cardNumber,
+      cardName,
+      cardExpiry,
+      cardCvv,
+    });
+
+    return validation.valid;
   };
 
   const isFormValid = () => {
@@ -312,6 +315,23 @@ export default function Pagamento() {
 
   const handleSubmit = async () => {
     if (!plan || !paymentMethod) return;
+
+    if (paymentMethod === "card" && activeGateway !== "mercadopago") {
+      const validation = validateCardForm({
+        cardNumber,
+        cardName,
+        cardExpiry,
+        cardCvv,
+      });
+
+      if (!validation.valid) {
+        toast({
+          title: "Erro",
+          description: validation.message,
+        });
+        return;
+      }
+    }
 
     setProcessing(true);
 
