@@ -68,6 +68,17 @@ interface StudentProfile {
   birth_date?: string | null;
 }
 
+interface DocumentCardProps {
+  config: DocumentConfig;
+  doc: DocumentRecord | undefined;
+  preview: string | undefined;
+  isUploading: boolean;
+  progress: number;
+  hasCameraSupport: boolean;
+  onUpload: (file: File, type: DocumentType) => void;
+  onOpenCamera: () => void;
+}
+
 const documentConfigs: DocumentConfig[] = [
   {
     type: 'matricula',
@@ -98,6 +109,350 @@ const documentConfigs: DocumentConfig[] = [
     maxSizeMB: 5
   }
 ];
+
+const DocumentCard = ({
+  config,
+  doc,
+  preview,
+  isUploading,
+  progress,
+  hasCameraSupport,
+  onUpload,
+  onOpenCamera,
+}: DocumentCardProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const IconComponent = config.icon;
+  const status = doc?.status;
+  const isSelfie = config.type === 'selfie';
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isSelfie) {
+      toast.error('Use a câmera para enviar a selfie');
+      return;
+    }
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      onUpload(file, config.type);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onUpload(file, config.type);
+    }
+    e.target.value = '';
+  };
+
+  const getStatusBadge = () => {
+    if (!doc) {
+      return (
+        <Badge variant="secondary" className="bg-slate-300 dark:bg-slate-500 text-slate-600 dark:text-slate-800">
+          <Clock className="w-3 h-3 mr-1" />
+          Pendente
+        </Badge>
+      );
+    }
+    switch (doc.status) {
+      case 'pending':
+        return (
+          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">
+            <Clock className="w-3 h-3 mr-1" />
+            Em análise
+          </Badge>
+        );
+      case 'approved':
+        return (
+          <Badge className="bg-green-500/20 text-green-600 dark:text-green-400">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Aprovado
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge variant="destructive" className="bg-red-400 text-red-600 dark:text-red-400">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Rejeitado
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const handleCardClick = () => {
+    if (isUploading) return;
+    if (isSelfie) {
+      onOpenCamera();
+      return;
+    }
+    if (!doc || status !== 'approved') {
+      inputRef.current?.click();
+    }
+  };
+
+  let PrimaryIcon: React.ElementType = IconComponent;
+  let SecondaryIcon: React.ElementType | null = null;
+
+  if (config.type === 'matricula') {
+    PrimaryIcon = FileText;
+    SecondaryIcon = GraduationCap;
+  } else if (config.type === 'rg') {
+    PrimaryIcon = CreditCard;
+    SecondaryIcon = User;
+  } else if (config.type === 'foto') {
+    PrimaryIcon = SquareUserRound;
+    SecondaryIcon = null;
+  } else if (config.type === 'selfie') {
+    PrimaryIcon = Camera;
+    SecondaryIcon = null;
+  }
+
+  const baseCardClasses =
+    'relative backdrop-blur-sm rounded-xl border-2 p-6 transition-colors shadow-sm';
+
+  let stateClasses = '';
+  if (!doc) {
+    stateClasses =
+      'bg-slate-200 border-slate-400 border-dashed hover:border-sky-500 hover:bg-yellow-100 hover:shadow-md';
+  } else if (status === 'approved') {
+    stateClasses = 'bg-sky-200 border-sky-400 border-solid';
+  } else if (status === 'rejected') {
+    stateClasses = 'bg-red-200 border-red-500 border-dashed';
+  } else if (status === 'pending') {
+    stateClasses = 'bg-slate-50 border-slate-300 border-dashed';
+  }
+
+  const interactive = !isUploading && status !== 'approved';
+
+  const renderTips = () => {
+    if (config.type === 'selfie') {
+      return (
+        <ul className="mt-1 space-y-1 text-xs text-slate-700">
+          <li>💡 Boa iluminação</li>
+          <li>👓 Sem óculos</li>
+          <li>🧢 Sem boné</li>
+        </ul>
+      );
+    }
+
+    if (config.type === 'foto') {
+      return (
+        <ul className="mt-1 space-y-1 text-xs text-slate-700">
+          <li>☀️ Fundo claro</li>
+          <li>👁️ Olhe para frente</li>
+          <li>🚫 Sem acessórios</li>
+        </ul>
+      );
+    }
+
+    if (config.type === 'rg') {
+      return (
+        <ul className="mt-1 space-y-1 text-xs text-slate-700">
+          <li>🪪 RG (Frente e Verso)</li>
+          <li>🚗 CNH</li>
+          <li>🛂 Passaporte</li>
+        </ul>
+      );
+    }
+
+    if (config.type === 'matricula') {
+      return (
+        <ul className="mt-1 space-y-1 text-xs text-slate-700">
+          <li>📄 Comprovante de matrícula 2026</li>
+          <li>🏫 Declaração da faculdade</li>
+          <li>💰 Boleto pago recente</li>
+        </ul>
+      );
+    }
+
+    return null;
+  };
+
+  const isEmpty = !doc;
+
+  return (
+    <div
+      className={cn(baseCardClasses, stateClasses, interactive && 'cursor-pointer')}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onClick={interactive ? handleCardClick : undefined}
+    >
+      <div className="absolute top-2 right-3">
+        {getStatusBadge()}
+      </div>
+
+      <div className="flex items-center mb-4">
+        {isEmpty ? (
+          <div className="flex items-center gap-4 flex-1">
+            <div className="flex-shrink-0 flex items-center">
+              <div className="w-16 h-16 rounded-full bg-slate-900/90 flex items-center justify-center">
+                <PrimaryIcon className="w-10 h-10 text-white" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-slate-900 dark:text-white">
+                {config.label}
+              </h3>
+              {renderTips()}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg flex items-center gap-1.5">
+              <PrimaryIcon className="w-5 h-5 text-primary" />
+              {SecondaryIcon && <SecondaryIcon className="w-4 h-4 text-primary/80" />}
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-white">
+                {config.label}
+              </h3>
+              {status !== 'approved' && renderTips()}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {status === 'approved' && (
+        <div className="pointer-events-none absolute inset-0 flex justify-end items-start pr-4 pt-4 opacity-10">
+          <CheckCircle className="w-16 h-16 text-sky-700" />
+        </div>
+      )}
+
+      {isUploading ? (
+        <div className="mt-4">
+          <Progress value={progress} className="h-2" />
+          <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 text-center">
+            Enviando... {progress}%
+          </p>
+        </div>
+      ) : doc && preview ? (
+        <div className="mt-4">
+          <img
+            src={preview}
+            alt="Preview"
+            className="object-cover rounded-lg mx-auto w-full h-40"
+          />
+          <div className={cn("mt-2 flex items-center", status === 'approved' ? "justify-center" : "justify-between")}>
+            <p className={cn("text-sm text-slate-600 dark:text-slate-300 truncate", status === 'approved' ? "text-center" : "flex-1")}>
+              {doc.file_name}
+            </p>
+            {status === 'rejected' && isSelfie && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenCamera}
+                className="text-primary hover:text-primary/80 hover:bg-primary/10"
+              >
+                Tirar nova selfie
+              </Button>
+            )}
+          </div>
+          {!isSelfie && (
+            <input
+              ref={inputRef}
+              type="file"
+              accept={config.acceptedTypes.join(',')}
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          )}
+        </div>
+      ) : doc && !preview ? (
+        <div className="mt-4">
+          <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex items-center gap-3">
+            <File className="w-8 h-8 text-slate-500 dark:text-slate-400" />
+            <p className="text-sm text-slate-900 dark:text-white truncate flex-1">{doc.file_name}</p>
+          </div>
+          {!isSelfie && (
+            <input
+              ref={inputRef}
+              type="file"
+              accept={config.acceptedTypes.join(',')}
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          )}
+        </div>
+      ) : (
+        <div className="mt-6 space-y-3">
+          {isSelfie ? (
+            <>
+              <Button onClick={onOpenCamera} className="w-full py-3">
+                <Camera className="w-4 h-4 mr-2" />
+                Tirar Selfie Agora
+              </Button>
+              {!hasCameraSupport && !doc && !preview && (
+                <Alert className="mt-3 bg-blue-50 border-blue-200">
+                  <Smartphone className="w-4 h-4 text-blue-600" />
+                  <AlertDescription className="text-sm">
+                    <p className="font-semibold mb-2">
+                      Câmera não disponível neste dispositivo
+                    </p>
+                    <p className="mb-3">
+                      Para sua segurança, a selfie deve ser tirada ao vivo pela câmera.
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      📱 Acesse esta página pelo smartphone para continuar.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
+          ) : (
+            <div>
+              <input
+                ref={inputRef}
+                type="file"
+                accept={config.acceptedTypes.join(',')}
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                onClick={() => inputRef.current?.click()}
+                variant="outline"
+                className="w-full"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Escolher arquivo
+              </Button>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
+                {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}
+                {' • '}Máx {config.maxSizeMB}MB
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {doc?.status === 'rejected' && doc.rejection_reason && (
+        <Alert variant="destructive" className="mt-4 bg-red-500/10 border-red-500/30">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-red-600 dark:text-red-300">
+            {doc.rejection_reason}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {doc?.status === 'rejected' && !isSelfie && (
+        <Button
+          onClick={() => inputRef.current?.click()}
+          className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 border border-red-500/30"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Enviar Novo Documento
+        </Button>
+      )}
+    </div>
+  );
+};
 
 export default function UploadDocumentos() {
   const { isChecking } = useOnboardingGuard('upload_documents');
@@ -408,346 +763,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
     }
   };
 
-const DocumentCard = ({ config }: { config: DocumentConfig }) => {
-    const inputRef = useRef<HTMLInputElement>(null);
-    
-    const doc = documents[config.type];
-    const preview = previews[config.type];
-    const isUploading = uploading[config.type];
-    const progress = uploadProgress[config.type] || 0;
-    const IconComponent = config.icon;
-    const status = doc?.status;
-    const isSelfie = config.type === 'selfie';
-    
-    const handleDragOver = (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-    
-    const handleDrop = (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (isSelfie) {
-        toast.error('Use a câmera para enviar a selfie');
-        return;
-      }
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        handleUpload(file, config.type);
-      }
-    };
-    
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        handleUpload(file, config.type);
-      }
-      e.target.value = '';
-    };
-    
-    const getStatusBadge = () => {
-      if (!doc) {
-        return (
-          <Badge variant="secondary" className="bg-slate-300 dark:bg-slate-500 text-slate-600 dark:text-slate-800">
-            <Clock className="w-3 h-3 mr-1" />
-            Pendente
-          </Badge>
-        );
-      }
-      switch (doc.status) {
-        case 'pending':
-          return (
-            <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">
-              <Clock className="w-3 h-3 mr-1" />
-              Em análise
-            </Badge>
-          );
-        case 'approved':
-          return (
-            <Badge className="bg-green-500/20 text-green-600 dark:text-green-400">
-              <CheckCircle className="w-3 h-3 mr-1" />
-              Aprovado
-            </Badge>
-          );
-        case 'rejected':
-          return (
-            <Badge variant="destructive" className="bg-red-400 text-red-600 dark:text-red-400">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              Rejeitado
-            </Badge>
-          );
-        default:
-          return null;
-      }
-    };
-    
-    const handleCardClick = () => {
-      if (isUploading) return;
-      if (isSelfie) {
-        setShowCamera(true);
-        return;
-      }
-      if (!doc || status !== 'approved') {
-        inputRef.current?.click();
-      }
-    };
-
-    let PrimaryIcon: React.ElementType = IconComponent;
-    let SecondaryIcon: React.ElementType | null = null;
-
-    if (config.type === 'matricula') {
-      PrimaryIcon = FileText;
-      SecondaryIcon = GraduationCap;
-    } else if (config.type === 'rg') {
-      PrimaryIcon = CreditCard;
-      SecondaryIcon = User;
-    } else if (config.type === 'foto') {
-      PrimaryIcon = SquareUserRound;
-      SecondaryIcon = null;
-    } else if (config.type === 'selfie') {
-      PrimaryIcon = Camera;
-      SecondaryIcon = null;
-    }
-
-    const baseCardClasses =
-      'relative backdrop-blur-sm rounded-xl border-2 p-6 transition-colors shadow-sm';
-
-    let stateClasses = '';
-    if (!doc) {
-      stateClasses =
-        'bg-slate-200 border-slate-400 border-dashed hover:border-sky-500 hover:bg-yellow-100 hover:shadow-md';
-    } else if (status === 'approved') {
-      stateClasses = 'bg-sky-200 border-sky-400 border-solid';
-    } else if (status === 'rejected') {
-      stateClasses = 'bg-red-200 border-red-500 border-dashed';
-    } else if (status === 'pending') {
-      stateClasses = 'bg-slate-50 border-slate-300 border-dashed';
-    }
-
-    const interactive = !isUploading && status !== 'approved';
-
-    const renderTips = () => {
-      if (config.type === 'selfie') {
-        return (
-          <ul className="mt-1 space-y-1 text-xs text-slate-700">
-            <li>💡 Boa iluminação</li>
-            <li>👓 Sem óculos</li>
-            <li>🧢 Sem boné</li>
-          </ul>
-        );
-      }
-
-      if (config.type === 'foto') {
-        return (
-          <ul className="mt-1 space-y-1 text-xs text-slate-700">
-            <li>☀️ Fundo claro</li>
-            <li>👁️ Olhe para frente</li>
-            <li>🚫 Sem acessórios</li>
-          </ul>
-        );
-      }
-
-      if (config.type === 'rg') {
-        return (
-          <ul className="mt-1 space-y-1 text-xs text-slate-700">
-            <li>🪪 RG (Frente e Verso)</li>
-            <li>🚗 CNH</li>
-            <li>🛂 Passaporte</li>
-          </ul>
-        );
-      }
-
-      if (config.type === 'matricula') {
-        return (
-          <ul className="mt-1 space-y-1 text-xs text-slate-700">
-            <li>📄 Comprovante de matrícula 2026</li>
-            <li>🏫 Declaração da faculdade</li>
-            <li>💰 Boleto pago recente</li>
-          </ul>
-        );
-      }
-
-      return null;
-    };
-
-    const isEmpty = !doc;
-
-return (
-      <div 
-        className={cn(baseCardClasses, stateClasses, interactive && 'cursor-pointer')}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        onClick={interactive ? handleCardClick : undefined}
-      >
-        <div className="absolute top-2 right-3">
-          {getStatusBadge()}
-        </div>
-
-        <div className="flex items-center mb-4">
-          {isEmpty ? (
-            <div className="flex items-center gap-4 flex-1">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="w-16 h-16 rounded-full bg-slate-900/90 flex items-center justify-center">
-                  <PrimaryIcon className="w-10 h-10 text-white" />
-                </div>
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white">
-                  {config.label}
-                </h3>
-                {renderTips()}
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg flex items-center gap-1.5">
-                <PrimaryIcon className="w-5 h-5 text-primary" />
-                {SecondaryIcon && <SecondaryIcon className="w-4 h-4 text-primary/80" />}
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">
-                  {config.label}
-                </h3>
-                {status !== 'approved' && renderTips()}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {status === 'approved' && (
-          <div className="pointer-events-none absolute inset-0 flex justify-end items-start pr-4 pt-4 opacity-10">
-            <CheckCircle className="w-16 h-16 text-sky-700" />
-          </div>
-        )}
-
-        {isUploading ? (
-          <div className="mt-4">
-            <Progress value={progress} className="h-2" />
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 text-center">
-              Enviando... {progress}%
-            </p>
-          </div>
-        ) : doc && preview ? (
-          <div className="mt-4">
-            <img 
-              src={preview} 
-              alt="Preview" 
-              className="object-cover rounded-lg mx-auto w-full h-40"
-            />
-            <div className={cn("mt-2 flex items-center", status === 'approved' ? "justify-center" : "justify-between")}>
-              <p className={cn("text-sm text-slate-600 dark:text-slate-300 truncate", status === 'approved' ? "text-center" : "flex-1")}>
-                {doc.file_name}
-              </p>
-              {status === 'rejected' && isSelfie && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowCamera(true)}
-                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
-                >
-                  Tirar nova selfie
-                </Button>
-              )}
-            </div>
-            {!isSelfie && (
-              <input
-                ref={inputRef}
-                type="file"
-                accept={config.acceptedTypes.join(',')}
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            )}
-          </div>
-        ) : doc && !preview ? (
-          <div className="mt-4">
-            <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex items-center gap-3">
-              <File className="w-8 h-8 text-slate-500 dark:text-slate-400" />
-              <p className="text-sm text-slate-900 dark:text-white truncate flex-1">{doc.file_name}</p>
-            </div>
-            {!isSelfie && (
-              <input
-                ref={inputRef}
-                type="file"
-                accept={config.acceptedTypes.join(',')}
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            )}
-          </div>
-        ) : (
-          <div className="mt-6 space-y-3">
-            {isSelfie ? (
-              <>
-                <Button onClick={() => setShowCamera(true)} className="w-full py-3">
-                  <Camera className="w-4 h-4 mr-2" />
-                  Tirar Selfie Agora
-                </Button>
-                {!hasCameraSupport && !doc && !preview && (
-                  <Alert className="mt-3 bg-blue-50 border-blue-200">
-                    <Smartphone className="w-4 h-4 text-blue-600" />
-                    <AlertDescription className="text-sm">
-                      <p className="font-semibold mb-2">
-                        Câmera não disponível neste dispositivo
-                      </p>
-                      <p className="mb-3">
-                        Para sua segurança, a selfie deve ser tirada ao vivo pela câmera.
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        📱 Acesse esta página pelo smartphone para continuar.
-                      </p>
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </>
-            ) : (
-              <div>
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept={config.acceptedTypes.join(',')}
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <Button 
-                  onClick={() => inputRef.current?.click()}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Escolher arquivo
-                </Button>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
-                  {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')} 
-                  {' • '}Máx {config.maxSizeMB}MB
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {doc?.status === 'rejected' && doc.rejection_reason && (
-          <Alert variant="destructive" className="mt-4 bg-red-500/10 border-red-500/30">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-red-600 dark:text-red-300">
-              {doc.rejection_reason}
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {doc?.status === 'rejected' && !isSelfie && (
-          <Button 
-            onClick={() => inputRef.current?.click()}
-            className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 border border-red-500/30"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Enviar Novo Documento
-          </Button>
-        )}
-      </div>
-    );
-  };
-
 const allDocsUploaded = documentConfigs.every((config) => !!documents[config.type]);
   const allDocsApproved = documentConfigs.every((config) => {
     const doc = documents[config.type];
@@ -889,7 +904,17 @@ if (termsAlreadyAccepted) {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">  
           {documentConfigs.map(config => (  
-            <DocumentCard key={config.type} config={config} />  
+            <DocumentCard
+              key={config.type}
+              config={config}
+              doc={documents[config.type]}
+              preview={previews[config.type]}
+              isUploading={uploading[config.type] || false}
+              progress={uploadProgress[config.type] || 0}
+              hasCameraSupport={hasCameraSupport}
+              onUpload={handleUpload}
+              onOpenCamera={() => setShowCamera(true)}
+            />  
           ))}  
         </div>  
   
