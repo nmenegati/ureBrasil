@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Button } from '@/components/ui/button';
@@ -28,8 +27,6 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const { avatarUrl, fullName: profileFullName } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, setTheme } = useTheme();
-  const resolvedTheme = (typeof theme === 'string' ? theme : 'light');
   const [scrolled, setScrolled] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -57,10 +54,6 @@ export function Header({ variant = 'app' }: HeaderProps) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!user) {
@@ -214,15 +207,6 @@ export function Header({ variant = 'app' }: HeaderProps) {
     });
   }
 
-  const themeLabel = theme === 'dark' ? 'Modo Claro' : 'Modo Escuro';
-  const themeIcon = theme === 'dark' ? Sun : Moon;
-
-  avatarMenuItems.push({
-    label: themeLabel,
-    icon: themeIcon,
-    onClick: toggleTheme,
-  });
-
   avatarMenuItems.push({
     label: 'Sair',
     icon: LogOut,
@@ -267,13 +251,9 @@ export function Header({ variant = 'app' }: HeaderProps) {
             />
             <div
               className={`hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 ${
-                resolvedTheme === 'light'
-                  ? (scrolled
-                      ? 'bg-gradient-to-r from-primary-foreground via-primary-foreground to-primary-foreground'
-                      : 'bg-gradient-to-r from-foreground via-primary to-foreground')
-                  : (scrolled
-                      ? 'bg-gradient-to-r from-secondary-foreground via-secondary-foreground to-secondary-foreground'
-                      : 'bg-gradient-to-r from-foreground via-foreground to-foreground')
+                scrolled
+                  ? 'bg-gradient-to-r from-primary-foreground via-primary-foreground to-primary-foreground'
+                  : 'bg-gradient-to-r from-foreground via-primary to-foreground'
               } bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer`}
             >
               <span className="text-[10px] font-medium tracking-wide uppercase">

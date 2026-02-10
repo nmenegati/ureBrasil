@@ -204,10 +204,10 @@ export default function EscolherPlano() {
             {digitalPlans.map((plan) => (
               <div key={plan.type} className="relative h-full">
                 <Card
-                  className={`group relative h-full bg-gray-200 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent ${
+                  className={`group relative h-full bg-gray-200 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent ${
                     plan.highlight
-                      ? 'dark:border-ure-yellow/30 hover:border-ure-yellow hover:ring-2 hover:ring-ure-yellow/30'
-                      : 'dark:border-ure-blue/30 hover:border-ure-blue hover:ring-2 hover:ring-ure-blue/30'
+                      ? 'hover:border-ure-yellow hover:ring-2 hover:ring-ure-yellow/30'
+                      : 'hover:border-ure-blue hover:ring-2 hover:ring-ure-blue/30'
                   }`}
                 >
                   <BorderTrail

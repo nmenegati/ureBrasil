@@ -603,7 +603,7 @@ export default function Perfil() {
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Avatar Section */}
-        <Card className="mb-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20">
+        <Card className="mb-6 bg-white/95 backdrop-blur-sm border border-white/20">
           <CardContent className="pt-6">
             <div className="flex flex-row items-center gap-6">
               <div className="relative flex-shrink-0">
@@ -631,7 +631,7 @@ export default function Perfil() {
         </Card>
 
         {/* Tabs */}
-        <Card className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20">
+        <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
           <Tabs defaultValue="personal" className="w-full">
             <TabsList className="w-full grid grid-cols-5 h-auto p-1 bg-muted/50">
               <TabsTrigger value="personal" className="flex flex-col sm:flex-row gap-1 py-2 text-xs sm:text-sm">
@@ -748,7 +748,7 @@ export default function Perfil() {
                 {cepError && (
                   <Alert className="border-amber-500/50 bg-amber-500/10 py-2">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-sm text-amber-700 dark:text-amber-400">
+                    <AlertDescription className="text-sm text-amber-700">
                       {cepError}
                     </AlertDescription>
                   </Alert>

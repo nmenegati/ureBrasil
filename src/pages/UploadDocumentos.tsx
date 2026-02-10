@@ -154,7 +154,7 @@ const DocumentCard = ({
   const getStatusBadge = () => {
     if (!doc) {
       return (
-        <Badge variant="secondary" className="bg-slate-300 dark:bg-slate-500 text-slate-600 dark:text-slate-800">
+        <Badge variant="secondary" className="bg-slate-300 text-slate-600">
           <Clock className="w-3 h-3 mr-1" />
           Pendente
         </Badge>
@@ -163,21 +163,21 @@ const DocumentCard = ({
     switch (doc.status) {
       case 'pending':
         return (
-          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">
+          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600">
             <Clock className="w-3 h-3 mr-1" />
             Em análise
           </Badge>
         );
       case 'approved':
         return (
-          <Badge className="bg-green-500/20 text-green-600 dark:text-green-400">
+          <Badge className="bg-green-500/20 text-green-600">
             <CheckCircle className="w-3 h-3 mr-1" />
             Aprovado
           </Badge>
         );
       case 'rejected':
         return (
-          <Badge variant="destructive" className="bg-red-400 text-red-600 dark:text-red-400">
+          <Badge variant="destructive" className="bg-red-400 text-red-600">
             <AlertCircle className="w-3 h-3 mr-1" />
             Rejeitado
           </Badge>
@@ -298,7 +298,7 @@ const DocumentCard = ({
               </div>
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-slate-900 dark:text-white">
+              <h3 className="font-semibold text-slate-900">
                 {config.label}
               </h3>
               {renderTips()}
@@ -311,7 +311,7 @@ const DocumentCard = ({
               {SecondaryIcon && <SecondaryIcon className="w-4 h-4 text-primary/80" />}
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 dark:text-white">
+              <h3 className="font-semibold text-slate-900">
                 {config.label}
               </h3>
               {status !== 'approved' && renderTips()}
@@ -327,9 +327,9 @@ const DocumentCard = ({
       )}
 
       {isUploading ? (
-        <div className="mt-4">
+          <div className="mt-4">
           <Progress value={progress} className="h-2" />
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 text-center">
+          <p className="text-sm text-slate-600 mt-2 text-center">
             Enviando... {progress}%
           </p>
         </div>
@@ -341,7 +341,7 @@ const DocumentCard = ({
             className="object-cover rounded-lg mx-auto w-full h-40"
           />
           <div className={cn("mt-2 flex items-center", status === 'approved' ? "justify-center" : "justify-between")}>
-            <p className={cn("text-sm text-slate-600 dark:text-slate-300 truncate", status === 'approved' ? "text-center" : "flex-1")}>
+            <p className={cn("text-sm text-slate-600 truncate", status === 'approved' ? "text-center" : "flex-1")}>
               {doc.file_name}
             </p>
             {status === 'rejected' && isSelfie && (
@@ -367,9 +367,9 @@ const DocumentCard = ({
         </div>
       ) : doc && !preview ? (
         <div className="mt-4">
-          <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex items-center gap-3">
-            <File className="w-8 h-8 text-slate-500 dark:text-slate-400" />
-            <p className="text-sm text-slate-900 dark:text-white truncate flex-1">{doc.file_name}</p>
+          <div className="p-4 bg-slate-100 rounded-lg flex items-center gap-3">
+            <File className="w-8 h-8 text-slate-500" />
+            <p className="text-sm text-slate-900 truncate flex-1">{doc.file_name}</p>
           </div>
           {!isSelfie && (
             <input
@@ -423,7 +423,7 @@ const DocumentCard = ({
                 <Upload className="w-4 h-4 mr-2" />
                 Escolher arquivo
               </Button>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
+              <p className="text-xs text-slate-500 mt-2 text-center">
                 {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}
                 {' • '}Máx {config.maxSizeMB}MB
               </p>
@@ -435,7 +435,7 @@ const DocumentCard = ({
       {doc?.status === 'rejected' && doc.rejection_reason && (
         <Alert variant="destructive" className="mt-4 bg-red-500/10 border-red-500/30">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="text-red-600 dark:text-red-300">
+          <AlertDescription className="text-red-600">
             {doc.rejection_reason}
           </AlertDescription>
         </Alert>
@@ -444,7 +444,7 @@ const DocumentCard = ({
       {doc?.status === 'rejected' && !isSelfie && (
         <Button
           onClick={() => inputRef.current?.click()}
-          className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 dark:text-red-400 border border-red-500/30"
+          className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
         >
           <Upload className="w-4 h-4 mr-2" />
           Enviar Novo Documento
@@ -896,7 +896,7 @@ if (termsAlreadyAccepted) {
             <p className="text-sm md:text-base text-muted-foreground">  
               Envie seus documentos para aprovação. O processo é rápido e seguro.  
               <br />  
-              <span className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-1 mt-2">  
+              <span className="text-xs md:text-sm font-medium text-emerald-700 flex items-center justify-center gap-1 mt-2">  
                 <CheckCircle className="w-4 h-4" /> Seus dados estão protegidos pela LGPD  
               </span>  
             </p>  
@@ -995,38 +995,38 @@ if (termsAlreadyAccepted) {
 
             <Dialog open={showFullTerms} onOpenChange={setShowFullTerms}>
               <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-                <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <div className="space-y-3 text-sm text-slate-600">
                   <h2 className="text-lg font-semibold text-foreground">
                     Termo de Responsabilidade por Veracidade dos Documentos
                   </h2>
                   <p>
-                    Eu, <strong className="text-slate-900 dark:text-white">{profile?.full_name}</strong>, portador(a) do CPF nº
-                    <strong className="text-slate-900 dark:text-white"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
+                    Eu, <strong className="text-slate-900">{profile?.full_name}</strong>, portador(a) do CPF nº
+                    <strong className="text-slate-900"> {profile?.cpf}</strong>, DECLARO sob as penas da lei que:
                   </p>
                   <ol className="list-decimal list-inside space-y-2 ml-2">
                     <li>
                       Os documentos enviados (RG/CNH, comprovante de matrícula e 
-                      fotografias) são <strong className="text-slate-900 dark:text-white">VERDADEIROS, AUTÊNTICOS</strong> e 
-                      de minha <strong className="text-slate-900 dark:text-white">TITULARIDADE</strong>.
+                      fotografias) são <strong className="text-slate-900">VERDADEIROS, AUTÊNTICOS</strong> e 
+                      de minha <strong className="text-slate-900">TITULARIDADE</strong>.
                     </li>
                     <li>
-                      Sou o <strong className="text-slate-900 dark:text-white">ÚNICO RESPONSÁVEL</strong> pela veracidade das 
-                      informações fornecidas, <strong className="text-slate-900 dark:text-white">ISENTANDO a URE BRASIL</strong> de 
+                      Sou o <strong className="text-slate-900">ÚNICO RESPONSÁVEL</strong> pela veracidade das 
+                      informações fornecidas, <strong className="text-slate-900">ISENTANDO a URE BRASIL</strong> de 
                       qualquer responsabilidade civil ou criminal decorrente de 
                       falsificação ou adulteração.
                     </li>
                     <li>
-                      Estou <strong className="text-slate-900 dark:text-white">CIENTE</strong> de que a falsificação de documentos 
-                      constitui <strong className="text-slate-900 dark:text-white">CRIME</strong> previsto nos Artigos 297, 298 e 
+                      Estou <strong className="text-slate-900">CIENTE</strong> de que a falsificação de documentos 
+                      constitui <strong className="text-slate-900">CRIME</strong> previsto nos Artigos 297, 298 e 
                       299 do Código Penal Brasileiro (reclusão de 1 a 5 anos e multa).
                     </li>
                     <li>
-                      Em caso de <strong className="text-slate-900 dark:text-white">FALSIDADE</strong> comprovada, meu cadastro será
-                      <strong className="text-slate-900 dark:text-white"> CANCELADO</strong> imediatamente, sem direito a reembolso, 
+                      Em caso de <strong className="text-slate-900">FALSIDADE</strong> comprovada, meu cadastro será
+                      <strong className="text-slate-900"> CANCELADO</strong> imediatamente, sem direito a reembolso, 
                       e o caso será comunicado às autoridades competentes.
                     </li>
                   </ol>
-                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="mt-4 pt-4 border-t border-slate-200 text-xs text-slate-500">
                     <p>Data: {new Date().toLocaleString('pt-BR')}</p>
                   </div>
                 </div>
@@ -1036,11 +1036,11 @@ if (termsAlreadyAccepted) {
         )}
 
         {allDocsUploaded && termsAlreadyAccepted && !canGenerateCard && (
-          <div className="mb-6 max-w-2xl mx-auto bg-green-500/20 dark:bg-green-500/15 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
-            <p className="text-sm text-green-900 dark:text-green-200">
+          <div className="mb-6 max-w-2xl mx-auto bg-green-500/20 border border-green-500/50 rounded-xl px-4 py-3 shadow-md">
+            <p className="text-sm text-green-900">
               ✅ Você aceitou o Termo de Responsabilidade
               <br />
-              <span className="text-xs text-green-800/80 dark:text-green-300/80">
+              <span className="text-xs text-green-800/80">
                 Data: {termsAcceptedDate ? new Date(termsAcceptedDate).toLocaleString('pt-BR') : 'N/A'} • Versão: {termsVersion || '1.0'}
               </span>
             </p>

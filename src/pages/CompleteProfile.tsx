@@ -420,7 +420,7 @@ export default function CompleteProfile() {
                   {cepError && (
                     <Alert className="border-amber-500/50 bg-amber-500/10 py-2">
                       <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <AlertDescription className="text-sm text-amber-700 dark:text-amber-400">
+                      <AlertDescription className="text-sm text-amber-700">
                         {cepError}
                       </AlertDescription>
                     </Alert>

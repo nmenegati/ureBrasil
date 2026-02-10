@@ -51,21 +51,21 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
     switch (doc.status) {
       case 'pending':
         return (
-          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30">
+          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
             Aguardando validação...
           </Badge>
         );
       case 'approved':
         return (
-          <Badge className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
+          <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
             <CheckCircle className="w-3 h-3 mr-1" />
             Aprovado
           </Badge>
         );
       case 'rejected':
         return (
-          <Badge variant="destructive" className="bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/30">
+          <Badge variant="destructive" className="bg-red-500/20 text-red-600 border-red-500/30">
             <XCircle className="w-3 h-3 mr-1" />
             Rejeitado
           </Badge>
@@ -76,22 +76,22 @@ const DocCard = ({ doc, config }: { doc?: DocumentRecord; config: typeof documen
   };
 
   return (
-    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border border-white/20 p-4 shadow-lg shadow-black/5">
+    <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-white/20 p-4 shadow-lg shadow-black/5">
       <div className="flex items-start gap-3">
         <div className="p-2 bg-primary/10 rounded-lg">
           <Icon className="w-6 h-6 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-slate-900 dark:text-white">{config.label}</h3>
+          <h3 className="font-semibold text-slate-900">{config.label}</h3>
           {doc && (
-            <p className="text-sm text-slate-600 dark:text-slate-300 truncate mt-1">{doc.file_name}</p>
+            <p className="text-sm text-slate-600 truncate mt-1">{doc.file_name}</p>
           )}
           <div className="mt-3">
             {getStatusBadge()}
           </div>
           {doc?.status === 'rejected' && (doc.rejection_reason || doc.rejection_notes) && (
             <Alert variant="destructive" className="mt-3 bg-red-500/10 border-red-500/30">
-              <AlertDescription className="text-red-600 dark:text-red-300 text-sm">
+              <AlertDescription className="text-red-600 text-sm">
                 {doc.rejection_reason || doc.rejection_notes}
               </AlertDescription>
             </Alert>
@@ -251,7 +251,7 @@ export default function StatusValidacao() {
               </p>
             </div>
             <div className="col-span-1 lg:justify-self-center">
-              <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border border-white/20 p-1.5 shadow-lg shadow-black/5 flex items-center justify-center w-full lg:w-[180px] mx-auto">
+              <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-white/20 p-1.5 shadow-lg shadow-black/5 flex items-center justify-center w-full lg:w-[180px] mx-auto">
                 <img
                   src={imagemCarteirinha}
                   alt="Modelo da carteirinha"
@@ -263,9 +263,9 @@ export default function StatusValidacao() {
         </div>
 
         {hasRejected && (
-          <Alert className="mb-6 bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30">
-            <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            <AlertDescription className="text-red-600 dark:text-red-300">
+          <Alert className="mb-6 bg-red-50 border-red-200">
+            <XCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-600">
               Alguns documentos foram rejeitados. Corrija-os e envie novamente.
             </AlertDescription>
           </Alert>

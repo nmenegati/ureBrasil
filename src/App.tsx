@@ -78,7 +78,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} storageKey="ure-theme">
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="ure-theme">
         <TooltipProvider>
           <ProfileProvider>
             <Toaster />

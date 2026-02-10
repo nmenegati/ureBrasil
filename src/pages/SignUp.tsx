@@ -726,7 +726,7 @@ export default function SignUp() {
                       </p>
                     )}
                     {isCpfValid && !cpfError && !checkingCpf && (
-                      <p className="text-green-600 dark:text-green-400 text-sm">CPF válido</p>
+                      <p className="text-green-600 text-sm">CPF válido</p>
                     )}
                   </div>
 
@@ -887,7 +887,7 @@ export default function SignUp() {
                             </p>
                           )}
                           {isCpfValid && !cpfError && !checkingCpf && (
-                            <p className="text-green-600 dark:text-green-400 text-sm">✓ CPF válido</p>
+                            <p className="text-green-600 text-sm">✓ CPF válido</p>
                           )}
                         </div>
 

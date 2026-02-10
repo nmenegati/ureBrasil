@@ -444,10 +444,10 @@ export default function Dashboard() {
         </div>
         <Header variant="app" />
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-lg mx-auto shadow-xl shadow-black/10">
+          <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-center max-w-lg mx-auto shadow-xl shadow-black/10">
             <AlertCircle className="w-16 h-16 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Ative Sua Economia Agora</h2>
-            <p className="text-slate-600 dark:text-slate-300 mt-2">
+            <h2 className="text-2xl font-bold text-slate-900">Ative Sua Economia Agora</h2>
+            <p className="text-slate-600 mt-2">
               Finalize seu pedido para desbloquear todos os benefícios estudantis.
             </p>
             <Button 
@@ -498,14 +498,14 @@ export default function Dashboard() {
         </div>
 
         {/* Progresso (barra + cards clicáveis) */}
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-xl shadow-black/10">
+        <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-xl shadow-black/10">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="font-semibold text-slate-900 dark:text-white">Seu Progresso</h2>
+            <h2 className="font-semibold text-slate-900">Seu Progresso</h2>
             <span className="text-primary font-bold">{percentage}%</span>
           </div>
           
           {/* Barra */}
-          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-4">
+          <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-4">
             <div 
               className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500"
               style={{ width: `${percentage}%` }}
@@ -564,7 +564,7 @@ export default function Dashboard() {
         {/* Card Carteirinha - clique liberado apenas com carteirinha gerada */}
         <Card 
           className={cn(
-            "transition-colors relative overflow-visible bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 shadow-xl shadow-black/10",
+            "transition-colors relative overflow-visible bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl shadow-black/10",
             hasCardGenerated ? "cursor-pointer hover:border-primary" : "opacity-50 cursor-not-allowed"
           )}
           onClick={hasCardGenerated ? () => navigate('/carteirinha') : undefined}
@@ -578,7 +578,7 @@ export default function Dashboard() {
                   <Clock className="w-8 h-8 text-slate-400" />
                 )}
                 <div>
-                  <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Carteirinha</h3>
+                  <h3 className="font-semibold text-lg text-slate-900">Carteirinha</h3>
                   <p className={
                     !hasCardGenerated
                       ? 'text-slate-500 text-sm'
@@ -613,7 +613,7 @@ export default function Dashboard() {
 
         {/* Carteirinha Digital (só se ativa) */}
         {progress.card && card && (
-          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-xl shadow-black/10">
+          <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-2xl p-4 shadow-xl shadow-black/10">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -637,16 +637,16 @@ export default function Dashboard() {
                     </>
                   )}
                 </div>
-                <h2 className="text-slate-900 dark:text-white text-xl font-bold mt-1">{profile.full_name}</h2>
+                <h2 className="text-slate-900 text-xl font-bold mt-1">{profile.full_name}</h2>
                 {profile.institution && (
-                  <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.institution}</p>
+                  <p className="text-slate-600 text-sm">{profile.institution}</p>
                 )}
                 {profile.course && (
-                  <p className="text-slate-600 dark:text-slate-300 text-sm">{profile.course}</p>
+                  <p className="text-slate-600 text-sm">{profile.course}</p>
                 )}
                 <div className="mt-3 space-y-1 text-sm">
-                  <p className="text-slate-700 dark:text-slate-200">Nº: {card.card_number}</p>
-                  <p className="text-slate-700 dark:text-slate-200">Válida até: {formatDate(card.valid_until)}</p>
+                  <p className="text-slate-700">Nº: {card.card_number}</p>
+                  <p className="text-slate-700">Válida até: {formatDate(card.valid_until)}</p>
                 </div>
               </div>
             </div>
@@ -694,31 +694,31 @@ export default function Dashboard() {
         {/* Grid 2 colunas: Informações + Ajuda */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Suas Informações */}
-          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
-            <h3 className="text-slate-900 dark:text-white font-bold mb-3">Suas Informações</h3>
+          <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
+            <h3 className="text-slate-900 font-bold mb-3">Suas Informações</h3>
             <div className="space-y-2 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs">CPF</p>
-                  <p className="text-slate-900 dark:text-white">{formatCPF(profile.cpf)}</p>
+                  <p className="text-slate-500 text-xs">CPF</p>
+                  <p className="text-slate-900">{formatCPF(profile.cpf)}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs">Telefone</p>
-                  <p className="text-slate-900 dark:text-white">{formatPhone(profile.phone)}</p>
+                  <p className="text-slate-500 text-xs">Telefone</p>
+                  <p className="text-slate-900">{formatPhone(profile.phone)}</p>
                 </div>
               </div>
               <div>
-                <p className="text-slate-500 dark:text-slate-400 text-xs">Email</p>
-                <p className="text-slate-900 dark:text-white break-all text-xs">{user.email}</p>
+                <p className="text-slate-500 text-xs">Email</p>
+                <p className="text-slate-900 break-all text-xs">{user.email}</p>
               </div>
             </div>
           </div>
           
           {/* Precisa de Ajuda */}
-          <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
+          <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-xl p-4 shadow-lg shadow-black/5">
             <HelpCircle className="w-6 h-6 text-primary mb-2" />
-            <h3 className="text-slate-900 dark:text-white font-bold">Precisa de Ajuda?</h3>
-            <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">Nossa equipe está pronta!</p>
+            <h3 className="text-slate-900 font-bold">Precisa de Ajuda?</h3>
+            <p className="text-slate-600 text-sm mb-3">Nossa equipe está pronta!</p>
             <Button
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               size="sm"

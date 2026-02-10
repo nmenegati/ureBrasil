@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +58,6 @@ import { goToStudentCardFlow } from "@/lib/cardNavigation";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { setTheme } = useTheme();
   const { user } = useAuth();
   const [hasActiveCard, setHasActiveCard] = useState(false);
   const [checkingCard, setCheckingCard] = useState(false);
@@ -98,9 +96,6 @@ const Index = () => {
     return () => clearInterval(timer);
   }, [humanImages.length]);
 
-  useEffect(() => {
-    setTheme('light');
-  }, [setTheme]);
   useEffect(() => {
     const checkActiveCard = async () => {
       if (!user?.id) {
@@ -354,7 +349,7 @@ const Index = () => {
                 </div>
 
                 {/* Floating Status Card */}
-                <div className="absolute -top-6 -right-6 bg-card dark:bg-card rounded-2xl shadow-2xl p-3 sm:p-4 animate-float backdrop-blur-lg border border-border z-30">
+                <div className="absolute -top-6 -right-6 bg-card rounded-2xl shadow-2xl p-3 sm:p-4 animate-float backdrop-blur-lg border border-border z-30">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="bg-ure-green rounded-full p-1.5 sm:p-2">
                       <Check className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
@@ -372,19 +367,19 @@ const Index = () => {
       </section>
 
       {/* Prova de Confiança Section */}
-      <section className="py-8 bg-background dark:bg-[hsl(230,20%,8%)] border-b border-border dark:border-[hsl(230,14%,20%)]">
-        <div className="container mx-auto px-4">
+      <section className="py-8 bg-slate-50 border-b border-border">
+        <div className="container bg-slate-50 mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-sm md:text-base font-medium text-muted-foreground">
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-ure-green" />
               Documento estudantil digital
             </span>
-            <span className="hidden md:block text-gray-300 dark:text-gray-500">•</span>
+            <span className="hidden md:block text-gray-300">•</span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-ure-green" />
               Processo seguro
             </span>
-            <span className="hidden md:block text-gray-300 dark:text-gray-500">•</span>
+            <span className="hidden md:block text-gray-300">•</span>
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-ure-green" />
               Verificação de autenticidade
@@ -397,10 +392,10 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section id="como-funciona" className="py-20 bg-accent dark:bg-[hsl(230,25%,12%)]">
+      <section id="como-funciona" className="py-20 bg-background border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="text-center mb-16 space-y-4">
+          <div className="text-center mb-8 space-y-4">
             <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua meia-entrada em minutos</h2>
             <p className="text-xl text-muted-foreground">Sem complicação.</p>
           </div>
@@ -412,7 +407,7 @@ const Index = () => {
               <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
                 <div className="relative w-20 h-20 rounded-full bg-ure-blue flex items-center justify-center">
                   <UserPlus className="w-10 h-10 text-white" />
-                  <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] dark:bg-background border-2 border-ure-blue flex items-center justify-center text-sm font-bold text-ure-blue">1</span>
+                  <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] border-2 border-ure-blue flex items-center justify-center text-sm font-bold text-ure-blue">1</span>
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Cadastro Rápido</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -427,7 +422,7 @@ const Index = () => {
               <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
                 <div className="relative w-20 h-20 rounded-full bg-ure-green flex items-center justify-center">
                   <CreditCard className="w-10 h-10 text-white" />
-                  <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] dark:bg-background border-2 border-ure-green flex items-center justify-center text-sm font-bold text-ure-green">2</span>
+                  <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] border-2 border-ure-green flex items-center justify-center text-sm font-bold text-ure-green">2</span>
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Pagamento Online</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -442,7 +437,7 @@ const Index = () => {
               <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
                 <div className="relative w-20 h-20 rounded-full bg-ure-orange flex items-center justify-center">
                   <FileCheck className="w-10 h-10 text-white" />
-                  <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] dark:bg-background border-2 border-ure-orange flex items-center justify-center text-sm font-bold text-ure-orange">3</span>
+                  <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] border-2 border-ure-orange flex items-center justify-center text-sm font-bold text-ure-orange">3</span>
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Carteira do Estudante</h3>
                 <p className="text-muted-foreground leading-relaxed">
@@ -456,21 +451,19 @@ const Index = () => {
       </section>
 
       {/* Economize de Verdade Section */}
-      <section id="beneficios" className="py-20 bg-accent dark:bg-[hsl(230,18%,14%)] transition-colors">
+      <section id="beneficios" className="py-20 bg-accent transition-colors">
         <div className="container mx-auto px-4">
           {/* Cabeçalho */}
           <div className="text-center mb-12">
             {/* Linha decorativa amarela */}
-            <div className="w-24 h-1 bg-ure-yellow mx-auto mb-6"></div>
 
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">Use sua meia-entrada no dia a dia</h2>
           </div>
-
           {/* Cards de Benefícios */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {/* Card 1 - Cinema */}
-            <div className="bg-card dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center p-3">
+            <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 flex items-center justify-center p-3">
                 <img src={iconeCinema} alt="Cinema" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Cinema</h3>
@@ -480,8 +473,8 @@ const Index = () => {
             </div>
 
             {/* Card 2 - Shows */}
-            <div className="bg-card dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center p-3">
+            <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-purple-100 flex items-center justify-center p-3">
                 <img src={iconeShow} alt="Shows" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Shows</h3>
@@ -491,8 +484,8 @@ const Index = () => {
             </div>
 
             {/* Card 3 - Teatro */}
-            <div className="bg-card dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center p-3">
+            <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center p-3">
                 <img src={iconeTeatro} alt="Teatro e Cultura" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Teatro e Cultura</h3>
@@ -502,8 +495,8 @@ const Index = () => {
             </div>
 
             {/* Card 4 - Esportes */}
-            <div className="bg-card dark:bg-gray-700 p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center p-3">
+            <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center p-3">
                 <img src={iconeEsporte} alt="Eventos Esportivos" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Eventos Esportivos</h3>
@@ -515,11 +508,11 @@ const Index = () => {
 
           {/* Banner de Economia Total */}
           <div className="mt-12 text-center">
-            <div className="inline-block bg-green-100 dark:bg-green-900 border-2 border-green-500 dark:border-green-400 p-8 rounded-2xl max-w-3xl">
-              <h3 className="text-2xl md:text-3xl font-bold text-green-800 dark:text-green-200 mb-4">
+            <div className="inline-block bg-green-100 border-2 border-green-500 p-8 rounded-2xl max-w-3xl">
+              <h3 className="text-2xl md:text-3xl font-bold text-green-800 mb-4">
                 Cinema, shows, teatro e eventos culturais com meia-entrada.
               </h3>
-              <p className="text-muted-foreground dark:text-gray-300 text-lg mb-6">
+              <p className="text-muted-foreground text-lg mb-6">
                 Um benefício simples que, no uso do dia a dia, gera economia ao longo do ano.
               </p>
               <Button
@@ -637,7 +630,7 @@ const Index = () => {
       </section>
 
       {/* Social Proof Section */}
-      <section className="relative py-20 bg-background dark:bg-[hsl(230,22%,15%)]">
+      <section className="relative py-20 bg-background">
         <div className="absolute inset-0 pointer-events-none opacity-10" style={{ background: 'linear-gradient(to bottom, hsl(var(--ure-blue) / 0.05), transparent)' }} />
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -723,9 +716,8 @@ const Index = () => {
         </div>
       </section>
 
-  {/* Pricing Section */}
-  <section id="planos" className="relative py-20 bg-gray-50 dark:bg-[hsl(230,25%,5%)] overflow-hidden border-t border-border">
-    <div className="hidden dark:block absolute inset-0 pointer-events-none opacity-20" style={{ background: 'linear-gradient(to bottom, hsl(var(--ure-blue) / 0.06), transparent)' }} />
+      {/* Pricing Section */}
+  <section id="planos" className="relative py-20 bg-gray-50 overflow-hidden border-b border-border">
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center mb-16 space-y-4">
@@ -737,7 +729,7 @@ const Index = () => {
       {/* Pricing Grid - 2 Digital Plans */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {/* Plan 1 - Carteira Digital (Geral) */}
-        <Card className="group relative bg-gray-100 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent dark:border-ure-blue/30 hover:border-ure-blue hover:ring-2 hover:ring-ure-blue/30">
+        <Card className="group relative bg-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-blue hover:ring-2 hover:ring-ure-blue/30">
           <BorderTrail
             className="bg-ure-blue/50 blur-[2px]"
             size={160}
@@ -801,7 +793,7 @@ const Index = () => {
             </Card>
 
         {/* Plan 2 - Digital Direito */}
-        <Card className="group relative bg-gray-100 dark:bg-card hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent dark:border-ure-yellow/30 hover:border-ure-yellow hover:ring-2 hover:ring-ure-yellow/30">
+        <Card className="group relative bg-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-ure-yellow hover:ring-2 hover:ring-ure-yellow/30">
           <BorderTrail
             className="bg-ure-yellow/60 blur-[2px]"
             size={170}
@@ -913,7 +905,7 @@ const Index = () => {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-accent dark:bg-[hsl(230,25%,12%)]">
+      <section id="faq" className="py-20 bg-sky-100">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           {/* Header */}
           <div className="text-center mb-16 space-y-4">
@@ -1017,7 +1009,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8">
         {/* Pulsing Badge */}
         <div className="inline-block">
-          <Badge className="bg-[hsl(var(--primary-foreground)/0.2)] dark:bg-white/10 text-white border-[hsl(var(--primary-foreground)/0.3)] dark:border-white/20 backdrop-blur-sm px-6 py-3 text-base font-bold animate-pulse">
+          <Badge className="bg-[hsl(var(--primary-foreground)/0.2)] text-white border-[hsl(var(--primary-foreground)/0.3)] backdrop-blur-sm px-6 py-3 text-base font-bold animate-pulse">
             ⏰ Oferta por tempo limitado
           </Badge>
         </div>
@@ -1068,7 +1060,7 @@ const Index = () => {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-gray-50 dark:bg-card text-foreground relative overflow-hidden">
+      <footer className="bg-gray-50 text-foreground relative overflow-hidden">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-center">
             {/* COLUNA 1 - SOBRE */}
