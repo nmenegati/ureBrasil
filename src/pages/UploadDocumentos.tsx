@@ -124,6 +124,8 @@ const DocumentCard = ({
   const IconComponent = config.icon;
   const status = doc?.status;
   const isSelfie = config.type === 'selfie';
+  const canUpload = !doc || status === 'rejected';
+  const disableUpload = !canUpload || isUploading;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -193,9 +195,10 @@ const DocumentCard = ({
       onOpenCamera();
       return;
     }
-    if (!doc || status !== 'approved') {
-      inputRef.current?.click();
+    if (!canUpload) {
+      return;
     }
+    inputRef.current?.click();
   };
 
   let PrimaryIcon: React.ElementType = IconComponent;
@@ -230,7 +233,7 @@ const DocumentCard = ({
     stateClasses = 'bg-slate-50 border-slate-300 border-dashed';
   }
 
-  const interactive = !isUploading && status !== 'approved';
+  const interactive = !disableUpload;
 
   const renderTips = () => {
     if (config.type === 'selfie') {
@@ -416,9 +419,10 @@ const DocumentCard = ({
                 className="hidden"
               />
               <Button
-                onClick={() => inputRef.current?.click()}
+                onClick={() => canUpload && inputRef.current?.click()}
                 variant="outline"
                 className="w-full"
+                disabled={disableUpload}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Escolher arquivo
@@ -443,7 +447,8 @@ const DocumentCard = ({
 
       {doc?.status === 'rejected' && !isSelfie && (
         <Button
-          onClick={() => inputRef.current?.click()}
+          onClick={() => !isUploading && inputRef.current?.click()}
+          disabled={isUploading}
           className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
         >
           <Upload className="w-4 h-4 mr-2" />

@@ -725,7 +725,7 @@ export default function CompleteProfile() {
                         onChange={(e) => {
                           setEnrollmentNumber(formatEnrollmentNumber(e.target.value));
                         }}
-                        maxLength={10}
+                        maxLength={11}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                         required
                       />

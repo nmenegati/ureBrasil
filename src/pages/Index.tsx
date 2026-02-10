@@ -65,7 +65,8 @@ const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [currentHumanSlide, setCurrentHumanSlide] = useState(0);
-  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [policyModalType, setPolicyModalType] = useState<"delivery" | "terms" | "privacy" | "about" | null>(null);
+  const isPolicyModalOpen = policyModalType !== null;
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
   
@@ -403,7 +404,7 @@ const Index = () => {
           {/* Steps Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Step 1 - Cadastro */}
-            <Card className="bg-background hover:-translate-y-2 transition-transform duration-300 border-border">
+            <Card className="bg-sky-100 hover:-translate-y-2 transition-transform duration-300 border-border">
               <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
                 <div className="relative w-20 h-20 rounded-full bg-ure-blue flex items-center justify-center">
                   <UserPlus className="w-10 h-10 text-white" />
@@ -418,7 +419,7 @@ const Index = () => {
             </Card>
 
             {/* Step 2 - Pagamento Online */}
-            <Card className="bg-background hover:-translate-y-2 transition-transform duration-300 border-border">
+            <Card className="bg-sky-100 hover:-translate-y-2 transition-transform duration-300 border-border">
               <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
                 <div className="relative w-20 h-20 rounded-full bg-ure-green flex items-center justify-center">
                   <CreditCard className="w-10 h-10 text-white" />
@@ -433,7 +434,7 @@ const Index = () => {
             </Card>
 
             {/* Step 3 - Envio e Validação */}
-            <Card className="bg-background hover:-translate-y-2 transition-transform duration-300 border-border">
+            <Card className="bg-sky-100 hover:-translate-y-2 transition-transform duration-300 border-border">
               <CardContent className="pt-8 pb-6 flex flex-col items-center text-center space-y-4">
                 <div className="relative w-20 h-20 rounded-full bg-ure-orange flex items-center justify-center">
                   <FileCheck className="w-10 h-10 text-white" />
@@ -1140,37 +1141,40 @@ const Index = () => {
               <h3 className="text-lg font-bold text-foreground">Institucional</h3>
               <ul className="space-y-2">
                 <li>
-                  <a
-                    href="/termos"
+                  <button
+                    type="button"
+                    onClick={() => setPolicyModalType("terms")}
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
                     Termos de Uso
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/privacidade"
-                    className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
-                  >
-                    Política de Privacidade
-                  </a>
+                  </button>
                 </li>
                 <li>
                   <button
                     type="button"
-                    onClick={() => setIsDeliveryModalOpen(true)}
+                    onClick={() => setPolicyModalType("privacy")}
+                    className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
+                  >
+                    Política de Privacidade
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setPolicyModalType("delivery")}
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
                     Política de Entregas
                   </button>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <button
+                    type="button"
+                    onClick={() => setPolicyModalType("about")}
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
                     Sobre Nós
-                  </a>
+                  </button>
                 </li>
                 <li>
                   <a
@@ -1206,11 +1210,17 @@ const Index = () => {
           </div>
         </div>
       </footer>
-      <PolicyModal
-        type="delivery"
-        open={isDeliveryModalOpen}
-        onOpenChange={setIsDeliveryModalOpen}
-      />
+      {policyModalType && (
+        <PolicyModal
+          type={policyModalType}
+          open={isPolicyModalOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPolicyModalType(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
