@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
 import { formatBirthDate } from '@/lib/dateUtils';
 import { formatEnrollmentNumber } from '@/lib/validators';
@@ -45,6 +46,7 @@ export default function Carteirinha() {
   const [side, setSide] = useState<'front' | 'back'>('front');
   const [generatingImage, setGeneratingImage] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -112,6 +114,32 @@ export default function Carteirinha() {
 
     loadProfilePhoto();
   }, [profile?.profile_photo_url]);
+
+  useEffect(() => {
+    const generateQrCode = async () => {
+      if (!card) {
+        setQrCodeUrl(null);
+        return;
+      }
+      if (!card.usage_code) {
+        setQrCodeUrl(null);
+        return;
+      }
+      const url = `https://urebrasil.com.br/verificar/${card.usage_code}`;
+      try {
+        const dataUrl = await QRCode.toDataURL(url, {
+          margin: 0,
+          scale: 4,
+          errorCorrectionLevel: 'M',
+        });
+        setQrCodeUrl(dataUrl);
+      } catch {
+        setQrCodeUrl(null);
+      }
+    };
+
+    generateQrCode();
+  }, [card]);
 
   const generateAndSaveCard = useCallback(async () => {
     try {
@@ -215,11 +243,12 @@ export default function Carteirinha() {
 
   useEffect(() => {
     if (!profile || !card) return;
+    if (!qrCodeUrl) return;
     if (card.digital_card_url || generatingImage) return;
     if (!cardRef.current) return;
 
     generateAndSaveCard();
-  }, [profile, card, generatingImage, generateAndSaveCard]);
+  }, [profile, card, qrCodeUrl, generatingImage, generateAndSaveCard]);
 
   if (isChecking || loading) {
     return (
@@ -308,10 +337,10 @@ export default function Carteirinha() {
                       ? formatEnrollmentNumber(String(profile.enrollment_number))
                       : null
                   }
-                  usageCode={card.usage_code || card.card_number}
+                  usageCode={card.usage_code}
                   validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
                   photoUrl={profilePhotoUrl}
-                  qrData={card.qr_code || card.usage_code || card.card_number}
+                  qrImageUrl={qrCodeUrl}
                 />
               </div>
             )

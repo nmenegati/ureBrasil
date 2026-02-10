@@ -24,6 +24,7 @@ import UploadDocumentos from "./pages/UploadDocumentos";
 import GerarCarteirinha from "./pages/GerarCarteirinha";
 import Carteirinha from "./pages/Carteirinha";
 import NotFound from "./pages/NotFound";
+import VerificarCarteirinha from "./pages/VerificarCarteirinha";
 
 // ========================================
 // LAZY LOADING (Páginas Secundárias)
@@ -131,6 +132,7 @@ const App = () => {
                   <Carteirinha />
                 </ProtectedRoute>
               } />
+              <Route path="/verificar/:usageCode" element={<VerificarCarteirinha />} />
 
               {/* PÁGINAS SECUNDÁRIAS (Lazy Loading) */}
               <Route path="/termos" element={<Termos />} />

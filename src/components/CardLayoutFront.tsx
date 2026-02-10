@@ -1,5 +1,3 @@
-import { QRCodeCanvas } from "qrcode.react";
-
 interface CardLayoutFrontProps {
   mode: "direito" | "geral";
   templateSrc: string;
@@ -14,7 +12,7 @@ interface CardLayoutFrontProps {
   usageCode: string;
   validUntil: string;
   photoUrl: string | null;
-  qrData: string;
+  qrImageUrl: string | null;
 }
 
 export function CardLayoutFront(props: CardLayoutFrontProps) {
@@ -48,7 +46,15 @@ export function CardLayoutFront(props: CardLayoutFrontProps) {
 
         <div className="absolute right-[11%] top-[20%] w-[24%] flex flex-col items-center gap-2">
           <div className="w-full bg-white rounded-lg flex items-center justify-center p-1">
-            <QRCodeCanvas value={props.qrData} size={82} />
+            {props.qrImageUrl ? (
+              <img
+                src={props.qrImageUrl}
+                alt="QR Code"
+                className="w-[82px] h-[82px] object-contain"
+              />
+            ) : (
+              <div className="w-[82px] h-[82px] border border-slate-300 rounded" />
+            )}
           </div>
           <div className="text-[10px] text-center leading-tight text-slate-900">
             <div className="font-semibold tracking-wide">COD. USO:</div>
