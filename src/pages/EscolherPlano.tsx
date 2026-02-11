@@ -10,13 +10,12 @@ import { Check, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BorderTrail } from '@/components/ui/border-trail';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
+import { formatPrice } from '@/utils/payment-helpers';
 
-// Configuração visual dos planos digitais
-const digitalPlans = [
+// Configuração visual dos planos digitais (descrições e features fixas)
+const digitalPlansConfig = [
   {
-    type: 'geral_digital',
-    name: 'Carteira Estudantil Digital URE',
-    price: 29,
+    type: 'geral_digital' as const,
     description: 'Educação básica ao ensino superior',
     features: [
       'Carteirinha digital',
@@ -26,12 +25,10 @@ const digitalPlans = [
       'Acesso ilimitado ao app',
       'Suporte prioritário'
     ],
-    highlight: false
+    highlight: false as const
   },
   {
-    type: 'direito_digital',
-    name: 'Carteira Estudantil Digital URE | LexPraxis',
-    price: 44,
+    type: 'direito_digital' as const,
     description: 'Exclusiva para estudantes de Direito',
     features: [
       'Carteirinha digital',
@@ -43,8 +40,8 @@ const digitalPlans = [
       'Descontos em cursos jurídicos',
       'Rede de networking jurídico'
     ],
-    highlight: true,
-    badge: 'LEXPRAXIS'
+    highlight: true as const,
+    badge: 'LEXPRAXIS' as const
   }
 ];
 
@@ -53,10 +50,22 @@ export default function EscolherPlano() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [planIds, setPlanIds] = useState<Record<string, string>>({});
+  const [digitalPlans, setDigitalPlans] = useState<
+    {
+      type: 'geral_digital' | 'direito_digital';
+      name: string;
+      price: number;
+      description: string;
+      features: string[];
+      highlight: boolean;
+      badge?: string;
+    }[]
+  >([]);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selecting, setSelecting] = useState<string | null>(null);
   const [isLawStudent, setIsLawStudent] = useState(false);
+  const [upsellPrice, setUpsellPrice] = useState<number | null>(null);
 
   // ID do plano Geral Digital para redirecionamento automático
   const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
@@ -99,19 +108,57 @@ export default function EscolherPlano() {
         return;
       }
 
-      // É estudante de Direito - buscar IDs dos planos digitais
+      // É estudante de Direito - buscar planos digitais a partir da tabela plans
       const { data: plansData } = await supabase
         .from('plans')
-        .select('id, type')
+        .select('id, type, name, price')
         .eq('is_active', true)
-        .in('type', ['geral_digital', 'direito_digital']);
+        .in('type', ['geral_digital', 'direito_digital', 'fisica_upsell']);
 
       if (plansData) {
         const ids: Record<string, string> = {};
+        const plansByType: Record<string, { id: string; name: string; price: number }> = {};
+
         plansData.forEach(p => {
           ids[p.type] = p.id;
+          plansByType[p.type] = {
+            id: p.id,
+            name: p.name,
+            price: p.price
+          };
         });
         setPlanIds(ids);
+
+        if (plansByType['fisica_upsell']) {
+          setUpsellPrice(plansByType['fisica_upsell'].price);
+        }
+
+        const mergedPlans = digitalPlansConfig
+          .map(config => {
+            const dbPlan = plansByType[config.type];
+            if (!dbPlan) return null;
+
+            return {
+              type: config.type,
+              name: dbPlan.name,
+              price: dbPlan.price,
+              description: config.description,
+              features: config.features,
+              highlight: config.highlight,
+              badge: config.badge
+            };
+          })
+          .filter((p): p is {
+            type: 'geral_digital' | 'direito_digital';
+            name: string;
+            price: number;
+            description: string;
+            features: string[];
+            highlight: boolean;
+            badge?: string;
+          } => p !== null);
+
+        setDigitalPlans(mergedPlans);
       }
 
       setLoading(false);
@@ -120,7 +167,7 @@ export default function EscolherPlano() {
     if (!isChecking) {
       checkEligibilityAndLoadPlans();
     }
-  }, [user, navigate, isChecking]);
+  }, [user, navigate, isChecking, authLoading]);
 
   const handleSelectPlan = async (planType: string, planName: string) => {
     const planId = planIds[planType];
@@ -276,7 +323,7 @@ export default function EscolherPlano() {
                   </h4>
                 </div>
                 <p className="text-muted-foreground mb-4 text-center">
-                  Após concluir o pagamento da carteira digital, você poderá adquirir a versão física por <strong className="text-foreground">R$ 15,00</strong>, com frete incluso para todo o Brasil.
+                  Após concluir o pagamento da carteira digital, você poderá adquirir a versão física por <strong className="text-foreground">{upsellPrice !== null ? formatPrice(upsellPrice) : 'R$ ...'}</strong>, com frete incluso para todo o Brasil.
                 </p>
                 <p className="text-sm text-muted-foreground text-center">
                   Material PVC durável — Frete incluso para todo Brasil — Disponível como adicional pós‑pagamento

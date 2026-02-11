@@ -10,7 +10,6 @@ export const STEP_ROUTES: Record<string, string> = {
   upsell_physical: '/pagamento/sucesso',
   payment_upsell: '/checkout',
   upload_documents: '/upload-documentos',
-  pending_validation: '/status-validacao',
   review_data: '/gerar-carteirinha',
   completed: '/carteirinha',
 };
@@ -65,7 +64,7 @@ export function useOnboardingGuard(requiredStep: string) {
     return () => {
       cancelled = true;
     };
-  }, [requiredStep, user?.id]);
+  }, [requiredStep, user?.id, navigate]);
 
   return { isChecking };
 }

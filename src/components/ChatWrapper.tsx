@@ -16,17 +16,16 @@ export function ChatWrapper() {
     '/escolher-plano',
     '/pagamento',
     '/perfil',
-    '/status-validacao',
     '/checkout'
   ];
 
   const shouldShowChat = allowedRoutes.some(route => location.pathname.startsWith(route));
 
-  // Buscar documentos rejeitados se estiver na página de upload ou status
+  // Buscar documentos rejeitados se estiver na página de upload
   useEffect(() => {
     const fetchRejectedDocs = async () => {
       if (!user) return;
-      if (!location.pathname.includes('upload-documentos') && !location.pathname.includes('status-validacao')) return;
+      if (!location.pathname.includes('upload-documentos')) return;
 
       const { data } = await supabase
         .from('documents')

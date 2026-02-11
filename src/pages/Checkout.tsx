@@ -80,7 +80,6 @@ export default function Checkout() {
   // Extrair state de upsell
   const upsellState = location.state as UpsellState | null;
   const isUpsell = upsellState?.isUpsell ?? false;
-  const upsellAmount = upsellState?.amount ?? 15;
   const originalPaymentId = upsellState?.originalPaymentId;
 
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -188,10 +187,33 @@ export default function Checkout() {
     const resolveUpsell = async () => {
       console.log("[Checkout] resolveUpsell start. upsellState:", upsellState);
 
+      const fetchUpsellPrice = async () => {
+        const { data } = await supabase
+          .from("plans")
+          .select("price")
+          .eq("type", "fisica_upsell")
+          .eq("is_active", true)
+          .single();
+
+        return data?.price ?? null;
+      };
+
       if (upsellState?.isUpsell && upsellState.originalPaymentId) {
+        let resolvedAmount = upsellState.amount;
+        if (typeof resolvedAmount !== "number") {
+          resolvedAmount = await fetchUpsellPrice();
+        }
+
+        if (typeof resolvedAmount !== "number") {
+          setResolvingUpsell(false);
+          setUpsellResolved(true);
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
         setResolvedUpsell({
           isUpsell: true,
-          amount: upsellState.amount ?? 15,
+          amount: resolvedAmount,
           originalPaymentId: upsellState.originalPaymentId,
         });
         if (typeof window !== "undefined") {
@@ -216,9 +238,21 @@ export default function Checkout() {
           const expired = Date.now() - timestamp > 30 * 60 * 1000;
 
           if (data.isUpsell && data.originalPaymentId && !expired) {
+            let resolvedAmount = data.amount;
+            if (typeof resolvedAmount !== "number") {
+              resolvedAmount = await fetchUpsellPrice();
+            }
+
+            if (typeof resolvedAmount !== "number") {
+              setResolvingUpsell(false);
+              setUpsellResolved(true);
+              navigate("/dashboard", { replace: true });
+              return;
+            }
+
             setResolvedUpsell({
               isUpsell: true,
-              amount: data.amount ?? 15,
+              amount: resolvedAmount,
               originalPaymentId: data.originalPaymentId,
             });
               if (typeof window !== "undefined") {

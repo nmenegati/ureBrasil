@@ -24,6 +24,7 @@ const PaymentSuccessPage = () => {
   const [isPhysicalPlan, setIsPhysicalPlan] = useState<boolean>(false);
   const [isStandalonePhysical, setIsStandalonePhysical] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
+  const [upsellPrice, setUpsellPrice] = useState<number | null>(null);
 
   const formatPrice = (price: number | null) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -63,10 +64,27 @@ const PaymentSuccessPage = () => {
       setShowUpsellModal(true);
     }, 2000);
 
+    const loadUpsellPrice = async () => {
+      const { data } = await supabase
+        .from("plans")
+        .select("price")
+        .eq("type", "fisica_upsell")
+        .eq("is_active", true)
+        .single();
+
+      if (data) {
+        setUpsellPrice(data.price);
+      }
+    };
+
+    loadUpsellPrice();
+
     return () => clearTimeout(timeout);
   }, [isChecking, location.state]);
 
   const handleAcceptUpsell = async () => {
+    if (!upsellPrice) return;
+
     setLoading(true);
 
     try {
@@ -112,7 +130,7 @@ const PaymentSuccessPage = () => {
           "upsell_data",
           JSON.stringify({
             originalPaymentId: paymentId,
-            amount: 15,
+            amount: upsellPrice,
             isUpsell: true,
             timestamp: Date.now(),
           }),
@@ -123,7 +141,7 @@ const PaymentSuccessPage = () => {
         state: {
           isUpsell: true,
           originalPaymentId: paymentId,
-          upsellAmount: 15.0,
+          amount: upsellPrice,
         },
         replace: true,
       });
@@ -250,7 +268,9 @@ const PaymentSuccessPage = () => {
                 Adicione a <span className="font-bold">Carteirinha Física</span>, com frete incluso, por apenas
               </p>
               <div className="flex items-center justify-center gap-3">
-                <span className="text-4xl font-bold text-ure-green">R$ 15,00</span>
+                <span className="text-4xl font-bold text-ure-green">
+                  {formatPrice(upsellPrice)}
+                </span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Economize 40% na compra conjunta!
@@ -265,7 +285,7 @@ const PaymentSuccessPage = () => {
             <div className="flex gap-4">
               <Button
                 onClick={handleAcceptUpsell}
-                disabled={loading}
+                disabled={loading || !upsellPrice}
                 className="flex-1 bg-ure-green hover:bg-ure-green/90"
               >
                 {loading ? (
@@ -274,7 +294,7 @@ const PaymentSuccessPage = () => {
                     Processando...
                   </>
                 ) : (
-                  'Sim, quero por R$ 15! 🎁'
+                  `Sim, quero por ${formatPrice(upsellPrice)}! 🎁`
                 )}
               </Button>
               <Button

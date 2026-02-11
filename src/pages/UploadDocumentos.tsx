@@ -477,6 +477,7 @@ export default function UploadDocumentos() {
   const [termsVersion, setTermsVersion] = useState<string>('');
   const [showCamera, setShowCamera] = useState(false);
   const [hasCameraSupport, setHasCameraSupport] = useState(true);
+  const [manualRequested, setManualRequested] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -768,7 +769,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
     }
   };
 
-const allDocsUploaded = documentConfigs.every((config) => !!documents[config.type]);
+  const allDocsUploaded = documentConfigs.every((config) => !!documents[config.type]);
   const allDocsApproved = documentConfigs.every((config) => {
     const doc = documents[config.type];
     return doc && doc.status === "approved";
@@ -777,7 +778,7 @@ const allDocsUploaded = documentConfigs.every((config) => !!documents[config.typ
   const termsOk = termsAccepted || termsAlreadyAccepted;
   const faceOk = !!profile?.face_validated;
   const canGenerateCard = allDocsApproved && faceOk && termsOk;
-  const canSubmit = allDocsUploaded && allDocsApproved && termsOk;
+  const canSubmit = allDocsUploaded && termsOk;
 
   console.log('[DEBUG] canSubmit?', {
     allDocsUploaded,
@@ -799,22 +800,10 @@ const allDocsUploaded = documentConfigs.every((config) => !!documents[config.typ
       return;
     }
 
-if (termsAlreadyAccepted) {
-  if (profile?.id) {
-    const { error } = await supabase
-      .from('student_profiles')
-      .update({ current_onboarding_step: 'pending_validation' })
-      .eq('id', profile.id);
-    
-    if (error) {
-      console.error('Erro ao atualizar step:', error);
-      toast.error('Erro ao atualizar status. Tente novamente.');
+    if (termsAlreadyAccepted) {
+      toast.success('Documentos enviados! Sua validação está em andamento.');
       return;
     }
-  }
-  navigate('/status-validacao');
-  return;
-}
 
     try {
       let ip = 'unknown';
@@ -845,16 +834,74 @@ if (termsAlreadyAccepted) {
         return;
       }
 
-      await supabase
-        .from('student_profiles')
-        .update({ current_onboarding_step: 'pending_validation' })
-        .eq('id', profile!.id);
-
-      toast.success('Termo aceito com sucesso!');
-      navigate('/status-validacao');
-      
+      toast.success('Termo aceito com sucesso! Seus documentos estão em validação.');
+     
     } catch (error) {
       toast.error('Erro ao processar. Tente novamente.');
+    }
+  };
+
+  const handleGoToReview = async () => {
+    if (!profile?.id) {
+      toast.error('Perfil não carregado. Recarregue a página.');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('advance_to_review', {
+        p_student_id: profile.id,
+      });
+
+      if (error) {
+        console.error('Erro ao chamar advance_to_review:', error);
+        toast.error('Erro ao avançar validação. Tente novamente.');
+        return;
+      }
+
+      if (data === true) {
+        navigate('/gerar-carteirinha');
+      } else {
+        toast.error('Ainda há pendências. Verifique documentos, termos e validação facial.');
+      }
+    } catch (err) {
+      console.error('Erro inesperado ao avançar para revisão:', err);
+      toast.error('Erro ao avançar validação. Tente novamente.');
+    }
+  };
+
+  const handleManualValidation = async () => {
+    if (!profile?.id || !user?.id) {
+      toast.error('Perfil não carregado. Recarregue a página.');
+      return;
+    }
+
+    if (manualRequested || profile.manual_review_requested) {
+      toast.success('Sua solicitação de validação manual já foi registrada.');
+      return;
+    }
+
+    setManualRequested(true);
+
+    try {
+      const { error } = await supabase
+        .from('student_profiles')
+        .update({ manual_review_requested: true })
+        .eq('id', profile.id);
+
+      if (error) {
+        console.error('Erro ao registrar solicitação manual:', error);
+        toast.error('Erro ao enviar solicitação. Tente novamente.');
+        setManualRequested(false);
+        return;
+      }
+
+      setProfile(prev => prev ? { ...prev, manual_review_requested: true } : prev);
+      toast.success('Solicitação enviada! Nossa equipe analisará seus documentos em até 2 dias úteis.');
+      navigate('/aguardando-aprovacao');
+    } catch (error) {
+      console.error('Erro inesperado ao solicitar validação manual:', error);
+      toast.error('Erro ao enviar solicitação. Tente novamente.');
+      setManualRequested(false);
     }
   };
 
@@ -1066,22 +1113,32 @@ if (termsAlreadyAccepted) {
             </Alert>
             <Button
               className="w-full max-w-2xl mx-auto block"
-              onClick={() => navigate('/gerar-carteirinha')}
+              onClick={handleGoToReview}
             >
               Ir para revisão e geração da carteirinha
             </Button>
           </>
         )}
 
-        {!canGenerateCard && (  
-                  <Button  
-                    disabled={!canSubmit}  
-                    onClick={handleSubmit}  
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"  
-                  >  
-                    {termsAlreadyAccepted ? 'Ver status da validação' : 'Aceitar termo e enviar para validação'}  
-                  </Button>  
-                )}  
+        {!canGenerateCard && (
+          <>
+            <Button
+              disabled={!canSubmit}
+              onClick={handleSubmit}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
+            >
+              Enviar para validação
+            </Button>
+            <Button
+              variant="outline"
+              disabled={manualRequested}
+              onClick={handleManualValidation}
+              className="w-full mt-3"
+            >
+              Solicitar validação manual
+            </Button>
+          </>
+        )}
   
                 {showCamera && (  
                   <CameraCapture  

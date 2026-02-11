@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { goToStudentCardFlow } from '@/lib/cardNavigation';
+import { formatPrice } from '@/utils/payment-helpers';
 
 interface HeaderProps {
   variant?: 'landing' | 'app';
@@ -33,6 +34,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [hasActiveCard, setHasActiveCard] = useState(false);
   const [hasPhysicalCard, setHasPhysicalCard] = useState(false);
+  const [physicalAvulsaPrice, setPhysicalAvulsaPrice] = useState<number | null>(null);
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -126,6 +128,23 @@ export function Header({ variant = 'app' }: HeaderProps) {
     checkPhysicalCard();
   }, [user]);
 
+  useEffect(() => {
+    const loadPhysicalAvulsaPrice = async () => {
+      const { data } = await supabase
+        .from('plans')
+        .select('price')
+        .eq('type', 'fisica_avulsa')
+        .eq('is_active', true)
+        .single();
+
+      if (data) {
+        setPhysicalAvulsaPrice(data.price);
+      }
+    };
+
+    loadPhysicalAvulsaPrice();
+  }, []);
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -200,7 +219,9 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
   if (showPhysicalOption) {
     avatarMenuItems.push({
-      label: 'Carteira Física por R$24',
+      label: physicalAvulsaPrice !== null
+        ? `Carteira Física por ${formatPrice(physicalAvulsaPrice)}`
+        : 'Carteira Física',
       icon: Package,
       highlight: true,
       onClick: () => navigate('/adquirir-fisica'),

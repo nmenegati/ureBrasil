@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCPF, formatPhone } from '@/lib/validators';
 import { formatBirthDate, formatDate } from '@/lib/dateUtils';
+import { formatPrice } from '@/utils/payment-helpers';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
@@ -74,6 +75,7 @@ export default function Dashboard() {
   // Estados para modal de upsell
   const [showUpsellModal, setShowUpsellModal] = useState(false);
   const [recentPaymentId, setRecentPaymentId] = useState<string | null>(null);
+  const [upsellPrice, setUpsellPrice] = useState<number | null>(null);
 
   // Redirecionar se não autenticado
   useEffect(() => {
@@ -119,6 +121,18 @@ export default function Dashboard() {
         if (existingUpsell) {
           localStorage.removeItem('recent_payment_id');
           return;
+        }
+
+        // Buscar preço do upsell e mostrar modal após 2 segundos
+        const { data: upsellPlan } = await supabase
+          .from('plans')
+          .select('price')
+          .eq('type', 'fisica_upsell')
+          .eq('is_active', true)
+          .single();
+
+        if (upsellPlan) {
+          setUpsellPrice(upsellPlan.price);
         }
 
         // Mostrar modal após 2 segundos
@@ -238,10 +252,12 @@ export default function Dashboard() {
 
   // Aceitar upsell - redirecionar para checkout
   const handleAcceptUpsell = () => {
+    if (!upsellPrice) return;
+
     navigate('/checkout', {
       state: {
         isUpsell: true,
-        amount: 15,
+        amount: upsellPrice,
         originalPaymentId: recentPaymentId,
         planType: 'physical_addon'
       }
@@ -802,7 +818,9 @@ export default function Dashboard() {
               <p className="text-muted-foreground text-xs mb-1">Adicione agora por apenas</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-muted-foreground text-sm line-through">R$ 29,90</span>
-                <span className="text-3xl font-bold text-primary">R$ 15,00</span>
+                <span className="text-3xl font-bold text-primary">
+                  {upsellPrice !== null ? formatPrice(upsellPrice) : '...'}
+                </span>
               </div>
               <p className="text-green-500 text-xs font-semibold mt-1">50% de desconto • Oferta única</p>
             </div>

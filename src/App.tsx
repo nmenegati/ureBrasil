@@ -20,6 +20,7 @@ import EscolherPlano from "./pages/EscolherPlano";
 import Pagamento from "./pages/Pagamento";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import Checkout from "./pages/Checkout";
+import CheckoutFisica from "./pages/CheckoutFisica";
 import UploadDocumentos from "./pages/UploadDocumentos";
 import GerarCarteirinha from "./pages/GerarCarteirinha";
 import Carteirinha from "./pages/Carteirinha";
@@ -38,7 +39,6 @@ const VerificarEmail = React.lazy(() => import("./pages/VerificarEmail"));
 const RecuperarSenha = React.lazy(() => import("./pages/RecuperarSenha"));
 const RedefinirSenha = React.lazy(() => import("./pages/RedefinirSenha"));
 const AdminEditEmail = React.lazy(() => import("./pages/AdminEditEmail"));
-const StatusValidacao = React.lazy(() => import("./pages/StatusValidacao"));
 const AguardandoAprovacao = React.lazy(() => import("./pages/AguardandoAprovacao").then(m => ({ default: m.AguardandoAprovacao })));
 const Termos = React.lazy(() => import("./pages/Termos"));
 const Privacidade = React.lazy(() => import("./pages/Privacidade"));
@@ -117,6 +117,11 @@ const App = () => {
                   <Checkout />
                 </ProtectedRoute>
               } />
+              <Route path="/checkout-fisica" element={
+                <ProtectedRoute>
+                  <CheckoutFisica />
+                </ProtectedRoute>
+              } />
               <Route path="/upload-documentos" element={
                 <ProtectedRoute>
                   <UploadDocumentos />
@@ -148,11 +153,6 @@ const App = () => {
               <Route path="/admin/edit-email" element={
                 <ProtectedRoute>
                   <AdminEditEmail />
-                </ProtectedRoute>
-              } />
-              <Route path="/status-validacao" element={
-                <ProtectedRoute>
-                  <StatusValidacao />
                 </ProtectedRoute>
               } />
               <Route path="/aguardando-aprovacao" element={

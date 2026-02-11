@@ -54,6 +54,7 @@ import iconeEsporte from "@/assets/icone-esporte.png";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { PolicyModal } from "@/components/PolicyModal";
+import { formatPrice } from "@/utils/payment-helpers";
 import { goToStudentCardFlow } from "@/lib/cardNavigation";
 
 const Index = () => {
@@ -67,6 +68,9 @@ const Index = () => {
   const [currentHumanSlide, setCurrentHumanSlide] = useState(0);
   const [policyModalType, setPolicyModalType] = useState<"delivery" | "terms" | "privacy" | "about" | null>(null);
   const isPolicyModalOpen = policyModalType !== null;
+  const [generalDigitalPrice, setGeneralDigitalPrice] = useState<number | null>(null);
+  const [lawDigitalPrice, setLawDigitalPrice] = useState<number | null>(null);
+  const [physicalUpsellPrice, setPhysicalUpsellPrice] = useState<number | null>(null);
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
   
@@ -123,6 +127,30 @@ const Index = () => {
     };
     checkActiveCard();
   }, [user?.id]);
+
+  useEffect(() => {
+    const loadPlanPrices = async () => {
+      const { data } = await supabase
+        .from("plans")
+        .select("type, price")
+        .eq("is_active", true)
+        .in("type", ["geral_digital", "direito_digital", "fisica_upsell"]);
+
+      if (!data) return;
+
+      data.forEach((plan) => {
+        if (plan.type === "geral_digital") {
+          setGeneralDigitalPrice(plan.price);
+        } else if (plan.type === "direito_digital") {
+          setLawDigitalPrice(plan.price);
+        } else if (plan.type === "fisica_upsell") {
+          setPhysicalUpsellPrice(plan.price);
+        }
+      });
+    };
+
+    loadPlanPrices();
+  }, []);
 
   const handleCTA = async () => {
     if (ctaLoading) return;
@@ -240,7 +268,8 @@ const Index = () => {
               {/* Promo Badge */}
               <div className="inline-block">
                 <Badge className="bg-ure-yellow text-ure-dark px-4 py-2 text-sm sm:text-base font-bold animate-pulse-slow">
-                  🔥 PROMOÇÃO - A partir de R$ 29
+                  🔥 PROMOÇÃO - A partir de{" "}
+                  {generalDigitalPrice !== null ? formatPrice(generalDigitalPrice) : "R$ ..."}
                 </Badge>
               </div>
 
@@ -723,7 +752,6 @@ const Index = () => {
       {/* Header */}
       <div className="text-center mb-16 space-y-4">
         <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Escolha Sua Carteirinha</h2>
-        <div className="w-24 h-[2px] bg-ure-yellow mx-auto"></div>
         <p className="text-xl text-muted-foreground">Transparente, simples e sem surpresas</p>
       </div>
 
@@ -744,7 +772,9 @@ const Index = () => {
               <h3 className="text-2xl font-bold text-foreground mb-2">Carteira Estudantil Digital | URE</h3>
               <p className="text-sm text-muted-foreground mb-4">Educação básica ao ensino superior</p>
               <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl font-black text-ure-blue">R$ 29</span>
+                <span className="text-5xl font-black text-ure-blue">
+                  {generalDigitalPrice !== null ? formatPrice(generalDigitalPrice) : "R$ ..."}
+                </span>
                 <span className="text-muted-foreground">/ano</span>
               </div>
             </div>
@@ -811,7 +841,9 @@ const Index = () => {
               <h3 className="text-2xl font-bold text-foreground mb-2">Carteira Estudantil Digital LexPraxis | URE</h3>
               <p className="text-sm text-muted-foreground mb-4">Exclusiva para estudantes de Direito</p>
               <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl font-black text-ure-yellow">R$ 44</span>
+                <span className="text-5xl font-black text-ure-yellow">
+                  {lawDigitalPrice !== null ? formatPrice(lawDigitalPrice) : "R$ ..."}
+                </span>
                 <span className="text-muted-foreground">/ano</span>
               </div>
             </div>
@@ -882,7 +914,11 @@ const Index = () => {
                 
                 <p className="text-muted-foreground mb-4">
                   Após o pagamento, você poderá adicionar a carteirinha física  
-                  por apenas <strong className="text-foreground">R$ 15,00.</strong>
+                  por apenas{" "}
+                  <strong className="text-foreground">
+                    {physicalUpsellPrice !== null ? formatPrice(physicalUpsellPrice) : "R$ ..."}
+                  </strong>
+                  .
                 </p>
                 
                 <div className="flex flex-wrap justify-center gap-4 text-sm">
@@ -896,7 +932,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-ure-green" />
-                    <span className="text-foreground">Entrega em 7-10 dias úteis</span>
+                    <span className="text-foreground">Envio em até 7 dias úteis</span>
                   </div>
                 </div>
               </CardContent>
@@ -991,7 +1027,7 @@ const Index = () => {
                 <span className="text-lg font-semibold text-foreground">Até quando vale minha carteirinha?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                Todas as carteirinhas emitidas valem até 31 de março, independente da data de emissão.
+                Todas as carteirinhas emitidas valem até o próximo dia 31 de março, independente da data de emissão.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
