@@ -15,8 +15,8 @@ export function ChatWrapper() {
     '/upload-documentos',
     '/escolher-plano',
     '/pagamento',
-    '/perfil',
-    '/checkout'
+    '/checkout',
+    '/checkout-fisica'
   ];
 
   const shouldShowChat = allowedRoutes.some(route => location.pathname.startsWith(route));

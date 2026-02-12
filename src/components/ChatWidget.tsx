@@ -9,6 +9,7 @@ import { MessageCircle, X, Send, Loader2, LifeBuoy, User, Bot } from 'lucide-rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -29,6 +30,7 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
   const [hasUnread, setHasUnread] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   // Initial welcome message
   useEffect(() => {
@@ -200,14 +202,17 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
                       >
                         <Button 
                           size="sm" 
-                          className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
-                          onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                          onClick={() => {
+                            navigate('/suporte');
+                            setIsOpen(false);
+                          }}
                         >
                           <LifeBuoy className="w-4 h-4" />
-                          Falar com Atendente
+                          Abrir Ticket de Suporte
                         </Button>
                         <p className="text-[10px] text-muted-foreground text-center">
-                          Disponível seg-sex 9h às 18h
+                          Nossa equipe responde em até 24h úteis
                         </p>
                       </motion.div>
                     )}

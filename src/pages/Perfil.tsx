@@ -73,6 +73,12 @@ interface StudentCard {
   valid_until: string;
   card_type: string;
   issued_at?: string;
+  usage_code?: string | null;
+  is_physical?: boolean;
+  shipping_status?: string | null;
+  shipping_code?: string | null;
+  shipped_at?: string | null;
+  delivered_at?: string | null;
 }
 
 interface Plan {
@@ -84,6 +90,14 @@ interface Plan {
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+};
+
+const formatDateOnly = (dateStr: string | null | undefined) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('T')[0]?.split('-') ?? [];
+  const [year, month, day] = parts;
+  if (!year || !month || !day) return dateStr;
+  return `${day}/${month}/${year}`;
 };
 
 const formatEducationLevel = (level: string | null | undefined) => {
@@ -1139,30 +1153,69 @@ export default function Perfil() {
                 </CardHeader>
                 <CardContent>
                   {card ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={card.status === 'active' ? 'default' : 'secondary'}
-                          className={card.status === 'active' ? 'bg-green-500' : 'bg-amber-500'}
-                        >
-                          {card.status === 'active' ? 'Ativa' : 'Pendente'}
-                        </Badge>
-                        {card.status === 'active' && card.issued_at && (
-                          <span className="text-xs text-muted-foreground">
-                            ativada em {formatDate(card.issued_at)}
-                          </span>
+                    <div className={card.is_physical ? "grid grid-cols-1 md:grid-cols-2 gap-4" : ""}>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={card.status === 'active' ? 'default' : 'secondary'}
+                            className={card.status === 'active' ? 'bg-green-500' : 'bg-amber-500'}
+                          >
+                            {card.status === 'active' ? 'Ativa' : 'Pendente'}
+                          </Badge>
+                          {card.status === 'active' && card.issued_at && (
+                            <span className="text-xs text-muted-foreground">
+                              ativada em {formatDate(card.issued_at)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Carteira Digital
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          <strong>Número:</strong> {card.usage_code || card.card_number}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          <strong>Validade:</strong> {formatDateOnly(card.valid_until)}
+                        </p>
+                        {plan && (
+                          <p className="text-sm text-muted-foreground">
+                            <strong>Plano:</strong> {plan.name}
+                          </p>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        <strong>Número:</strong> {card.card_number}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        <strong>Validade:</strong> {formatDate(card.valid_until)}
-                      </p>
-                      {plan && (
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Plano:</strong> {plan.name}
-                        </p>
+
+                      {card.is_physical && (
+                        <div className="space-y-2 border-t md:border-t-0 md:border-l md:pl-4 border-border/60 pt-3 md:pt-0">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Carteira Física
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            <strong>Status de envio:</strong>{" "}
+                            {(() => {
+                              const status = card.shipping_status;
+                              if (!status || status === 'pending') return 'Pendente de envio';
+                              if (status === 'processing') return 'Em preparação';
+                              if (status === 'shipped') return 'Enviado';
+                              if (status === 'delivered') return 'Entregue';
+                              if (status === 'failed') return 'Falha na entrega';
+                              return 'Pendente de envio';
+                            })()}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            <strong>Código de rastreio:</strong>{" "}
+                            {card.shipping_code || 'Não informado'}
+                          </p>
+                          {card.shipped_at && (
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Postada em:</strong> {formatDateOnly(card.shipped_at)}
+                            </p>
+                          )}
+                          {card.delivered_at && (
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Entregue em:</strong> {formatDateOnly(card.delivered_at)}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   ) : (

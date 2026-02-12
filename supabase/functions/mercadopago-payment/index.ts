@@ -41,6 +41,7 @@ serve(async (req) => {
       // Flags de contexto
       is_upsell = false,
       original_payment_id = null,
+      metadata = {},
     } = body;
 
     // 3. Buscar perfil do estudante
@@ -150,6 +151,7 @@ serve(async (req) => {
         installments: payment_method === "credit_card" ? Number(installments) : null,
         confirmed_at: paymentStatus === "approved" ? new Date().toISOString() : null,
         metadata: {
+          ...metadata,
           mp_status: mpData.status,
           mp_status_detail: mpData.status_detail,
           mp_payment_type: mpData.payment_type_id,

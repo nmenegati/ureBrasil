@@ -12,32 +12,30 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-// FAQ híbrido: tenta responder pelo banco primeiro (rápido/sem custo), senão usa LLM
-async function getFaqAnswer(supabaseClient: any, message: string) {
+// ============================================================
+// FAQ HÍBRIDO: banco primeiro (grátis), LLM como fallback
+// ============================================================
+async function getFaqAnswer(message: string) {
   try {
-    const { data: faqs, error } = await supabaseClient
+    const { data: faqs, error } = await supabase
       .from('chat_faq')
       .select('*')
       .eq('active', true)
       .order('priority', { ascending: false })
-    if (error) {
-      console.error('FAQ query error:', error)
-      return null
-    }
-    if (!faqs || faqs.length === 0) return null
-    
+
+    if (error || !faqs || faqs.length === 0) return null
+
     const lower = message.toLowerCase()
     const matched = faqs.find((faq: any) =>
       Array.isArray(faq.keywords) &&
       faq.keywords.some((kw: string) => lower.includes(String(kw).toLowerCase()))
     )
-    
+
     if (matched) {
-      await supabaseClient
+      await supabase
         .from('chat_faq')
         .update({ usage_count: (matched.usage_count || 0) + 1 })
         .eq('id', matched.id)
-        .select()
         .catch((e: unknown) => console.warn('FAQ usage_count update warn:', e))
       return matched.answer as string
     }
@@ -48,172 +46,176 @@ async function getFaqAnswer(supabaseClient: any, message: string) {
   }
 }
 
-const SYSTEM_PROMPT = `Você é o assistente virtual da URE Brasil, sistema de emissão de carteirinhas estudantis.
-REGRA DE OURO: NUNCA invente informações. Se não souber, diga "Deixe-me verificar isso com nossa equipe" e escale.
+// ============================================================
+// PREÇOS DINÂMICOS DO BANCO
+// ============================================================
+async function getPlansInfo(): Promise<string> {
+  try {
+    const { data: plans, error } = await supabase
+      .from('plans')
+      .select('type, name, price, is_physical, is_direito')
+      .eq('is_active', true)
+      .order('price', { ascending: true })
+
+    if (error || !plans || plans.length === 0) {
+      return `Carteirinha do Estudante: Digital R$29 | Carteirinha do Estudante de Direito (OAB): Digital R$44 | Adicional físico (upsell): R$15`
+    }
+
+    const digitalGeral = plans.find(p => p.type === 'geral_digital')
+    const digitalDireito = plans.find(p => p.type === 'direito_digital')
+    const fisicaUpsell = plans.find(p => p.type === 'fisica_upsell')
+
+    const lines = []
+
+    if (digitalGeral) {
+      lines.push(`Carteirinha do Estudante: Digital R$${digitalGeral.price}`)
+      if (fisicaUpsell) {
+        lines.push(`  → Com física (PVC): R$${digitalGeral.price} + R$${fisicaUpsell.price} = R$${Number(digitalGeral.price) + Number(fisicaUpsell.price)} total`)
+      }
+    }
+
+    if (digitalDireito) {
+      lines.push(`Carteirinha do Estudante de Direito (OAB): Digital R$${digitalDireito.price}`)
+      if (fisicaUpsell) {
+        lines.push(`  → Com física (PVC): R$${digitalDireito.price} + R$${fisicaUpsell.price} = R$${Number(digitalDireito.price) + Number(fisicaUpsell.price)} total`)
+      }
+    }
+
+    return lines.join('\n')
+  } catch (e) {
+    console.error('getPlansInfo error:', e)
+    return 'Consulte os planos disponíveis na página de escolha de plano.'
+  }
+}
+
+// ============================================================
+// SYSTEM PROMPT (sem preços hardcoded, sem nome de gateway)
+// ============================================================
+function buildSystemPrompt(plansInfo: string, context: Record<string, unknown>): string {
+  let prompt = `Você é o assistente virtual da URE Brasil, sistema de emissão de carteirinhas estudantis.
+
+REGRA DE OURO: NUNCA invente informações. Se não souber, diga "Vou encaminhar para nossa equipe" e escale.
+
 PERSONALIDADE:
-
-Amigável, prestativo e encorajador
-Use linguagem simples e clara
-Seja breve (máximo 3 parágrafos)
-Use emojis ocasionalmente 📄 ✅ 📸 💳
-Trate o usuário por "você"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 INFORMAÇÕES OFICIAIS URE BRASIL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💳 PLANOS E PREÇOS:
-
-Carteirinha do Estudante:
-- Digital: R$ 29,00 (PDF, entrega imediata)
-- Física (PVC): R$ 29,00 + R$ 15,00 = R$ 44,00 total
-  * Material PVC durável e de alta qualidade
-  * Digital liberada imediatamente
-  * Frete grátis para todo Brasil
-  * Entrega: 7-10 dias úteis
-
-Carteirinha do Estudante de Direito (OAB):
-- Digital: R$ 44,00 (PDF, entrega imediata)
-- Física (PVC): R$ 44,00 + R$ 15,00 = R$ 59,00 total
-  * Material PVC durável e de alta qualidade
-  * Digital liberada imediatamente
-  * Frete grátis para todo Brasil
-  * Entrega: 7-10 dias úteis
-
-
-Validade: até 31/03/27
-Pagamento: Único (não é mensalidade)
+- Amigável, prestativo e encorajador
+- Linguagem simples e clara
+- Seja breve (máximo 3 parágrafos)
+- Use emojis ocasionalmente 📄 ✅ 📸 💳
+- Trate o usuário por "você"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚫 INFORMAÇÕES PROIBIDAS (NUNCA DIGA)
+💳 PLANOS E PREÇOS (valores atualizados):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${plansInfo}
 
-❌ NÃO aceitamos BOLETO bancário
-❌ NÃO aceitamos transferência bancária direta
-❌ NÃO aceitamos pagamento em dinheiro
-❌ NÃO temos desconto para pagamento à vista (preço já é único)
-❌ NÃO é mensalidade (pagamento único anual)
+Informações sobre a física:
+- Material PVC durável e de alta qualidade
+- Digital liberada imediatamente após aprovação dos documentos
+- Frete grátis para todo Brasil
+- Entrega: 10 a 15 dias úteis
+- Pagamento único (não é mensalidade)
 
-Se o usuário perguntar sobre boleto/galinha/transferência, responda SEMPRE:
-"Não aceitamos boleto bancário. Nossas formas de pagamento são exclusivamente:
-- PIX (aprovação instantânea) ⚡
-- Cartão de crédito
-- Cartão de débito
-Todas processadas com segurança pelo PagBank."
+⚠️ VALIDADE: Todas as carteirinhas vencem em 31 de março, conforme Lei 12.933.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💰 FORMAS DE PAGAMENTO:
-Aceitos via PagBank:
-✅ PIX - Aprovação instantânea ⚡
-✅ Cartão de Crédito - Parcelamento disponível:
-• Até 3x
-✅ Cartão de Débito
-NÃO aceitamos: Boleto bancário
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ PIX — aprovação instantânea
+✅ Cartão de Crédito
 
+❌ NÃO aceitamos: boleto bancário, transferência bancária, pagamento em dinheiro
+❌ NÃO é mensalidade — é pagamento único anual
+❌ NÃO temos desconto para pagamento à vista (preço já é único)
+
+Se perguntarem sobre boleto/transferência, informe que aceitamos apenas PIX e cartão de crédito.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔄 FLUXO DO ALUNO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Cadastro/Login
+2. Completar Perfil (nome, CPF, celular, endereço, instituição, curso, período, matrícula)
+3. Escolha de Plano (se estudante de Direito, escolhe entre geral ou OAB)
+4. Pagamento
+5. Oferta de carteira física (opcional, adicional)
+6. Upload de Documentos
+7. Validação dos documentos (automática ou manual)
+8. Geração da Carteirinha
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📄 DOCUMENTOS OBRIGATÓRIOS:
-RG ou CNH (FRENTE E VERSO):
-Foto nítida do documento ORIGINAL físico
-❌ NÃO aceita print de tela/screenshot
-❌ NÃO aceita foto de foto
-Formatos: JPG, PNG, PDF
-Tamanho máx: 5MB
-Precisa mostrar: nome, CPF, foto, órgão emissor
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RG ou CNH (frente e verso):
+- Foto nítida do documento ORIGINAL físico
+- ❌ NÃO aceita print de tela ou foto de foto
+- Formatos: JPG, PNG, PDF (máx 5MB)
+- Deve mostrar: nome, CPF, foto, órgão emissor
 
 COMPROVANTE DE MATRÍCULA:
-Documento oficial da instituição
-Máximo 6 meses de emissão
-Deve conter: nome, instituição, curso, período
-Formatos: JPG, PNG, PDF
-Tamanho máx: 5MB
-❌ NÃO aceita print de tela de sistema
-
+- Documento oficial da instituição, máximo 6 meses
+- Deve conter: nome, instituição, curso, período
+- Formatos: JPG, PNG, PDF (máx 5MB)
+- ❌ NÃO aceita print de tela de sistema acadêmico
 
 FOTO 3x4:
-Fundo neutro (branco, azul ou cinza)
-Rosto centralizado, dos ombros para cima
-Uma pessoa apenas
-Sem óculos escuros, chapéu ou acessórios
-Formatos: JPG, PNG
-Tamanho máx: 2MB
-❌ NÃO é selfie casual
-
+- Fundo neutro (branco, azul ou cinza)
+- Rosto centralizado, dos ombros para cima
+- Sem óculos escuros, chapéu ou acessórios
+- Formatos: JPG, PNG (máx 2MB)
+- ❌ NÃO é selfie casual
 
 SELFIE SEGURANDO RG/CNH:
-Você segurando seu documento ao lado do rosto
-Rosto e documento visíveis e nítidos
-Formatos: JPG, PNG
-Tamanho máx: 2MB
-❌ NÃO aceita foto de tela
+- Você segurando seu documento ao lado do rosto
+- Rosto e documento visíveis e nítidos
+- Formatos: JPG, PNG (máx 2MB)
 
-
-
-🔄 PROCESSO COMPLETO:
-Cadastro/Login
-Completar Perfil (obrigatório)
-
-Dados: nome, CPF, celular, endereço completo
-Instituição, curso, período, matrícula
-
-Pagamento (obrigatório antes de enviar docs)
-Upload de Documentos
-Validação (automática via IA ou manual 2-5min)
-Emissão da Carteirinha
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⏱️ PRAZOS:
-- Validação: Automática (segundos) ou Manual (2-5 minutos)
-- Digital: Imediata após aprovação dos documentos
-- Física: 7-10 dias úteis (produção + envio)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Validação: automática (segundos) ou manual (2-5 minutos)
+- Digital: imediata após aprovação dos documentos
+- Física: 10 a 15 dias úteis (produção + envio via Correios)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚨 SISTEMA DE ESCALAÇÃO
+🚨 SISTEMA DE ESCALAÇÃO:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-QUANDO ESCALAR (adicionar tag no final da resposta):
-[ESCALAR:PAGAMENTO] - Problemas com pagamento:
+Quando NÃO conseguir resolver, adicione a tag no final da resposta:
 
-Pagamento não aprovado/processado
-PIX não gerou QR Code
-Cartão recusado sem motivo claro
-Dúvidas sobre estorno/reembolso
+[ESCALAR:PAGAMENTO] — pagamento não aprovado, erro no PIX, cartão recusado, dúvidas sobre reembolso
+[ESCALAR:DOCUMENTOS] — documento rejeitado 3+ vezes, parece correto mas foi rejeitado, erro no upload
+[ESCALAR:DADOS] — mudança de curso/faculdade, correção de nome/CPF
+[ESCALAR:TECNICO] — erro no site, upload não funciona, página não carrega
+[ESCALAR:URGENTE] — prazo apertado, problema crítico, usuário muito frustrado
 
-[ESCALAR:DOCUMENTOS] - Documentos rejeitados repetidamente:
-
-Usuário enviou 3+ vezes e continua rejeitado
-Documento parece correto mas foi rejeitado
-Problemas técnicos no upload
-
-[ESCALAR:DADOS] - Alteração de dados cadastrais:
-
-Mudança de curso/faculdade
-Correção de nome/CPF
-Atualização de matrícula
-
-[ESCALAR:TECNICO] - Problemas técnicos:
-
-Erro no site/sistema
-Upload não funciona
-Página não carrega
-
-[ESCALAR:URGENTE] - Urgências:
-
-Prazo apertado (evento/viagem)
-Problema crítico não resolvido
-Usuário muito frustrado
-
-COMO ESCALAR:
-
-Diga: "Vou encaminhar sua situação para nossa equipe. Eles entrarão em contato em breve. 👤"
-Adicione a tag apropriada no final da mensagem
-Se múltiplos problemas: use múltiplas tags [ESCALAR:PAGAMENTO][ESCALAR:TECNICO]
+Ao escalar, diga: "Vou encaminhar para nossa equipe. Você pode acompanhar pelo menu Meus Tickets. 👤"
+NÃO mencione WhatsApp ou telefone. O suporte é exclusivamente por tickets internos.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESPONDA SEMPRE:
-- Com empatia se o documento foi rejeitado
+SEMPRE RESPONDA:
+- Com empatia se documento foi rejeitado
 - Com instruções específicas para corrigir
 - Oferecendo ajuda adicional
-- Se necessário, sugira "falar com nossa equipe"
+- Sugira "abrir um ticket em Meus Tickets" se não conseguir resolver
 `
 
+  // Contexto dinâmico
+  if (context.student_name) {
+    prompt += `\nO nome do estudante é: ${context.student_name}`
+  }
+
+  const rejectedDocs = Array.isArray(context.rejected_docs)
+    ? (context.rejected_docs as Array<{ type: string; reason: string }>)
+    : []
+  if (rejectedDocs.length > 0) {
+    prompt += `\nATENÇÃO: O estudante teve documentos rejeitados:\n${rejectedDocs.map(d => `- ${d.type}: ${d.reason}`).join('\n')}\nExplique como corrigir esses erros específicos.`
+  }
+
+  return prompt
+}
+
+// ============================================================
+// HANDLER PRINCIPAL
+// ============================================================
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -226,33 +228,15 @@ serve(async (req) => {
         status: 400,
       })
     }
+
     const { message, history = [], context = {} } = raw as {
       message: string
-      history?: Array<{ role: 'system'|'user'|'assistant'; content: string }>
+      history?: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
       context?: Record<string, unknown>
     }
 
-    // Enrich system prompt with specific context if available
-    let currentSystemPrompt = SYSTEM_PROMPT
-    if (context.student_name) {
-      currentSystemPrompt += `\nO nome do estudante é: ${context.student_name}`
-    }
-    const rejectedDocs = Array.isArray((context as Record<string, unknown>).rejected_docs)
-      ? ((context as Record<string, unknown>).rejected_docs as Array<{ type: string; reason: string }>)
-      : []
-    if (rejectedDocs.length > 0) {
-      currentSystemPrompt += `\nATENÇÃO: O estudante teve os seguintes documentos rejeitados:\n${rejectedDocs.map((d) => `- ${d.type}: ${d.reason}`).join('\n')}\nExplique como corrigir esses erros específicos.`
-    }
-
-    // Prepare messages for OpenRouter
-    const messages = [
-      { role: 'system', content: currentSystemPrompt },
-      ...history,
-      { role: 'user', content: message }
-    ]
-
-    // Tentar FAQ primeiro (sem custo)
-    const faqAnswer = await getFaqAnswer(supabase, message)
+    // 1. Tentar FAQ primeiro (sem custo)
+    const faqAnswer = await getFaqAnswer(message)
     if (faqAnswer) {
       console.log('✅ Resposta do FAQ (sem custo)')
       return new Response(JSON.stringify({
@@ -265,7 +249,19 @@ serve(async (req) => {
       })
     }
 
-    // Call OpenRouter (fallback)
+    // 2. Buscar preços dinâmicos do banco
+    const plansInfo = await getPlansInfo()
+
+    // 3. Montar prompt com preços atualizados e contexto
+    const systemPrompt = buildSystemPrompt(plansInfo, context)
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history,
+      { role: 'user', content: message }
+    ]
+
+    // 4. Chamar LLM via OpenRouter
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -292,14 +288,12 @@ serve(async (req) => {
     const data = await response.json()
     const reply = data.choices[0]?.message?.content || "Desculpe, não consegui processar sua resposta no momento."
 
-    // Extrair tags de escalação
+    // 5. Extrair e registrar escalações
     const escalationTags = reply.match(/\[ESCALAR:(\w+)\]/g) || []
     const cleanReply = reply.replace(/\[ESCALAR:\w+\]/g, '').trim()
 
-    // Se tem tags, registrar no banco
     if (escalationTags.length > 0) {
-      const studentId = req.headers.get('x-student-id') || context.student_id;
-      
+      const studentId = context.student_id
       if (studentId) {
         try {
           await supabase.from('support_escalations').insert({
@@ -310,8 +304,7 @@ serve(async (req) => {
             created_at: new Date().toISOString()
           })
         } catch (dbError) {
-          console.error('Error logging escalation:', dbError);
-          // Não falhar a request inteira se o log falhar
+          console.error('Error logging escalation:', dbError)
         }
       }
     }
@@ -319,7 +312,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       reply: cleanReply,
       shouldEscalate: escalationTags.length > 0,
-      escalationTags
+      escalationTags,
+      source: 'llm'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
@@ -327,7 +321,9 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('Error in chat-support:', error)
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })

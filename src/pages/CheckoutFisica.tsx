@@ -224,6 +224,7 @@ export default function CheckoutFisica() {
             amount: plan.price,
             payer_email: user.email!,
             is_upsell: false,
+            metadata,
           });
           if (!result.success) throw new Error(result.error || "Erro PIX");
           data = result;
@@ -261,6 +262,7 @@ export default function CheckoutFisica() {
           amount: plan.price,
           payer_email: user.email!,
           is_upsell: false,
+          metadata,
         });
 
         if (!result.success) {

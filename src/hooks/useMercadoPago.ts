@@ -49,7 +49,14 @@ export function useMercadoPago() {
   const paymentResolverRef = useRef<{
     resolve: (data: any) => void;
     reject: (err: any) => void;
-    params: any;
+    params: {
+      plan_id: string;
+      amount: number;
+      payer_email: string;
+      is_upsell?: boolean;
+      original_payment_id?: string;
+      metadata?: Record<string, unknown>;
+    };
   } | null>(null);
   const cardFormInitializedRef = useRef(false);
 
@@ -144,6 +151,7 @@ export function useMercadoPago() {
                   payer_email: params.payer_email,
                   is_upsell: params.is_upsell || false,
                   original_payment_id: params.original_payment_id || null,
+                  metadata: params.metadata || {},
                 },
               });
 
@@ -179,6 +187,7 @@ export function useMercadoPago() {
     payer_email: string;
     is_upsell?: boolean;
     original_payment_id?: string;
+    metadata?: Record<string, unknown>;
   }): Promise<PaymentResult> => {
     setLoading(true);
     setError(null);
@@ -225,6 +234,7 @@ export function useMercadoPago() {
     payer_email: string;
     is_upsell?: boolean;
     original_payment_id?: string;
+    metadata?: Record<string, unknown>;
   }): Promise<PaymentResult> => {
     setLoading(true);
     setError(null);
@@ -241,6 +251,7 @@ export function useMercadoPago() {
           payer_email: params.payer_email,
           is_upsell: params.is_upsell || false,
           original_payment_id: params.original_payment_id || null,
+          metadata: params.metadata || {},
         },
       });
 
