@@ -55,8 +55,28 @@ async function fetchWithRetry(
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  // Verificar autenticação
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    })
+  }
+
+  const token = authHeader.replace('Bearer ', '')
+  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+
+  if (authError || !authUser) {
+    return new Response(JSON.stringify({ error: 'Token inválido' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    })
   }
 
   try {
@@ -248,6 +268,7 @@ serve(async (req) => {
       },
       items: [
         {
+          reference_id: referenceId,
           name: "Carteirinha URE Brasil",
           quantity: 1,
           unit_amount: amountInCents,
@@ -255,6 +276,7 @@ serve(async (req) => {
       ],
       charges: [
         {
+          reference_id: referenceId,
           amount: {
             value: amountInCents,
             currency: "BRL",
@@ -273,11 +295,12 @@ serve(async (req) => {
               },
             },
           },
-          metadata,
         },
       ],
+      metadata,
     };
 
+    console.log("🔍 [PAYLOAD]:", JSON.stringify(orderPayload, null, 2));
     console.log("MODE:", Deno.env.get("PAGBANK_MODE"));
     console.log("KEY:", Deno.env.get("PAGBANK_SANDBOX_KEY") ? "OK" : "MISSING");
 

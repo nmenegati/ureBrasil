@@ -56,6 +56,7 @@ export function useMercadoPago() {
       is_upsell?: boolean;
       original_payment_id?: string;
       metadata?: Record<string, unknown>;
+      cardType?: "credit" | "debit";
     };
   } | null>(null);
   const cardFormInitializedRef = useRef(false);
@@ -139,6 +140,11 @@ export function useMercadoPago() {
               const { data: { session } } = await supabase.auth.getSession();
               if (!session) throw new Error('Sessão expirada');
 
+              const finalInstallments =
+                paymentResolverRef.current?.params.cardType === 'debit'
+                  ? 1
+                  : Number(cardFormData.installments) || 1;
+
               const { data, error: fnError } = await supabase.functions.invoke('mercadopago-payment', {
                 body: {
                   payment_method: 'credit_card',
@@ -147,7 +153,7 @@ export function useMercadoPago() {
                   card_token: cardFormData.token,
                   payment_method_id: (cardFormData as any).paymentMethodId,
                   issuer_id: (cardFormData as any).issuerId,
-                  installments: Number(cardFormData.installments) || 1,
+                  installments: finalInstallments,
                   payer_email: params.payer_email,
                   is_upsell: params.is_upsell || false,
                   original_payment_id: params.original_payment_id || null,
@@ -188,6 +194,7 @@ export function useMercadoPago() {
     is_upsell?: boolean;
     original_payment_id?: string;
     metadata?: Record<string, unknown>;
+    cardType?: "credit" | "debit";
   }): Promise<PaymentResult> => {
     setLoading(true);
     setError(null);

@@ -508,6 +508,7 @@ export default function Pagamento() {
             amount: paymentAmount,
             payer_email: user!.email!,
             is_upsell: isUpsell,
+            cardType,
           });
           if (!result.success) throw new Error(result.error || "Pagamento não autorizado");
           data = result;
@@ -860,7 +861,7 @@ export default function Pagamento() {
                           />
                         </div>
                       </div>
-                      <div>
+                      <div style={cardType === "debit" ? { display: "none" } : undefined}>
                         <Label htmlFor="mp-installments">Parcelamento</Label>
                         <select
                           id="mp-installments"

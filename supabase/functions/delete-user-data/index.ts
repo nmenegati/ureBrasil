@@ -13,8 +13,27 @@ function hashCpf(cpf: string): string {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  // Verificar autenticação
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    })
+  }
+
+  const token = authHeader.replace('Bearer ', '')
+  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+
+  if (authError || !authUser) {
+    return new Response(JSON.stringify({ error: 'Token inválido' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    })
   }
 
   try {

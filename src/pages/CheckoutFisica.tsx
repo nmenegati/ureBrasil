@@ -263,6 +263,7 @@ export default function CheckoutFisica() {
           payer_email: user.email!,
           is_upsell: false,
           metadata,
+          cardType,
         });
 
         if (!result.success) {
@@ -470,7 +471,7 @@ export default function CheckoutFisica() {
                           />
                         </div>
                       </div>
-                      <div>
+                      <div style={cardType === "debit" ? { display: "none" } : undefined}>
                         <Label htmlFor="mp-installments">Parcelamento</Label>
                         <select
                           id="mp-installments"

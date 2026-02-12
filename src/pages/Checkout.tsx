@@ -461,6 +461,7 @@ export default function Checkout() {
             payer_email: user!.email!,
             is_upsell: true,
             original_payment_id: resolvedUpsell.originalPaymentId,
+            cardType,
           });
           if (!result.success) {
             throw new Error(
@@ -872,7 +873,7 @@ export default function Checkout() {
                           />
                         </div>
                       </div>
-                      <div>
+                      <div style={cardType === "debit" ? { display: "none" } : undefined}>
                         <Label htmlFor="mp-installments">Parcelamento</Label>
                         <select
                           id="mp-installments"

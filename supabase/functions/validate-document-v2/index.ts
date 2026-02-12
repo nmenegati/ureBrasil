@@ -11,6 +11,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -48,7 +49,7 @@ serve(async (req) => {
     const isPdf = mimeType === 'application/pdf'
 
     // Regras de tipo por documento
-    if ((type === 'foto' || type === 'selfie' || type === 'rg') && !isImage) {
+    if ((type === 'foto' || type === 'selfie') && !isImage) {
       await supabase
         .from('documents')
         .update({
@@ -66,7 +67,7 @@ serve(async (req) => {
       })
     }
 
-    if (type === 'matricula' && !isImage && !isPdf) {
+    if ((type === 'rg' || type === 'matricula') && !isImage && !isPdf) {
       await supabase
         .from('documents')
         .update({

@@ -122,12 +122,13 @@ Informações sobre a física:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ PIX — aprovação instantânea
 ✅ Cartão de Crédito
+✅ Cartão de Débito
 
 ❌ NÃO aceitamos: boleto bancário, transferência bancária, pagamento em dinheiro
 ❌ NÃO é mensalidade — é pagamento único anual
 ❌ NÃO temos desconto para pagamento à vista (preço já é único)
 
-Se perguntarem sobre boleto/transferência, informe que aceitamos apenas PIX e cartão de crédito.
+Se perguntarem sobre boleto/transferência, informe que aceitamos apenas PIX, cartão de crédito e cartão de débito.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔄 FLUXO DO ALUNO:
@@ -153,20 +154,21 @@ RG ou CNH (frente e verso):
 COMPROVANTE DE MATRÍCULA:
 - Documento oficial da instituição, máximo 6 meses
 - Deve conter: nome, instituição, curso, período
-- Formatos: JPG, PNG, PDF (máx 5MB)
+- Formatos: JPG, PNG, PDF (máx 3MB)
 - ❌ NÃO aceita print de tela de sistema acadêmico
 
 FOTO 3x4:
 - Fundo neutro (branco, azul ou cinza)
 - Rosto centralizado, dos ombros para cima
 - Sem óculos escuros, chapéu ou acessórios
-- Formatos: JPG, PNG (máx 2MB)
+- Formatos: JPG, PNG (máx 3MB)
 - ❌ NÃO é selfie casual
 
-SELFIE SEGURANDO RG/CNH:
-- Você segurando seu documento ao lado do rosto
-- Rosto e documento visíveis e nítidos
+SELFIE:
+- Foto do seu rosto, bem iluminada e nítida
+- Rosto centralizado, sem óculos escuros ou acessórios
 - Formatos: JPG, PNG (máx 2MB)
+- Usada para validação facial automática
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⏱️ PRAZOS:
@@ -218,6 +220,27 @@ SEMPRE RESPONDA:
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+// Após o bloco OPTIONS/CORS, antes do try principal:
+
+  // Verificar autenticação
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    })
+  }
+
+  const token = authHeader.replace('Bearer ', '')
+  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+
+  if (authError || !authUser) {
+    return new Response(JSON.stringify({ error: 'Token inválido' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 401,
+    })
   }
 
   try {
