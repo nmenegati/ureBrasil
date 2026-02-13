@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 // Tipos
 interface CardFormData {
@@ -137,6 +138,12 @@ export function useMercadoPago() {
             const { resolve, reject, params } = paymentResolverRef.current;
 
             try {
+              if (!cardFormData.token) {
+                toast.error('Preencha corretamente os dados do cartão');
+                reject(new Error('Cartão inválido ou incompleto'));
+                return;
+              }
+
               const { data: { session } } = await supabase.auth.getSession();
               if (!session) throw new Error('Sessão expirada');
 
@@ -206,6 +213,14 @@ export function useMercadoPago() {
         const formEl = document.getElementById('form-checkout') as HTMLFormElement | null;
         if (formEl) {
           formEl.requestSubmit();
+          // Timeout: se MP não chamar onSubmit em 8s, campos estão inválidos
+          setTimeout(() => {
+            if (paymentResolverRef.current) {
+              paymentResolverRef.current = null;
+              toast.error('Verifique os dados do cartão e tente novamente');
+              reject(new Error('Tempo esgotado - verifique os dados do cartão'));
+            }
+          }, 8000);
         } else {
           reject(new Error('Formulário não encontrado'));
         }

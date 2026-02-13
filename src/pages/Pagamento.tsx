@@ -907,7 +907,13 @@ export default function Pagamento() {
                   <Button
                     className="w-full py-6 text-lg"
                     onClick={handleSubmit}
-                    disabled={processing || !isFormValid()}
+                    disabled={
+                      processing ||
+                      (paymentMethod === "card" &&
+                        activeGateway === "mercadopago"
+                        ? false
+                        : !isFormValid())
+                    }
                   >
                     {processing ? (
                       <>

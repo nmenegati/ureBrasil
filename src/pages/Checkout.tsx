@@ -578,7 +578,6 @@ export default function Checkout() {
 
   const isFormValid = () => {
     if (paymentMethod === "pix") return true;
-    if (activeGateway === "mercadopago") return true;
     const cardNumberClean = cardNumber.replace(/\s/g, "");
     return (
       cardNumberClean.length >= 13 &&
@@ -919,7 +918,13 @@ export default function Checkout() {
                   <Button
                     className="w-full py-6 text-lg"
                     onClick={handleSubmit}
-                    disabled={processing || !isFormValid()}
+                    disabled={
+                      processing ||
+                      (paymentMethod === "card" &&
+                        activeGateway === "mercadopago"
+                        ? false
+                        : !isFormValid())
+                    }
                   >
                     {processing ? (
                       <>

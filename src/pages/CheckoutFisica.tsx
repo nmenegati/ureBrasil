@@ -546,7 +546,11 @@ export default function CheckoutFisica() {
 
               <Button
                 className="w-full mt-2"
-                disabled={processing || mpLoading || !plan}
+                disabled={
+                  processing ||
+                  mpLoading ||
+                  !plan
+                }
                 onClick={handleSubmit}
               >
                 {processing ? (

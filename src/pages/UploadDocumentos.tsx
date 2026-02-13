@@ -120,12 +120,13 @@ const DocumentCard = ({
   onUpload,
   onOpenCamera,
 }: DocumentCardProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
   const IconComponent = config.icon;
   const status = doc?.status;
   const isSelfie = config.type === 'selfie';
   const canUpload = !doc || status === 'rejected';
   const disableUpload = !canUpload || isUploading;
+  const inputId = `file-${config.type}`;
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -145,12 +146,17 @@ const DocumentCard = ({
     }
   };
 
+  const handleChooseFileClick = () => {
+    if (disableUpload || isSelfie) return;
+    fileInputRef.current?.click();
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log('🚀 FILE SELECT!', file?.name, 'tipo:', config.type);
     if (file) {
       onUpload(file, config.type);
     }
-    e.target.value = '';
   };
 
   const getStatusBadge = () => {
@@ -187,18 +193,6 @@ const DocumentCard = ({
       default:
         return null;
     }
-  };
-
-  const handleCardClick = () => {
-    if (isUploading) return;
-    if (isSelfie) {
-      onOpenCamera();
-      return;
-    }
-    if (!canUpload) {
-      return;
-    }
-    inputRef.current?.click();
   };
 
   let PrimaryIcon: React.ElementType = IconComponent;
@@ -286,7 +280,6 @@ const DocumentCard = ({
       className={cn(baseCardClasses, stateClasses, interactive && 'cursor-pointer')}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      onClick={interactive ? handleCardClick : undefined}
     >
       <div className="absolute top-2 right-3">
         {getStatusBadge()}
@@ -358,15 +351,7 @@ const DocumentCard = ({
               </Button>
             )}
           </div>
-          {!isSelfie && (
-            <input
-              ref={inputRef}
-              type="file"
-              accept={config.acceptedTypes.join(',')}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          )}
+          {/* input único por card, renderizado mais abaixo */}
         </div>
       ) : doc && !preview ? (
         <div className="mt-4">
@@ -374,15 +359,7 @@ const DocumentCard = ({
             <File className="w-8 h-8 text-slate-500" />
             <p className="text-sm text-slate-900 truncate flex-1">{doc.file_name}</p>
           </div>
-          {!isSelfie && (
-            <input
-              ref={inputRef}
-              type="file"
-              accept={config.acceptedTypes.join(',')}
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          )}
+          {/* input único por card, renderizado mais abaixo */}
         </div>
       ) : (
         <div className="mt-6 space-y-3">
@@ -411,22 +388,18 @@ const DocumentCard = ({
             </>
           ) : (
             <div>
-              <input
-                ref={inputRef}
-                type="file"
-                accept={config.acceptedTypes.join(',')}
-                onChange={handleFileSelect}
-                className="hidden"
-              />
+            {!isSelfie && (
               <Button
-                onClick={() => canUpload && inputRef.current?.click()}
+                type="button"
                 variant="outline"
                 className="w-full"
                 disabled={disableUpload}
+                onClick={handleChooseFileClick}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Escolher arquivo
               </Button>
+            )}
               <p className="text-xs text-slate-500 mt-2 text-center">
                 {config.acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}
                 {' • '}Máx {config.maxSizeMB}MB
@@ -446,14 +419,38 @@ const DocumentCard = ({
       )}
 
       {doc?.status === 'rejected' && !isSelfie && (
-        <Button
-          onClick={() => !isUploading && inputRef.current?.click()}
-          disabled={isUploading}
-          className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Enviar Novo Documento
-        </Button>
+        <>
+          {isUploading ? (
+            <Button
+              type="button"
+              disabled
+              className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Enviar Novo Documento
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
+              onClick={handleChooseFileClick}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Enviar Novo Documento
+            </Button>
+          )}
+        </>
+      )}
+
+      {!isSelfie && (
+        <input
+          id={inputId}
+          ref={fileInputRef}
+          type="file"
+          accept={config.acceptedTypes.join(',')}
+          onChange={handleFileSelect}
+          className="hidden"
+        />
       )}
     </div>
   );
