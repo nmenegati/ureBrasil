@@ -17,8 +17,8 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const videoConstraints = {
-    width: 1280,
-    height: 720,
+    width: { ideal: 720 },
+    height: { ideal: 960 },
     facingMode: "user",
   };
 
@@ -83,7 +83,7 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
             </Alert>
           )}
 
-          <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video max-h-[50vh] sm:max-h-[60vh]">
+          <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-[3/4] sm:aspect-video max-h-[50vh] sm:max-h-[60vh]">
             {!capturedImage ? (
               <>
                 <Webcam
