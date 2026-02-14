@@ -97,7 +97,7 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
                 />
 
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-45 h-63 sm:w-64 sm:h-80 border-4 border-white border-dashed rounded-full opacity-50" />
+                  <div className="w-42 h-59 sm:w-64 sm:h-80 border-4 border-white border-dashed rounded-full opacity-50" />
                 </div>
 
                 <div className="absolute bottom-4 left-0 right-0 text-center">
