@@ -32,7 +32,7 @@ serve(async (req) => {
     // Fetch documents (pending or approved, we want the latest uploaded ones)
     const { data: docs, error: docsError } = await supabase
       .from('documents')
-      .select('*')
+      .select('id, type, file_url, mime_type, status')
       .eq('student_id', student_id)
       .in('type', ['rg', 'foto', 'selfie'])
       .order('created_at', { ascending: false })
@@ -40,7 +40,7 @@ serve(async (req) => {
     if (docsError) throw docsError
     
     // Group by type to get latest
-    type DocumentRow = { id: string; type: string; file_url: string }
+    type DocumentRow = { id: string; type: string; file_url: string; mime_type: string | null; status: string }
     const latestDocs: Record<string, DocumentRow> = {}
     ;((docs ?? []) as DocumentRow[]).forEach((d) => {
         if (!latestDocs[d.type]) {
@@ -52,15 +52,15 @@ serve(async (req) => {
     const foto = latestDocs['foto']
     const selfie = latestDocs['selfie']
 
-    // Validar apenas se tivermos pelo menos RG e Selfie
-    if (!rg || !selfie) {
+    // Validar apenas se tivermos pelo menos Selfie e algum documento de rosto (RG ou Foto)
+    if (!selfie || (!rg && !foto)) {
       console.log('Documentos insuficientes para comparação:', { 
         hasRg: !!rg, 
         hasFoto: !!foto, 
         hasSelfie: !!selfie 
       })
       return new Response(JSON.stringify({ 
-        message: 'Aguardando envio de RG e Selfie',
+        message: 'Aguardando envio de selfie e documento com foto',
         ready: false 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -71,26 +71,58 @@ serve(async (req) => {
       console.log('Baixando imagens...')
 
     try {
-      const downloadPromises = [
-        downloadFile(supabase, rg.file_url),
-        downloadFile(supabase, selfie.file_url)
-      ]
-      if (foto) downloadPromises.push(downloadFile(supabase, foto.file_url))
+      const selfieBuffer = await downloadFile(supabase, selfie.file_url)
 
-      const results = await Promise.all(downloadPromises)
-      const rgBuffer = results[0]
-      const selfieBuffer = results[1]
-      const fotoBuffer = foto ? results[2] : null
+      const rgIsImage = !!rg?.mime_type && rg.mime_type.startsWith('image/')
+      const fotoIsImage = !!foto?.mime_type && foto.mime_type.startsWith('image/')
+
+      const shouldCompareRg = !!rg && rgIsImage
+      const shouldCompareFoto = !!foto && fotoIsImage
+
+      if (!shouldCompareRg && !shouldCompareFoto) {
+        console.log('Nenhum documento de rosto em formato de imagem disponível para comparação')
+        return new Response(JSON.stringify({
+          message: 'Nenhum documento de rosto em imagem para comparação',
+          ready: false
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        })
+      }
+
+      const downloadTargets: Array<Promise<Uint8Array>> = []
+      if (shouldCompareRg) downloadTargets.push(downloadFile(supabase, rg!.file_url))
+      if (shouldCompareFoto) downloadTargets.push(downloadFile(supabase, foto!.file_url))
+
+      const downloaded = await Promise.all(downloadTargets)
+      let rgBuffer: Uint8Array | null = null
+      let fotoBuffer: Uint8Array | null = null
+
+      let idx = 0
+      if (shouldCompareRg) {
+        rgBuffer = downloaded[idx]
+        idx++
+      }
+      if (shouldCompareFoto) {
+        fotoBuffer = downloaded[idx]
+      }
 
       console.log('Iniciando comparação AWS Rekognition...')
-      
-      const matchRG = await compareTwoFaces(awsClient, region, selfieBuffer, rgBuffer)
-      console.log('Selfie vs RG:', matchRG)
-      
-      let matchFoto = { match: true, similarity: 100, note: 'Skipped (no foto)' }
-      if (foto && fotoBuffer) {
-          matchFoto = await compareTwoFaces(awsClient, region, selfieBuffer, fotoBuffer)
-          console.log('Selfie vs Foto:', matchFoto)
+
+      let matchRG = { match: true, similarity: 100, note: 'Skipped (no rg image)' as string | undefined }
+      if (shouldCompareRg && rgBuffer) {
+        matchRG = await compareTwoFaces(awsClient, region, selfieBuffer, rgBuffer)
+        console.log('Selfie vs RG:', matchRG)
+      } else {
+        console.log('Pulando comparação com RG (não é imagem ou inexistente)')
+      }
+
+      let matchFoto = { match: true, similarity: 100, note: 'Skipped (no foto image)' as string | undefined }
+      if (shouldCompareFoto && fotoBuffer) {
+        matchFoto = await compareTwoFaces(awsClient, region, selfieBuffer, fotoBuffer)
+        console.log('Selfie vs Foto:', matchFoto)
+      } else {
+        console.log('Pulando comparação com Foto 3x4 (não é imagem ou inexistente)')
       }
 
       const passed = matchRG.match && matchFoto.match
@@ -105,7 +137,8 @@ serve(async (req) => {
             .update({ face_validated: true })
             .eq('id', student_id)
           
-          const docIdsToApprove = [rg.id, selfie.id]
+          const docIdsToApprove = [selfie.id]
+          if (rg) docIdsToApprove.push(rg.id)
           if (foto) docIdsToApprove.push(foto.id)
           
           await supabase.from('documents')

@@ -91,8 +91,8 @@ const documentConfigs: DocumentConfig[] = [
     type: 'rg',
     label: 'Documento de Identidade',
     icon: CreditCard,
-    acceptedTypes: ['image/jpeg', 'image/png'],
-    maxSizeMB: 5
+    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    maxSizeMB: 3
   },
   {
     type: 'foto',
@@ -243,9 +243,9 @@ const DocumentCard = ({
     if (config.type === 'foto') {
       return (
         <ul className="mt-1 space-y-1 text-xs text-slate-700">
-          <li>☀️ Fundo claro</li>
-          <li>👁️ Olhe para frente</li>
-          <li>🚫 Sem acessórios</li>
+          <li>☀️ Fundo claro • 🚫 Sem acessórios</li>
+          <li>👁️ Olhando para para frente</li>
+          <li>⚠️ Esta foto será usada na sua carteira</li>
         </ul>
       );
     }
@@ -639,24 +639,22 @@ const handleUpload = async (file: File, type: DocumentType) => {
       }
     }
 
-    if (type === 'rg') {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Apenas imagens são aceitas para Documento de Identidade');
-        return;
-      }
-    }
-
-    if (type === 'matricula') {
+    if (type === 'rg' || type === 'matricula') {
       const isImage = file.type.startsWith('image/');
       const isPDF = file.type === 'application/pdf';
 
       if (!isImage && !isPDF) {
-        toast.error('Apenas imagens ou PDFs são aceitos para Comprovante de Matrícula');
+        const label =
+          type === 'rg'
+            ? 'Documento de Identidade'
+            : 'Comprovante de Matrícula';
+        toast.error(`Apenas imagens ou PDFs são aceitos para ${label}`);
         return;
       }
 
-      if (isPDF && file.size > 3 * 1024 * 1024) {
-        toast.error('PDF deve ter no máximo 3MB');
+      const maxSizeMB = 3;
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        toast.error(`Arquivo deve ter no máximo ${maxSizeMB}MB`);
         return;
       }
     }
@@ -681,9 +679,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
       const fileIsPDF = fileToUpload.type === 'application/pdf';
 
       let maxSizeMB = config.maxSizeMB;
-      if (type === 'matricula') {
-        maxSizeMB = fileIsPDF ? 3 : 5;
-      }
 
       if (fileToUpload.size > maxSizeMB * 1024 * 1024) {
         throw new Error(`Arquivo maior que ${maxSizeMB}MB`);
