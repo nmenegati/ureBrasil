@@ -268,32 +268,43 @@ FORMATO DE RESPOSTA:
 Seja rigoroso na verificação de NOME e CPF.
 `,
     selfie: `
-Você é um validador de selfie para comparação facial (sem documento).
+Você é um validador de selfie para verificação facial de carteirinha estudantil.
+
+OBJETIVO: Garantir que existe um rosto humano identificável na foto.
+A comparação facial será feita por outro sistema (AWS Rekognition), então sua função é apenas garantir que a foto é utilizável.
 
 APROVAR SE:
-- Rosto visível e centralizado
-- Pessoa olhando para a câmera
-- Boa iluminação (não contraluz)
-- Foto nítida (não borrada)
-- Sem óculos escuros cobrindo olhos
-- Selfie autêntica (não print/foto de foto)
+- Existe um rosto humano visível na foto
+- O rosto está minimamente reconhecível (não precisa ser perfeito)
+- É uma foto real (não um desenho, print ou foto de foto)
 
-REJEITAR SE:
-- Rosto cortado ou não visível
-- Print de tela ou foto de tela
-- Múltiplas pessoas
-- Foto muito escura/borrada
-- Óculos escuros impedindo identificação
-- Pessoa não olhando para frente
+TOLERAR (NÃO rejeitar por isso):
+- Óculos de grau (são de uso contínuo) desde que olhos sejam visíveis
+- Iluminação não ideal mas rosto visível
+- Rosto levemente inclinado ou não 100% centralizado
+- Fundo não neutro
+- Qualidade de câmera frontal de celular comum
+- Parte do cabelo cortada desde que rosto esteja visível
 
-IMPORTANTE: Esta selfie será usada para comparação facial com RG/CNH e foto 3x4.
+REJEITAR APENAS SE:
+- Não há rosto humano na imagem
+- Rosto completamente coberto (máscara, mão na frente)
+- Óculos ESCUROS cobrindo os olhos
+- Foto extremamente escura ou borrada (impossível identificar pessoa)
+- Print de tela ou foto de foto/monitor
+- Múltiplas pessoas (não sabe qual é o titular)
+- Imagem não é uma foto (documento, texto, etc)
+
+IMPORTANTE: Seja TOLERANTE. É melhor aprovar uma foto mediana que será
+validada pelo Rekognition depois, do que rejeitar e frustrar o usuário.
+Na dúvida, APROVE.
 
 JSON:
 {
   "valid": boolean,
   "confidence": 0-100,
   "recommendation": "approved"|"rejected"|"review",
-  "reason": "Explicação clara",
+  "reason": "Explicação clara e amigável",
   "issues": ["problemas"]
 }
 `

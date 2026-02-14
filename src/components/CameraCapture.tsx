@@ -67,7 +67,7 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="w-[95vw] max-w-md sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Camera className="w-5 h-5" />
@@ -83,7 +83,7 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
             </Alert>
           )}
 
-          <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">
+          <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video max-h-[50vh] sm:max-h-[60vh]">
             {!capturedImage ? (
               <>
                 <Webcam
@@ -97,7 +97,7 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
                 />
 
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-64 h-80 border-4 border-white border-dashed rounded-full opacity-50" />
+                  <div className="w-40 h-56 sm:w-64 sm:h-80 border-4 border-white border-dashed rounded-full opacity-50" />
                 </div>
 
                 <div className="absolute bottom-4 left-0 right-0 text-center">
@@ -115,7 +115,7 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
             )}
           </div>
 
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-col sm:flex-row gap-2 justify-end sm:justify-between">
             {!capturedImage ? (
               <>
                 <Button
@@ -159,4 +159,3 @@ export function CameraCapture({ onCapture, onCancel }: CameraCaptureProps) {
     </Dialog>
   );
 }
-
