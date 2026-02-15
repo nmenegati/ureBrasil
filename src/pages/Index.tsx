@@ -441,8 +441,8 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Cadastro Rápido</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Crie sua conta em minutos.<br />
-                  Seus dados são protegidos conforme a LGPD.
+                  Crie sua conta em poucos minutos.<br />
+                  Seus dados ficam protegidos conforme a LGPD.
                 </p>
               </CardContent>
             </Card>
@@ -456,8 +456,8 @@ const Index = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">Pagamento Online</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Pague com PIX ou cartão.<br />
-                  O pagamento libera o envio dos documentos.
+                  Pague no cartão ou no PIX.<br />
+                  Liberação imediata para enviar documentos.
                 </p>
               </CardContent>
             </Card>
@@ -469,10 +469,10 @@ const Index = () => {
                   <FileCheck className="w-10 h-10 text-white" />
                   <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] border-2 border-ure-orange flex items-center justify-center text-sm font-bold text-ure-orange">3</span>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">Documentação</h3>
+                <h3 className="text-2xl font-bold text-foreground">Envio de Documentos</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Envie seus documentos.<br />
-                  Após validação, sua carteira estará disponível.
+                  Envie os documentos para validação.<br />
+                  Depois disso, sua carteirinha é liberada.
                 </p>
               </CardContent>
             </Card>
