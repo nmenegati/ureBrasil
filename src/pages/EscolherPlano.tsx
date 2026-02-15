@@ -18,7 +18,7 @@ const digitalPlansConfig = [
     type: 'geral_digital' as const,
     description: 'Educação básica ao ensino superior',
     features: [
-      'Carteirinha digital',
+      'Carteira URE digital',
       'QR Code de verificação',
       'Validade até 31/03/2026',
       'Emissão em até 2h',
@@ -31,7 +31,7 @@ const digitalPlansConfig = [
     type: 'direito_digital' as const,
     description: 'Exclusiva para estudantes de Direito',
     features: [
-      'Carteirinha digital',
+      'inhCarteira digital',
       'QR Code de verificação',
       'Validade até 31/03/2026',
       'Emissão em até 2h',
@@ -234,7 +234,7 @@ export default function EscolherPlano() {
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              Escolha seu Plano
+              Escolha sua Carteira URE
             </h1>
             <div className="flex justify-center mb-3">
               <div className="h-1 w-40 bg-ure-yellow rounded-full" />
@@ -242,7 +242,7 @@ export default function EscolherPlano() {
             <p className="text-base text-muted-foreground">
               {isLawStudent
                 ? 'Benefícios exclusivos para estudantes de Direito com a LexPraxis'
-                : 'Carteira digital com QR Code de verificação e meia‑entrada'}
+                : 'Carteira digital URE com QR Code de verificação e meia‑entrada'}
             </p>
           </div>
 
@@ -319,7 +319,7 @@ export default function EscolherPlano() {
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <CreditCard className="w-6 h-6 text-blue-500" />
                   <h4 className="text-xl font-bold text-foreground">
-                    Carteirinha Física em PVC
+                    Carteira Física
                   </h4>
                 </div>
                 <p className="text-muted-foreground mb-4 text-center">

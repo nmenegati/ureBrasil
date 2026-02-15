@@ -171,7 +171,7 @@ const Index = () => {
 
   const testimonials = [
     {
-      text: "Já perdi a conta de quanto economizei nesses meses. A carteirinha já se pagou umas dez vezes. Valeu muito a pena!",
+      text: "Já perdi a conta de quanto economizei nesses meses. A carteira já se pagou umas dez vezes. Valeu muito a pena!",
       name: "João Victor Lima",
       role: "Estudante de Educação Física – Recife/PE",
       avatarColor: "bg-ure-green",
@@ -213,7 +213,7 @@ const Index = () => {
       initial: "T"
     },
     {
-      text: "Carteirinha on e desconto garantido! 😎 Já usei várias vezes em eventos de tecnologia e lazer. Prática, segura e aceita em qualquer lugar.",
+      text: "Carteira on e desconto garantido! 😎 Já usei várias vezes em eventos de tecnologia e lazer. Prática, segura e aceita em qualquer lugar.",
       name: "Matheus Pacheco",
       role: "Estudante de Marketing – São Bernardo do Campo/SP",
       avatarColor: "bg-ure-yellow",
@@ -276,7 +276,7 @@ const Index = () => {
               {/* Main Heading */}
               <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white leading-tight drop-shadow-lg">
-                  Sua Carteira do Estudante Válida em Todo o Brasil
+                  Sua Carteira do Estudante URE Válida em Todo o Brasil
                 </h1>
                 <div className="flex items-center gap-2 sm:gap-3 justify-center lg:justify-start">
                   <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold tracking-tight text-ure-yellow min-h-[56px] sm:min-h-[64px] lg:min-h-[72px] xl:min-h-[80px] flex items-center drop-shadow-md">
@@ -426,7 +426,7 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-8 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua meia-entrada em minutos</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua carteira estudantil emitida em minutos</h2>
             <p className="text-xl text-muted-foreground">Sem complicação.</p>
           </div>
 
@@ -556,12 +556,12 @@ const Index = () => {
                 {user && hasActiveCard ? (
                   <>
                     <CreditCard className="mr-2 h-5 w-5" />
-                    Ver Minha Carteirinha
+                    Ver Minha Carteira URE
                   </>
                 ) : (
                   <>
                     <Rocket className="mr-2 h-5 w-5" />
-                    Solicitar Carteirinha
+                    Solicitar Carteira URE
                   </>
                 )}
               </Button>
@@ -588,7 +588,7 @@ const Index = () => {
 
               {/* Description */}
               <p className="text-lg sm:text-xl text-white/90 leading-relaxed">
-                Mais que uma carteirinha estudantil. Uma identificação pensada para estudantes de Direito que buscam posicionamento, preparação e economia desde a faculdade.
+                Mais que uma carteira estudantil. Uma identificação pensada para estudantes de Direito que buscam posicionamento, preparação e economia desde a faculdade.
               </p>
 
               {/* Benefits */}
@@ -629,7 +629,7 @@ const Index = () => {
                   {user && hasActiveCard ? (
                     <>
                       <CreditCard className="mr-2 h-5 w-5" />
-                      Ver Minha Carteirinha
+                      Ver Minha Carteira URE
                     </>
                   ) : (
                     <>
@@ -751,7 +751,7 @@ const Index = () => {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center mb-16 space-y-4">
-        <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Escolha Sua Carteirinha</h2>
+        <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Escolha Sua Carteira URE</h2>
         <p className="text-xl text-muted-foreground">Transparente, simples e sem surpresas</p>
       </div>
 
@@ -782,7 +782,7 @@ const Index = () => {
                 <div className="space-y-3 mb-6 flex-grow">
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Carteirinha digital</span>
+                    <span className="text-sm text-foreground">Carteira digital</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
@@ -811,7 +811,7 @@ const Index = () => {
                   {user && hasActiveCard ? (
                     <>
                       <CreditCard className="mr-2 h-5 w-5" />
-                      Ver Minha Carteirinha
+                      Ver Minha Carteira URE
                     </>
                   ) : (
                     <>
@@ -851,7 +851,7 @@ const Index = () => {
                 <div className="space-y-3 mb-6 flex-grow">
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Carteirinha digital</span>
+                    <span className="text-sm text-foreground">Carteira digital</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
@@ -888,7 +888,7 @@ const Index = () => {
                   {user && hasActiveCard ? (
                     <>
                       <CreditCard className="mr-2 h-5 w-5" />
-                      Ver Minha Carteirinha
+                      Ver Minha Carteira URE
                     </>
                   ) : (
                     <>
@@ -908,12 +908,12 @@ const Index = () => {
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <CreditCard className="w-6 h-6 text-blue-500" />
                   <h4 className="text-xl font-bold text-foreground">
-                    Carteirinha Física Disponível
+                    Carteira Física Disponível
                   </h4>
                 </div>
                 
                 <p className="text-muted-foreground mb-4">
-                  Após o pagamento, você poderá adicionar a carteirinha física  
+                  Após o pagamento, você poderá adicionar a carteira física  
                   por apenas{" "}
                   <strong className="text-foreground">
                     {physicalUpsellPrice !== null ? formatPrice(physicalUpsellPrice) : "R$ ..."}
@@ -964,10 +964,10 @@ const Index = () => {
 
             <AccordionItem value="item-2" className="border border-border rounded-lg px-6 bg-card">
               <AccordionTrigger className="hover:no-underline text-left">
-                <span className="text-lg font-semibold text-foreground">A carteirinha é válida em todo Brasil?</span>
+                <span className="text-lg font-semibold text-foreground">A carteira é válida em todo Brasil?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                Sim! A carteirinha URE é válida em todo território nacional, seguindo a legislação de meia-entrada
+                Sim! A carteira URE é válida em todo território nacional, seguindo a legislação de meia-entrada
                 estudantil.
               </AccordionContent>
             </AccordionItem>
@@ -1007,14 +1007,14 @@ const Index = () => {
                 <span className="text-lg font-semibold text-foreground">Como funciona a LexPraxis?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                É nossa carteirinha especial para estudantes de Direito, com acesso a materiais de estudo para OAB,
+                É nossa carteira especial para estudantes de Direito, com acesso a materiais de estudo para OAB,
                 descontos em cursos jurídicos e eventos da área.
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="item-7" className="border border-border rounded-lg px-6 bg-card">
               <AccordionTrigger className="hover:no-underline text-left">
-                <span className="text-lg font-semibold text-foreground">A carteirinha física é obrigatória?</span>
+                <span className="text-lg font-semibold text-foreground">A carteira física é obrigatória?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
                 Não! A versão digital já garante todos os benefícios. A física é opcional para quem prefere ter o
@@ -1024,10 +1024,10 @@ const Index = () => {
 
             <AccordionItem value="item-8" className="border border-border rounded-lg px-6 bg-card">
               <AccordionTrigger className="hover:no-underline text-left">
-                <span className="text-lg font-semibold text-foreground">Até quando vale minha carteirinha?</span>
+                <span className="text-lg font-semibold text-foreground">Até quando vale minha carteira?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                Todas as carteirinhas emitidas valem até o próximo dia 31 de março, independente da data de emissão.
+                Todas as carteiras estudantis emitidas valem até o próximo dia 31 de março, independente da data de emissão.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -1056,7 +1056,7 @@ const Index = () => {
 
             {/* Subtitle */}
             <p className="text-xl lg:text-2xl text-white/90 font-medium">
-              Sua carteirinha estudantil válida em todo Brasil. Aprovação rápida, uso imediato.
+              Sua carteira estudantil válida em todo Brasil. Aprovação rápida, uso imediato.
             </p>
 
         {/* Counters removed */}
@@ -1073,12 +1073,12 @@ const Index = () => {
             {user && hasActiveCard ? (
               <>
                 <CreditCard className="mr-2 h-5 w-5" />
-                Ver Minha Carteirinha
+                Ver Minha Carteira URE
               </>
             ) : (
               <>
                 <Rocket className="mr-2 h-5 w-5" />
-                Emitir Carteirinha Agora
+                Emitir Carteira Agora
               </>
             )}
           </Button>
@@ -1108,7 +1108,7 @@ const Index = () => {
                 className="h-16 w-auto mb-4" 
               />
               <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                Carteirinha estudantil digital e física, válida em todo território nacional. Economia real para
+                Carteira estudantil digital e física, válida em todo território nacional. Economia real para
                 estudantes.
               </p>
               <div className="flex items-center justify-center space-x-4 pt-2">
@@ -1158,7 +1158,7 @@ const Index = () => {
                     href="#"
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
-                    Validar Carteirinha
+                    Validar Carteira URE
                   </a>
                 </li>
                 <li>
