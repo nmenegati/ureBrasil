@@ -107,9 +107,89 @@ const fieldConfiguration = {
 const toTitleCase = (str: string) =>
   str
     .toLowerCase()
-    .replace(/(^|\s)(da|de|do|das|dos|em|e)\s/gi, (m) => m.toLowerCase())
     .replace(/(^|\s)\w/g, (m) => m.toUpperCase())
+    .replace(/(^|\s)(da|de|do|das|dos|em|e)\s/gi, (m) => m.toLowerCase())
     .trim();
+
+const institutionSuggestions = [
+  "Universidade de Brasília (UnB)",
+  "Universidade de São Paulo (USP)",
+  "Universidade Estadual de Campinas (UNICAMP)",
+  "Universidade Federal da Bahia (UFBA)",
+  "Universidade Federal da Paraíba (UFPB)",
+  "Universidade Federal de Alagoas (UFAL)",
+  "Universidade Federal de Goiás (UFG)",
+  "Universidade Federal de Juiz de Fora (UFJF)",
+  "Universidade Federal de Mato Grosso (UFMT)",
+  "Universidade Federal de Mato Grosso do Sul (UFMS)",
+  "Universidade Federal de Minas Gerais (UFMG)",
+  "Universidade Federal de Ouro Preto (UFOP)",
+  "Universidade Federal de Pernambuco (UFPE)",
+  "Universidade Federal de Santa Catarina (UFSC)",
+  "Universidade Federal de Santa Maria (UFSM)",
+  "Universidade Federal de São Carlos (UFSCar)",
+  "Universidade Federal de São João del-Rei (UFSJ)",
+  "Universidade Federal de Sergipe (UFS)",
+  "Universidade Federal de Uberlândia (UFU)",
+  "Universidade Federal de Viçosa (UFV)",
+  "Universidade Federal do ABC (UFABC)",
+  "Universidade Federal do Amazonas (UFAM)",
+  "Universidade Federal do Ceará (UFC)",
+  "Universidade Federal do Espírito Santo (UFES)",
+  "Universidade Federal do Maranhão (UFMA)",
+  "Universidade Federal do Pará (UFPA)",
+  "Universidade Federal do Paraná (UFPR)",
+  "Universidade Federal do Piauí (UFPI)",
+  "Universidade Federal do Recôncavo da Bahia (UFRB)",
+  "Universidade Federal do Rio de Janeiro (UFRJ)",
+  "Universidade Federal do Rio Grande (FURG)",
+  "Universidade Federal do Rio Grande do Norte (UFRN)",
+  "Universidade Federal do Rio Grande do Sul (UFRGS)",
+  "Universidade Federal do Rio Grande do Sul (UFRGS)",
+  "Universidade Federal do Tocantins (UFT)",
+  "Universidade Federal dos Vales do Jequitinhonha e Mucuri (UFVJM)",
+  "Universidade Estadual de Londrina (UEL)",
+  "Universidade Estadual de Maringá (UEM)",
+  "Universidade Estadual de Montes Claros (UNIMONTES)",
+  "Universidade Estadual de Ponta Grossa (UEPG)",
+  "Universidade Estadual do Ceará (UECE)",
+  "Universidade Estadual do Norte Fluminense (UENF)",
+  "Universidade Estadual Paulista (UNESP)",
+  "Universidade do Estado do Rio de Janeiro (UERJ)",
+  "Centro Universitário Estácio de Sá (Estácio)",
+  "Centro Universitário UNA",
+  "Centro Universitário UNIFACS",
+  "Centro Universitário Unisinos",
+  "Centro Universitário UniBH",
+  "Centro Universitário Uninove",
+  "Centro Universitário Unisociesc",
+  "Faculdade Anhanguera",
+  "Faculdade IBMEC",
+  "Faculdade Pitágoras",
+  "Fundação Getulio Vargas (FGV)",
+  "Pontifícia Universidade Católica de Goiás (PUC Goiás)",
+  "Pontifícia Universidade Católica de Minas Gerais (PUC Minas)",
+  "Pontifícia Universidade Católica do Paraná (PUCPR)",
+  "Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio)",
+  "Pontifícia Universidade Católica do Rio Grande do Sul (PUCRS)",
+  "Universidade Anhembi Morumbi",
+  "Universidade Cruzeiro do Sul",
+  "Universidade Estácio de Sá",
+  "Universidade Nove de Julho (UNINOVE)",
+  "Universidade Paulista (UNIP)",
+  "Universidade Presbiteriana Mackenzie",
+  "Universidade Salvador (UNIFACS)",
+  "IFBA - Instituto Federal da Bahia",
+  "IFCE - Instituto Federal do Ceará",
+  "IFMG - Instituto Federal de Minas Gerais",
+  "IFRJ - Instituto Federal do Rio de Janeiro",
+  "IFRS - Instituto Federal do Rio Grande do Sul",
+  "IFSC - Instituto Federal de Santa Catarina",
+  "IFSP - Instituto Federal de São Paulo",
+  "IF Sul de Minas",
+  "SENAI",
+  "SENAC",
+];
 
 const courseSuggestions = [
   "Administração",
@@ -163,6 +243,18 @@ const courseSuggestions = [
   "Terapia Ocupacional",
   "Turismo",
 ];
+
+const normalizeWithSuggestions = (value: string, suggestions: string[]) => {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const match = suggestions.find(
+    (name) => name.toLowerCase() === trimmed.toLowerCase()
+  );
+
+  if (match) return match;
+  return toTitleCase(trimmed);
+};
 
 export default function CompleteProfile() {
   const { isChecking } = useOnboardingGuard('complete_profile');
@@ -656,10 +748,17 @@ export default function CompleteProfile() {
                     <Input
                       id="institution"
                       type="text"
+                      spellCheck={true}
+                      lang="pt-BR"
+                      list="institution-suggestions"
                       placeholder={institutionPlaceholder}
                       value={institution}
                       onChange={(e) => setInstitution(e.target.value)}
-                      onBlur={() => setInstitution((prev) => toTitleCase(prev))}
+                      onBlur={() =>
+                        setInstitution((prev) =>
+                          normalizeWithSuggestions(prev, institutionSuggestions)
+                        )
+                      }
                       maxLength={70}
                       className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       required
@@ -710,6 +809,8 @@ export default function CompleteProfile() {
                           <Input
                             id="course"
                             type="text"
+                            spellCheck={true}
+                            lang="pt-BR"
                             placeholder={coursePlaceholder}
                             value={courseType === 'direito' ? 'Direito' : customCourseName}
                             list={courseType === 'direito' ? undefined : "course-suggestions"}
@@ -721,7 +822,10 @@ export default function CompleteProfile() {
                             }}
                             onBlur={() => {
                               if (courseType === 'outro') {
-                                const formatted = toTitleCase(customCourseName);
+                                const formatted = normalizeWithSuggestions(
+                                  customCourseName,
+                                  courseSuggestions
+                                );
                                 setCustomCourseName(formatted);
                                 setCourse(formatted);
                               }
@@ -747,11 +851,17 @@ export default function CompleteProfile() {
                         <Input
                           id="course"
                           type="text"
+                          spellCheck={true}
+                          lang="pt-BR"
                           placeholder={coursePlaceholder}
                           value={course}
                           list="course-suggestions"
                           onChange={(e) => setCourse(e.target.value)}
-                          onBlur={() => setCourse((prev) => toTitleCase(prev))}
+                          onBlur={() =>
+                            setCourse((prev) =>
+                              normalizeWithSuggestions(prev, courseSuggestions)
+                            )
+                          }
                           maxLength={70}
                           className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                           required
@@ -809,6 +919,12 @@ export default function CompleteProfile() {
                     <p>Esses dados aparecerão na sua carteirinha.</p>
                   </div>
                 </div>
+
+                <datalist id="institution-suggestions">
+                  {institutionSuggestions.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
 
                 <datalist id="course-suggestions">
                   {courseSuggestions.map((name) => (

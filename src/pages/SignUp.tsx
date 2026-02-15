@@ -698,20 +698,25 @@ export default function SignUp() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cpf" className="text-foreground font-medium">CPF *</Label>
-                    <Input
-                      id="cpf"
-                      type="text"
-                      placeholder="000.000.000-00"
-                      value={cpf}
-                      onChange={(e) => handleCpfChange(e.target.value)}
-                      maxLength={14}
-                      className={cn(
-                        "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11",
-                        cpfError && "border-destructive focus:border-destructive focus:ring-destructive/20",
-                        isCpfValid && "border-green-500 focus:border-green-500 focus:ring-green-500/20"
-                      )}
-                      required
-                    />
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <Input
+                        id="cpf"
+                        type="text"
+                        placeholder="000.000.000-00"
+                        value={cpf}
+                        onChange={(e) => handleCpfChange(e.target.value)}
+                        maxLength={14}
+                        className={cn(
+                          "bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 text-base h-11 w-full sm:max-w-xs",
+                          cpfError && "border-destructive focus:border-destructive focus:ring-destructive/20",
+                          isCpfValid && "border-green-500 focus:border-green-500 focus:ring-green-500/20"
+                        )}
+                        required
+                      />
+                      <span className="text-xs text-muted-foreground sm:ml-2">
+                        Validação feita com o CPF informado
+                      </span>
+                    </div>
                     {checkingCpf && (
                       <p className="text-muted-foreground text-sm">Verificando CPF...</p>
                     )}
@@ -740,7 +745,7 @@ export default function SignUp() {
                           className="mt-1 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <div className="text-sm">
-                          Autorizo a URE Brasil a consultar meus dados cadastrais na Receita Federal exclusivamente para validação.
+                          Autorizo a URE Brasil a validar meus dados cadastrais de forma segura e automática.
                           <button
                             type="button"
                             onClick={() => setIsPrivacyModalOpen(true)}
@@ -769,7 +774,7 @@ export default function SignUp() {
                   {cpfData && !allowManualData ? (
                     <>
                       <Alert className="bg-green-50 border-green-300 text-green-900 shadow-sm">
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                           <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-700" />
                             <AlertDescription>
@@ -780,7 +785,7 @@ export default function SignUp() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="bg-white text-green-700 border-green-300 hover:bg-green-50"
+                            className="w-full sm:w-auto bg-sky-200 text-green-700 border-green-500 hover:bg-sky-300 text-xs sm:text-sm"
                             onClick={() => {
                               setStep('cpf');
                               setCpf('');
@@ -1066,21 +1071,21 @@ export default function SignUp() {
                   className="mt-1 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer text-foreground">
-                  Ao continuar, concordo e aceito os{' '}
-                  <button
-                    type="button"
-                    onClick={() => setIsTermsModalOpen(true)}
-                    className="text-primary hover:underline"
-                  >
-                    Termos de Uso
-                  </button>
-                  {' '}e a{' '}
+                  Ao continuar, concordo e aceito a{' '}
                   <button
                     type="button"
                     onClick={() => setIsPrivacyModalOpen(true)}
                     className="text-primary hover:underline"
                   >
                     Política de Privacidade
+                  </button>
+                  {' '}e os{' '}
+                  <button
+                    type="button"
+                    onClick={() => setIsTermsModalOpen(true)}
+                    className="text-primary hover:underline"
+                  >
+                    Termos de Uso
                   </button>.
                   Estou ciente de que sou único responsável pela veracidade das informações fornecidas.
                 </Label>
