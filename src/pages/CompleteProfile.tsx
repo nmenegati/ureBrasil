@@ -104,6 +104,66 @@ const fieldConfiguration = {
   },
 } as const;
 
+const toTitleCase = (str: string) =>
+  str
+    .toLowerCase()
+    .replace(/(^|\s)(da|de|do|das|dos|em|e)\s/gi, (m) => m.toLowerCase())
+    .replace(/(^|\s)\w/g, (m) => m.toUpperCase())
+    .trim();
+
+const courseSuggestions = [
+  "Administração",
+  "Agronomia",
+  "Arquitetura e Urbanismo",
+  "Biomedicina",
+  "Ciência da Computação",
+  "Ciências Biológicas",
+  "Ciências Contábeis",
+  "Contabilidade",
+  "Design",
+  "Design Gráfico",
+  "Direito",
+  "Economia",
+  "Educação Física",
+  "Enfermagem",
+  "Engenharia Ambiental",
+  "Engenharia Civil",
+  "Engenharia de Produção",
+  "Engenharia Elétrica",
+  "Engenharia Mecânica",
+  "Engenharia Química",
+  "Farmácia",
+  "Filosofia",
+  "Fisioterapia",
+  "Fonoaudiologia",
+  "Geografia",
+  "Gestão de RH",
+  "História",
+  "Jornalismo",
+  "Letras",
+  "Logística",
+  "Marketing",
+  "Matemática",
+  "Medicina",
+  "Medicina Veterinária",
+  "Nutrição",
+  "Odontologia",
+  "Pedagogia",
+  "Psicologia",
+  "Publicidade e Propaganda",
+  "Química",
+  "Relações Internacionais",
+  "Serviço Social",
+  "Sistemas de Informação",
+  "Técnico em Eletrônica",
+  "Técnico em Enfermagem",
+  "Técnico em Informática",
+  "Técnico em Mecânica",
+  "Técnico em Segurança do Trabalho",
+  "Terapia Ocupacional",
+  "Turismo",
+];
+
 export default function CompleteProfile() {
   const { isChecking } = useOnboardingGuard('complete_profile');
   const { user, loading: authLoading } = useAuth();
@@ -371,26 +431,28 @@ export default function CompleteProfile() {
         </div>
         <div className="flex items-center justify-center">
           <div className="w-full max-w-2xl">
-            <div className="bg-card rounded-2xl shadow-xl border border-border p-6 md:p-8">
-              <div className="space-y-6">
+            <div className="space-y-6">
               {/* Título */}
               <div className="text-center space-y-2">
-                <h1 className="text-2xl font-bold text-foreground">Complete seu perfil</h1>
-                <p className="text-muted-foreground">Precisamos de mais algumas informações</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Complete seu perfil</h1>
+                <p className="text-muted-foreground">Sua carteirinha está a poucos passos</p>
+                <p className="text-xs text-muted-foreground italic -mt-1 mb-4">
+                   Preencha as informações marcadas com *
+                </p>
               </div>
 
               {/* Formulário */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Bloco Endereço */}
-                <div className="bg-green-100 p-6 rounded-lg border border-green/300 space-y-4">
+                <div className="bg-green-100 p-4 sm:p-6 rounded-lg border border-green/300 space-y-4">
                   <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
                     <span>Endereço Residencial</span>
                   </h3>
 
                   {/* CEP com mensagem informativa */}
-                  <div className="flex flex-row items-start gap-3 rounded-lg border border-sky-400 bg-slate-50 px-3 py-2">
-                    <div className="w-32 sm:w-36">
+                  <div className="flex flex-col sm:flex-row items-start gap-3 rounded-lg border border-sky-400 bg-slate-50 px-3 py-2">
+                    <div className="w-full sm:w-32 sm:w-36">
                       <Label htmlFor="cep" className="text-foreground">CEP *</Label>
                       <div className="relative">
                         <Input
@@ -408,7 +470,7 @@ export default function CompleteProfile() {
                         )}
                       </div>
                     </div>
-                    <div className="flex-1 flex items-center gap-1.5 pt-6">
+                    <div className="flex-1 flex items-center gap-1.5 sm:pt-6">
                       <Info className="h-4 w-4 text-primary shrink-0" />
                       <span className="text-sm text-muted-foreground">
                         Insira seu CEP para preenchimento automatico.
@@ -442,7 +504,7 @@ export default function CompleteProfile() {
                   </div>
 
                   {/* Número + Complemento */}
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="col-span-1 space-y-2">
                       <Label htmlFor="number" className="text-foreground">Número *</Label>
                       <Input
@@ -461,7 +523,7 @@ export default function CompleteProfile() {
                       />
 
                     </div>
-                    <div className="col-span-2 space-y-2">
+                    <div className="sm:col-span-2 space-y-2">
                       <Label htmlFor="complement" className="text-foreground">Complemento</Label>
                       <Input
                         id="complement"
@@ -490,8 +552,8 @@ export default function CompleteProfile() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="space-y-2 col-span-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="space-y-2 sm:col-span-3">
                       <Label htmlFor="city" className="text-foreground">Cidade *</Label>
                       <Input
                         id="city"
@@ -506,7 +568,7 @@ export default function CompleteProfile() {
                         {isCepResolved ? 'Preenchido pelo CEP.' : 'Preencha manualmente.'}
                       </span>
                     </div>
-                    <div className="space-y-2 col-span-1">
+                    <div className="space-y-2 sm:col-span-1">
                       <Label htmlFor="state" className="text-foreground">Estado *</Label>
                       <Select
                         value={state}
@@ -556,7 +618,7 @@ export default function CompleteProfile() {
                 </div>
 
                 {/* Bloco Acadêmico */}
-                <div className="bg-green-100 p-6 rounded-lg border border-green/200 space-y-4">
+                <div className="bg-green-100 p-4 sm:p-6 rounded-lg border border-green/200 space-y-4">
                   <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
                     <GraduationCap className="w-5 h-5" />
                     <span>Dados Acadêmicos</span>
@@ -571,7 +633,7 @@ export default function CompleteProfile() {
                           type="button"
                           variant={educationLevel === level.id ? 'default' : 'outline'}
                           className={
-                            'justify-start flex items-center gap-2 ' +
+                            'justify-start flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ' +
                             (educationLevel === level.id ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
                           }
                           onClick={() => {
@@ -581,9 +643,9 @@ export default function CompleteProfile() {
                             setCourseType('outro');
                             setCustomCourseName('');
                           }}
-                        >
+                          >
                           <level.icon className="h-5 w-5" />
-                          <span>{level.label}</span>
+                          <span className="truncate">{level.label}</span>
                         </Button>
                       ))}
                     </div>
@@ -597,6 +659,7 @@ export default function CompleteProfile() {
                       placeholder={institutionPlaceholder}
                       value={institution}
                       onChange={(e) => setInstitution(e.target.value)}
+                      onBlur={() => setInstitution((prev) => toTitleCase(prev))}
                       maxLength={70}
                       className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                       required
@@ -612,7 +675,7 @@ export default function CompleteProfile() {
                             type="button"
                             variant={courseType === 'outro' ? 'default' : 'outline'}
                             className={
-                              'justify-start flex items-center gap-2 ' +
+                              'justify-start flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ' +
                               (courseType === 'outro' ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
                             }
                             onClick={() => {
@@ -627,7 +690,7 @@ export default function CompleteProfile() {
                             type="button"
                             variant={courseType === 'direito' ? 'default' : 'outline'}
                             className={
-                              'justify-start flex items-center gap-2 ' +
+                              'justify-start flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ' +
                               (courseType === 'direito' ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
                             }
                             onClick={() => {
@@ -649,10 +712,18 @@ export default function CompleteProfile() {
                             type="text"
                             placeholder={coursePlaceholder}
                             value={courseType === 'direito' ? 'Direito' : customCourseName}
+                            list={courseType === 'direito' ? undefined : "course-suggestions"}
                             onChange={(e) => {
                               if (courseType === 'outro') {
                                 setCustomCourseName(e.target.value);
                                 setCourse(e.target.value);
+                              }
+                            }}
+                            onBlur={() => {
+                              if (courseType === 'outro') {
+                                const formatted = toTitleCase(customCourseName);
+                                setCustomCourseName(formatted);
+                                setCourse(formatted);
                               }
                             }}
                             readOnly={courseType === 'direito'}
@@ -661,7 +732,7 @@ export default function CompleteProfile() {
                             className={
                               'border-input focus:border-primary focus:ring-primary/20 h-11 text-base ' +
                               (courseType === 'direito'
-                                ? 'bg-sky-200 text-foreground cursor-default pointer-events-none'
+                                ? 'bg-sky-200 border border-sky-400 text-foreground cursor-default pointer-events-none'
                                 : 'bg-background text-foreground placeholder:text-muted-foreground')
                             }
                             required
@@ -678,7 +749,9 @@ export default function CompleteProfile() {
                           type="text"
                           placeholder={coursePlaceholder}
                           value={course}
+                          list="course-suggestions"
                           onChange={(e) => setCourse(e.target.value)}
+                          onBlur={() => setCourse((prev) => toTitleCase(prev))}
                           maxLength={70}
                           className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                           required
@@ -687,8 +760,8 @@ export default function CompleteProfile() {
                     )
                   )}
 
-                  <div className="flex flex-row gap-4">
-                    <div className="space-y-2 w-1/2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <Label htmlFor="period" className="text-foreground">
                         {config.showCourseField ? config.periodLabel : config.seriesLabel}
                       </Label>
@@ -714,7 +787,7 @@ export default function CompleteProfile() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2 w-1/2">
+                    <div className="space-y-2">
                       <Label htmlFor="enrollmentNumber" className="text-foreground">Nº de matrícula *</Label>
                       <Input
                         id="enrollmentNumber"
@@ -734,9 +807,14 @@ export default function CompleteProfile() {
 
                   <div className="text-xs text-muted-foreground space-y-1">
                     <p>Esses dados aparecerão na sua carteirinha.</p>
-                    <p>Exemplo: "Graduação – 3º semestre – Direito – UFJF"</p>
                   </div>
                 </div>
+
+                <datalist id="course-suggestions">
+                  {courseSuggestions.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
 
                 {/* Botão Continuar */}
                 <Button
@@ -750,7 +828,6 @@ export default function CompleteProfile() {
             </div>
           </div>
         </div>
-      </div>
       </main>
     </div>
   );

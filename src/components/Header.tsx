@@ -254,9 +254,9 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
   const menuItems = ['Como Funciona', 'Benefícios', 'LexPraxis', 'Planos', 'Dúvidas'];
   
-  // Determine background based on variant - both use CSS variables for theme support
+  // Header sempre claro; na rolagem adiciona apenas sombra sutil
   const headerBg = scrolled
-    ? 'bg-secondary/85 backdrop-blur-lg shadow-sm'
+    ? 'bg-background/95 backdrop-blur-lg border-b border-border shadow-lg'
     : 'bg-background/95 backdrop-blur-lg border-b border-border';
   
   return (
@@ -268,19 +268,15 @@ export function Header({ variant = 'app' }: HeaderProps) {
             <img
               src={ureBrasilLogo}
               alt="URE Brasil - União Representativa dos Estudantes"
-              className="h-9 sm:h-11 w-auto object-contain"
+              className="h-8 sm:h-9 lg:h-10 w-auto object-contain"
             />
             <div
-              className={`hidden md:flex flex-col items-start justify-center -space-y-0.5 ml-2 ${
-                scrolled
-                  ? 'bg-gradient-to-r from-primary-foreground via-primary-foreground to-primary-foreground'
-                  : 'bg-gradient-to-r from-foreground via-primary to-foreground'
-              } bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer`}
+              className="flex flex-col items-start justify-center -space-y-0.5 ml-2 max-w-[140px] sm:max-w-none bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer"
             >
-              <span className="text-[10px] font-medium tracking-wide uppercase">
+              <span className="text-[8px] sm:text-[10px] font-medium tracking-wide uppercase">
                 UNIÃO REPRESENTATIVA
               </span>
-              <span className="text-[10px] font-bold tracking-wide uppercase">
+              <span className="text-[8px] sm:text-[10px] font-bold tracking-wide uppercase">
                 DOS ESTUDANTES DO BRASIL
               </span>
             </div>
@@ -293,7 +289,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 <Button
                   key={item}
                   variant="ghost"
-                  className={scrolled ? 'text-secondary-foreground hover:text-primary font-medium' : 'text-foreground hover:text-primary font-medium'}
+                  className="text-foreground hover:text-primary font-medium"
                   onClick={() => scrollToSection(item)}
                 >
                   {item}
@@ -307,11 +303,11 @@ export function Header({ variant = 'app' }: HeaderProps) {
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`relative ${scrolled ? 'text-secondary-foreground hover:text-primary hover:bg-secondary/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
-                  >
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="relative text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
                     <Bell className="h-5 w-5" />
                     {notificationCount > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-0">
@@ -384,7 +380,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                           {initials}
                         </AvatarFallback>
                       </Avatar>
-                      <span className={`font-medium hidden sm:block ${scrolled ? 'text-secondary-foreground' : 'text-foreground'}`}>
+                      <span className="font-medium hidden sm:block text-foreground">
                         {firstName}
                       </span>
                     </button>
@@ -417,11 +413,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
                 <Button 
                   asChild 
                   variant="header-outline" 
-                  className={`hidden sm:inline-flex ${
-                    scrolled
-                      ? 'text-secondary-foreground hover:text-secondary-foreground hover:bg-secondary/20'
-                      : 'text-foreground hover:text-foreground hover:bg-muted'
-                  }`}
+                  className="hidden sm:inline-flex text-foreground hover:text-foreground hover:bg-muted"
                 >
                   <Link to="/login">Entrar</Link>
                 </Button>

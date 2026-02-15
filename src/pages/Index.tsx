@@ -469,7 +469,7 @@ const Index = () => {
                   <FileCheck className="w-10 h-10 text-white" />
                   <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary-foreground))] border-2 border-ure-orange flex items-center justify-center text-sm font-bold text-ure-orange">3</span>
                 </div>
-                <h3 className="text-2xl font-bold text-foreground">Carteira do Estudante</h3>
+                <h3 className="text-2xl font-bold text-foreground">Documentação</h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Envie seus documentos.<br />
                   Após validação, sua carteira estará disponível.
