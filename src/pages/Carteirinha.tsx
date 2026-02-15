@@ -48,6 +48,8 @@ export default function Carteirinha() {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const mouseStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -308,11 +310,58 @@ export default function Carteirinha() {
     ? '/templates/direito-verso-template-v.png'
     : '/templates/geral-verso-template-v.png';
 
+  const handleSwipeLeft = () => {
+    setSide('back');
+  };
+
+  const handleSwipeRight = () => {
+    setSide('front');
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current == null) return;
+    const deltaX = e.changedTouches[0]?.clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (deltaX == null) return;
+    if (Math.abs(deltaX) < 40) return;
+    if (deltaX < 0) {
+      handleSwipeLeft();
+    } else {
+      handleSwipeRight();
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    mouseStartX.current = e.clientX;
+  };
+
+  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (mouseStartX.current == null) return;
+    const deltaX = e.clientX - mouseStartX.current;
+    mouseStartX.current = null;
+    if (Math.abs(deltaX) < 60) return;
+    if (deltaX < 0) {
+      handleSwipeLeft();
+    } else {
+      handleSwipeRight();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       <main className="container mx-auto px-4 py-8 max-w-sm">
-        <div className="bg-white rounded-lg overflow-hidden border border-border">
+        <div
+          className="bg-white rounded-lg overflow-hidden border border-border touch-pan-y select-none"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+        >
           {side === 'front' ? (
             card.digital_card_url ? (
               <img
