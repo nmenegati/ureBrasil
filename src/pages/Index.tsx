@@ -185,7 +185,7 @@ const Index = () => {
       initial: "C"
     },
     {
-      text: "A LexPraxis é um diferencial absurdo. Além de garantir minha meia-entrada, os materiais de Direito me ajudam muito na faculdade. É 2 em 1!",
+      text: "A Carteira do Estudante de Direito é um diferencial absurdo. Além de garantir minha meia-entrada, os materiais de Direito me ajudam muito na faculdade. É 2 em 1!",
       name: "Aline Domingos",
       role: "Pós-graduação em Direito – Ribeirão Preto/SP",
       avatarColor: "bg-ure-yellow",
@@ -648,7 +648,7 @@ const Index = () => {
               >
                 <img
                   src={carteirinhaDireito1}
-                  alt="Carteirinha LexPraxis"
+                  alt="Carteira do Estudante de Direito"
                   className="w-full h-auto rounded-xl shadow-2xl transform hover:scale-105 transition-transform duration-500"
                 />
                 {/* Glow effect behind the card */}
@@ -1004,7 +1004,7 @@ const Index = () => {
 
             <AccordionItem value="item-6" className="border border-border rounded-lg px-6 bg-card">
               <AccordionTrigger className="hover:no-underline text-left">
-                <span className="text-lg font-semibold text-foreground">Como funciona a LexPraxis?</span>
+                <span className="text-lg font-semibold text-foreground">Como funciona a Carteira do Estudante de Direito?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
                 É nossa carteira especial para estudantes de Direito, com acesso a materiais de estudo para OAB,
