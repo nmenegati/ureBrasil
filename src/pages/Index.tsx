@@ -633,8 +633,8 @@ const Index = () => {
                     </>
                   ) : (
                     <>
-                      <Rocket className="mr-2 h-5 w-5" />
-                      Solicitar Carteira do Estudante de Direito
+                      <Rocket className="mr-2 h-5 w-5"/>
+                      Solicitar Agora
                     </>
                   )}
                 </Button>
