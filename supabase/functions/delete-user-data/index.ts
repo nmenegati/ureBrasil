@@ -17,6 +17,11 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
   // Verificar autenticação
   const authHeader = req.headers.get('Authorization')
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -27,9 +32,9 @@ serve(async (req) => {
   }
 
   const token = authHeader.replace('Bearer ', '')
-  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
-  if (authError || !authUser) {
+  if (authError || !user) {
     return new Response(JSON.stringify({ error: 'Token inválido' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 401,
@@ -37,31 +42,26 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Não autorizado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
+//    const authHeader = req.headers.get("Authorization");
+//    if (!authHeader) {
+//      return new Response(
+//        JSON.stringify({ error: "Não autorizado" }),
+//        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+//      );
+//    }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+//    const token = authHeader.replace("Bearer ", "").trim();
+//    const {
+//      data: { user },
+//      error: userError,
+//    } = await supabase.auth.getUser(token);
 
-    const token = authHeader.replace("Bearer ", "").trim();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Usuário não encontrado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
+//    if (userError || !user) {
+//      return new Response(
+//        JSON.stringify({ error: "Usuário não encontrado" }),
+//        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+//      );
+//    }
 
     const { data: profile } = await supabase
       .from("student_profiles")
@@ -118,11 +118,45 @@ serve(async (req) => {
         await supabase.storage.from("documents").remove(filePaths);
       }
     }
+    // Apagar profile photos | profile-photos usa user.id no path
+    const { data: profilePhotos } = await supabase.storage
+      .from('profile-photos')
+      .list(`${user.id}/foto`);
+    if (profilePhotos && profilePhotos.length > 0) {
+      await supabase.storage.from('profile-photos').remove([`${user.id}/foto`, user.id]);
+    }
+    // Tentar remover "pastas" como objetos
+    await supabase.storage.from('profile-photos').remove([
+      `${user.id}/foto`,
+      `${user.id}`
+    ]);
 
+    // Apagar student cards | student-cards também usa user.id
+    const { data: cardFiles } = await supabase.storage
+      .from('student-cards')
+      .list(user.id);
+    if (cardFiles && cardFiles.length > 0) {
+      const files = cardFiles.filter(f => f.id);
+      await supabase.storage.from('student-cards')
+        .remove(files.map(f => `${user.id}/${f.name}`));
+    }
+    
+    await supabase.storage.from('student-cards').remove([user.id]);
     await supabase.from("audit_logs").delete().eq("student_id", studentId);
     await supabase.from("documents").delete().eq("student_id", studentId);
     await supabase.from("student_cards").delete().eq("student_id", studentId);
     await supabase.from("student_profiles").delete().eq("id", studentId);
+    // Apagar profile photos
+    await supabase.storage.from('profile-photos').remove([`${user.id}`]);
+    await supabase.from("face_validations").delete().eq("student_id", studentId);
+    await supabase.from("support_messages").delete().in("ticket_id", 
+    (await supabase.from("support_tickets").select("id").eq("student_id", studentId)).data?.map(t => t.id) || [] );
+    await supabase.from("support_tickets").delete().eq("student_id", studentId);
+    await supabase.from("support_escalations").delete().eq("student_id", studentId);
+    await supabase.from("notifications").delete().eq("student_id", studentId);
+    await supabase.from("activity_log").delete().eq("student_id", studentId);
+    await supabase.from("physical_card_prints").delete().eq("student_id", studentId);
+    await supabase.from("cpf_validations").delete().eq("cpf", profile.cpf?.replace(/\D/g, ''));
 
     const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
     if (deleteError) throw deleteError;

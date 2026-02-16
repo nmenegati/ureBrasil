@@ -527,7 +527,7 @@ export default function CompleteProfile() {
               {/* Título */}
               <div className="text-center space-y-2">
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Complete seu perfil</h1>
-                <p className="text-muted-foreground">Sua carteirinha está a poucos passos</p>
+                <p className="text-muted-foreground">Sua carteira URE está a poucos passos</p>
                 <p className="text-xs text-muted-foreground italic -mt-1 mb-4">
                    Preencha as informações marcadas com *
                 </p>

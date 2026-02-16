@@ -29,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { CameraCapture } from '@/components/CameraCapture';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
+import { useFaceValidation } from '@/hooks/useFaceValidation';
 
 type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
@@ -234,8 +235,8 @@ const DocumentCard = ({
       return (
         <ul className="mt-1 space-y-1 text-xs text-slate-700">
           <li>💡 Boa iluminação</li>
-          <li>👓 Sem óculos</li>
-          <li>🧢 Sem boné</li>
+          <li>👓 Sem óculos escuros</li>
+          <li>🧢 Sem boné ou chapéu</li>
         </ul>
       );
     }
@@ -243,9 +244,9 @@ const DocumentCard = ({
     if (config.type === 'foto') {
       return (
         <ul className="mt-1 space-y-1 text-xs text-slate-700">
-          <li>☀️ Fundo claro • 🚫 Sem acessórios</li>
-          <li>👁️ Olhando para para frente</li>
-          <li>⚠️ Esta foto será usada na sua carteira</li>
+          <li>☀️ Fundo claro e uniforme</li>
+          <li>🚫 Sem acessórios ou filtros</li>
+          <li>⚠️ Foto usada na carteira URE</li>
         </ul>
       );
     }
@@ -263,9 +264,9 @@ const DocumentCard = ({
     if (config.type === 'matricula') {
       return (
         <ul className="mt-1 space-y-1 text-xs text-slate-700">
-          <li>📄 Comprovante de matrícula 2026</li>
-          <li>🏫 Declaração da faculdade</li>
-          <li>💰 Boleto pago recente</li>
+          <li>📄 Comprovante de matrícula atual</li>
+          <li>🏫 Declaração da instituição</li>
+          <li>💰 Comprovante de pagamento recente</li>
         </ul>
       );
     }
@@ -280,6 +281,14 @@ const DocumentCard = ({
       className={cn(baseCardClasses, stateClasses, interactive && 'cursor-pointer')}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      onClick={() => {
+        if (!interactive || disableUpload) return;
+        if (isSelfie) {
+          onOpenCamera?.();
+        } else {
+          fileInputRef.current?.click();
+        }
+      }}
     >
       <div className="absolute top-2 right-3">
         {getStatusBadge()}
@@ -475,6 +484,7 @@ export default function UploadDocumentos() {
   const [showCamera, setShowCamera] = useState(false);
   const [hasCameraSupport, setHasCameraSupport] = useState(true);
   const [manualRequested, setManualRequested] = useState(false);
+  const [faceValidationPending, setFaceValidationPending] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -545,6 +555,8 @@ export default function UploadDocumentos() {
       fetchDocuments();
     }
   }, [profile, isChecking, fetchDocuments]);
+
+  const { result: faceValidation } = useFaceValidation(profile?.id);
 
   useEffect(() => {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -838,28 +850,32 @@ const handleUpload = async (file: File, type: DocumentType) => {
       toast.error('Perfil não carregado. Recarregue a página.');
       return;
     }
-
+    if (faceValidation?.passed === true) {
+      navigate('/gerar-carteirinha');
+      return;
+    }
     try {
+      setFaceValidationPending(true);
       const { data, error } = await supabase.rpc('advance_to_review', {
         p_student_id: profile.id,
       });
-
       if (error) {
         console.error('Erro ao chamar advance_to_review:', error);
+        setFaceValidationPending(false);
         toast.error('Erro ao avançar validação. Tente novamente.');
         return;
       }
-
-      if (data === true) {
-        navigate('/gerar-carteirinha');
-      } else {
-        toast.error('Ainda há pendências. Verifique documentos, termos e validação facial.');
+      if (data !== true) {
+        setFaceValidationPending(false);
+        toast.error('Ainda há pendências. Verifique documentos e termos.');
       }
     } catch (err) {
-      console.error('Erro inesperado ao avançar para revisão:', err);
+      console.error('Erro inesperado:', err);
+      setFaceValidationPending(false);
       toast.error('Erro ao avançar validação. Tente novamente.');
     }
   };
+
 
   const handleManualValidation = async () => {
     if (!profile?.id || !user?.id) {
@@ -896,6 +912,29 @@ const handleUpload = async (file: File, type: DocumentType) => {
       setManualRequested(false);
     }
   };
+
+  useEffect(() => {
+    if (!faceValidationPending) return;
+    if (!faceValidation) return;
+
+    if (faceValidation.passed === true) {
+      setFaceValidationPending(false);
+      toast.success('Identidade validada com sucesso!');
+      navigate('/gerar-carteirinha');
+    } else if (faceValidation.passed === false) {
+      setFaceValidationPending(false);
+      toast.error('Não foi possível validar. Verifique selfie e tente novamente.');
+    }
+  }, [faceValidation, faceValidationPending, navigate]);
+
+  useEffect(() => {
+    if (!faceValidationPending) return;
+    const timer = setTimeout(() => {
+      setFaceValidationPending(false);
+      toast.info('Validação em processamento. Aguarde um momento e atualize a página.');
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [faceValidationPending]);
 
   if (authLoading || isChecking || loadingProfile) {
     return (
@@ -935,7 +974,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
           
           <div className="text-center">  
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">  
-              Vamos Preparar Sua Carteirinha URE  
+              Vamos Preparar Sua Carteira do Estudante URE  
             </h1>  
             <p className="text-sm md:text-base text-muted-foreground">  
               Envie seus documentos para aprovação. O processo é rápido e seguro.  
@@ -1106,6 +1145,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
             <Button
               className="w-full max-w-2xl mx-auto block"
               onClick={handleGoToReview}
+              disabled={faceValidationPending}
             >
               Ir para revisão e geração da carteirinha
             </Button>
@@ -1115,7 +1155,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
         {!canGenerateCard && (
           <>
             <Button
-              disabled={!canSubmit}
+              disabled={!canSubmit || faceValidationPending}
               onClick={handleSubmit}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
             >

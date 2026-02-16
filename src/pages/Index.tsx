@@ -426,7 +426,7 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-8 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua carteira estudantil emitida em minutos</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua carteira do estudante emitida em minutos</h2>
             <p className="text-xl text-muted-foreground">Sem complicação.</p>
           </div>
 
@@ -634,7 +634,7 @@ const Index = () => {
                   ) : (
                     <>
                       <Rocket className="mr-2 h-5 w-5" />
-                      Solicitar LexPraxis
+                      Solicitar Carteira do Estudante de Direito
                     </>
                   )}
                 </Button>
@@ -752,7 +752,7 @@ const Index = () => {
       {/* Header */}
       <div className="text-center mb-16 space-y-4">
         <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Escolha Sua Carteira URE</h2>
-        <p className="text-xl text-muted-foreground">Transparente, simples e sem surpresas</p>
+        <p className="text-xl text-muted-foreground">Documento válido para identificação estudantil</p>
       </div>
 
       {/* Pricing Grid - 2 Digital Plans */}
@@ -769,7 +769,7 @@ const Index = () => {
           />
           <CardContent className="pt-8 pb-6 flex flex-col h-full">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira Estudantil Digital | URE</h3>
+              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira do Estudante URE | Digital</h3>
               <p className="text-sm text-muted-foreground mb-4">Educação básica ao ensino superior</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-ure-blue">
@@ -834,11 +834,11 @@ const Index = () => {
             style={{ boxShadow: '0 0 44px 14px hsl(var(--ure-yellow) / 0.28)' }}
           />
           <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-ure-yellow text-ure-dark border-none px-4 py-1 text-xs font-bold">
-            LEXPRAXIS
+            DIREITO
           </Badge>
           <CardContent className="pt-8 pb-6 flex flex-col h-full">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira Estudantil Digital LexPraxis | URE</h3>
+              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira do <strong>Estudante de Direito</strong> URE | Digital</h3>
               <p className="text-sm text-muted-foreground mb-4">Exclusiva para estudantes de Direito</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-ure-yellow">
@@ -893,7 +893,7 @@ const Index = () => {
                   ) : (
                     <>
                       <Rocket className="mr-2 h-5 w-5" />
-                      Solicitar LexPraxis
+                      Solicitar Agora
                     </>
                   )}
                 </Button>
@@ -913,7 +913,7 @@ const Index = () => {
                 </div>
                 
                 <p className="text-muted-foreground mb-4">
-                  Após o pagamento, você poderá adicionar a carteira física  
+                  Após o pagamento, você poderá adquirir a carteira física  
                   por apenas{" "}
                   <strong className="text-foreground">
                     {physicalUpsellPrice !== null ? formatPrice(physicalUpsellPrice) : "R$ ..."}
@@ -1056,7 +1056,7 @@ const Index = () => {
 
             {/* Subtitle */}
             <p className="text-xl lg:text-2xl text-white/90 font-medium">
-              Sua carteira estudantil válida em todo Brasil. Aprovação rápida, uso imediato.
+              Sua carteira do estudante válida em todo Brasil. Aprovação rápida, uso imediato.
             </p>
 
         {/* Counters removed */}

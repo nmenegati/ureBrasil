@@ -818,7 +818,7 @@ export default function SignUp() {
                             type="text"
                             value={fullName}
                             readOnly
-                            className="bg-muted text-foreground border-input text-base h-11"
+                            className="bg-sky-300 text-foreground border border-sky-400 text-base h-11"
                             required
                           />
                         </div>
@@ -829,7 +829,7 @@ export default function SignUp() {
                             type="text"
                             value={birthDateText}
                             readOnly
-                            className="bg-muted text-foreground border-input text-base h-11"
+                            className="bg-sky-300 text-foreground border border-sky-400 text-base h-11"
                             required
                           />
                         </div>

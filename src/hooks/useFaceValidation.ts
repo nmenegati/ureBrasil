@@ -57,4 +57,3 @@ export function useFaceValidation(studentId: string | undefined) {
 
   return { result, loading };
 }
-

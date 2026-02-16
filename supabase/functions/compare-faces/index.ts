@@ -136,7 +136,16 @@ serve(async (req) => {
           await supabase.from('student_profiles')
             .update({ face_validated: true })
             .eq('id', student_id)
-          
+
+          // ADICIONAR AQUI ↓
+          await supabase.from('face_validations').insert({
+            student_id,
+            rg_similarity: matchRG.similarity || 0,
+            foto_similarity: matchFoto.similarity || 0,
+            passed: true,
+            attempt_number: 1,
+          });
+
           const docIdsToApprove = [selfie.id]
           if (rg) docIdsToApprove.push(rg.id)
           if (foto) docIdsToApprove.push(foto.id)
@@ -156,7 +165,16 @@ serve(async (req) => {
           let reason = ''
           if (!matchRG.match) reason += `Rosto não confere com RG (${Math.round(matchRG.similarity)}%). `
           if (!matchFoto.match) reason += `Rosto não confere com Foto 3x4 (${Math.round(matchFoto.similarity)}%).`
-          
+
+          // ADICIONAR AQUI ↓
+          await supabase.from('face_validations').insert({
+            student_id,
+            rg_similarity: matchRG.similarity || 0,
+            foto_similarity: matchFoto.similarity || 0,
+            passed: false,
+            attempt_number: 1,
+          });
+
           await supabase.from('documents').update({
               status: 'rejected',
               rejection_reason: reason.trim()
