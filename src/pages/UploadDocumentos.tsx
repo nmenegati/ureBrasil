@@ -594,7 +594,7 @@ export default function UploadDocumentos() {
         .eq('student_id', profile.id)
         .maybeSingle();
       if (card?.status === 'active') {
-        toast.error('Documentos não podem ser alterados com carteirinha ativa. Entre em contato com suporte.');
+        toast.error('Documentos não podem ser alterados com carteira ativa. Entre em contato com suporte.');
       }
     };
     checkIfLocked();
@@ -633,7 +633,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
         .maybeSingle();
       
       if (card?.status === 'active') {
-        toast.error('Foto não pode ser alterada após emissão da carteirinha. Entre em contato com suporte.');
+        toast.error('Foto não pode ser alterada após emissão da Carteira. Entre em contato com suporte.');
         return;
       }
     }
@@ -846,6 +846,9 @@ const handleUpload = async (file: File, type: DocumentType) => {
   };
 
   const handleGoToReview = async () => {
+    console.log('=== handleGoToReview CHAMADO ===');
+    console.log('profile?.id:', profile?.id);
+    console.log('faceValidation:', JSON.stringify(faceValidation));
     if (!profile?.id) {
       toast.error('Perfil não carregado. Recarregue a página.');
       return;
@@ -1147,7 +1150,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
               onClick={handleGoToReview}
               disabled={faceValidationPending}
             >
-              Ir para revisão e geração da carteirinha
+              Ir para revisão e geração da sua carteira
             </Button>
           </>
         )}

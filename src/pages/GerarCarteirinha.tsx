@@ -110,7 +110,7 @@ export default function GerarCarteirinha() {
         const termsOk = !!profileData.terms_accepted;
 
         if (!docsOk || !faceOk || !termsOk) {
-          setError('Você ainda precisa concluir alguma etapa antes de gerar a carteirinha.');
+          setError('Você ainda precisa concluir alguma etapa antes de gerar a sua Carteira URE.');
           setLoading(false);
           setTimeout(() => navigate('/upload-documentos'), 2000);
           return;
@@ -243,7 +243,7 @@ export default function GerarCarteirinha() {
                     Gerando sua carteirinha...
                   </>
                 ) : (
-                  'Confirmar dados e gerar carteirinha'
+                  'Confirmar dados e gerar Carteira URE'
                 )}
               </Button>
               <Button

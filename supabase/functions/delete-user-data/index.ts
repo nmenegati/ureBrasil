@@ -123,7 +123,8 @@ serve(async (req) => {
       .from('profile-photos')
       .list(`${user.id}/foto`);
     if (profilePhotos && profilePhotos.length > 0) {
-      await supabase.storage.from('profile-photos').remove([`${user.id}/foto`, user.id]);
+      await supabase.storage.from('profile-photos')
+        .remove([`${user.id}/foto`, user.id]);
     }
     // Tentar remover "pastas" como objetos
     await supabase.storage.from('profile-photos').remove([
