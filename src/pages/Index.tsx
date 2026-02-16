@@ -402,7 +402,7 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-sm md:text-base font-medium text-muted-foreground">
             <span className="flex items-center gap-2">
               <Check className="w-4 h-4 text-ure-green" />
-              Documento estudantil digital
+              Documento Nacional do Estudante
             </span>
             <span className="hidden md:block text-gray-300">•</span>
             <span className="flex items-center gap-2">
@@ -487,7 +487,7 @@ const Index = () => {
           <div className="text-center mb-12">
             {/* Linha decorativa amarela */}
 
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">Use sua meia-entrada no dia a dia</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">Use a meia-entrada no dia a dia</h2>
           </div>
           {/* Cards de Benefícios */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
@@ -1056,7 +1056,7 @@ const Index = () => {
 
             {/* Subtitle */}
             <p className="text-xl lg:text-2xl text-white/90 font-medium">
-              Sua carteira do estudante URE válida em todo Brasil. Aprovação rápida, uso imediato.
+              Carteira do Estudante URE válida em todo Brasil. Aprovação rápida, uso imediato.
             </p>
 
         {/* Counters removed */}
