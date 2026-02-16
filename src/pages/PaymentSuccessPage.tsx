@@ -216,10 +216,10 @@ const PaymentSuccessPage = () => {
                     por <span className="font-semibold">{formatPrice(amount)}</span>
                   </>
                 )}
-                . Agora envie seus documentos para validar sua carteirinha.
+                . Agora envie seus documentos para validar sua Carteira URE.
               </>
             ) : (
-              "Agora envie seus documentos para validar sua carteirinha."
+              "Agora envie seus documentos para validar sua Carteira URE."
             )}
           </p>
           
@@ -253,7 +253,7 @@ const PaymentSuccessPage = () => {
               🎉 OFERTA ESPECIAL
             </Badge>
             <h2 className="text-xl font-bold text-white mb-1">
-              Adicione a Carteirinha Física!
+              Adicione a Carteira Física!
             </h2>
             <p className="text-white/90 text-sm">
               Oferta válida apenas agora
@@ -265,7 +265,7 @@ const PaymentSuccessPage = () => {
             <div className="text-center space-y-3">
               <h3 className="text-2xl font-bold">🎉 Oferta Especial!</h3>
               <p className="text-lg">
-                Adicione a <span className="font-bold">Carteirinha Física</span>, com frete incluso, por apenas
+                Adicione a <span className="font-bold">Carteira Física</span>, com frete incluso, por apenas
               </p>
               <div className="flex items-center justify-center gap-3">
                 <span className="text-4xl font-bold text-ure-green">
@@ -278,7 +278,7 @@ const PaymentSuccessPage = () => {
               <Alert className="text-left">
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  A carteirinha física <strong>não é obrigatória</strong>. Sua carteirinha digital já é 100% válida e aceita em todo Brasil.
+                  A carteira física <strong>não é obrigatória</strong>. Sua Carteira do Estudante URE digital já é 100% válida e aceita em todo Brasil.
                 </AlertDescription>
               </Alert>
             </div>

@@ -805,8 +805,11 @@ const handleUpload = async (file: File, type: DocumentType) => {
     }
 
     if (termsAlreadyAccepted) {
-      toast.success('Documentos enviados! Sua validação está em andamento.');
-      return;
+        toast.success('Documentos enviados! Aguardando validação...');
+        setTimeout(() => {
+            window.location.reload();
+        }, 5000);
+        return;
     }
 
     try {
@@ -838,47 +841,30 @@ const handleUpload = async (file: File, type: DocumentType) => {
         return;
       }
 
-      toast.success('Termo aceito com sucesso! Seus documentos estão em validação.');
+      toast.success('Documentos enviados! Validação em andamento...');
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
      
     } catch (error) {
       toast.error('Erro ao processar. Tente novamente.');
     }
   };
-
+  
   const handleGoToReview = async () => {
-    console.log('=== handleGoToReview CHAMADO ===');
-    console.log('profile?.id:', profile?.id);
-    console.log('faceValidation:', JSON.stringify(faceValidation));
     if (!profile?.id) {
-      toast.error('Perfil não carregado. Recarregue a página.');
+      toast.error('Perfil não carregado.');
       return;
     }
-    if (faceValidation?.passed === true) {
-      navigate('/gerar-carteirinha');
-      return;
-    }
-    try {
-      setFaceValidationPending(true);
-      const { data, error } = await supabase.rpc('advance_to_review', {
-        p_student_id: profile.id,
-      });
-      if (error) {
-        console.error('Erro ao chamar advance_to_review:', error);
-        setFaceValidationPending(false);
-        toast.error('Erro ao avançar validação. Tente novamente.');
-        return;
-      }
-      if (data !== true) {
-        setFaceValidationPending(false);
-        toast.error('Ainda há pendências. Verifique documentos e termos.');
-      }
-    } catch (err) {
-      console.error('Erro inesperado:', err);
-      setFaceValidationPending(false);
-      toast.error('Erro ao avançar validação. Tente novamente.');
+    const { data } = await supabase.rpc('advance_to_review', {
+      p_student_id: profile.id,
+    });
+    if (data === true) {
+      window.location.href = '/gerar-carteirinha';
+    } else {
+      toast.error('Ainda há pendências. Verifique documentos, termos e validação facial.');
     }
   };
-
 
   const handleManualValidation = async () => {
     if (!profile?.id || !user?.id) {
