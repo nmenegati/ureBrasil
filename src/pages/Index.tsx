@@ -583,12 +583,12 @@ const Index = () => {
 
               {/* Title */}
               <div className="space-y-2 max-w-3xl">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">LexPraxis — A Carteira Estudantil para Quem Escolheu o Direito</h2>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">Carteira do Estudante de Direito URE</h2>
               </div>
 
               {/* Description */}
               <p className="text-lg sm:text-xl text-white/90 leading-relaxed">
-                Mais que uma carteira estudantil. Uma identificação pensada para estudantes de Direito que buscam posicionamento, preparação e economia desde a faculdade.
+                Mais que uma identificação estudantil. Um documento pensado para alunos de Direito que buscam organização, economia e preparo desde a faculdade.
               </p>
 
               {/* Benefits */}
@@ -769,7 +769,7 @@ const Index = () => {
           />
           <CardContent className="pt-8 pb-6 flex flex-col h-full">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira do Estudante URE | Digital</h3>
+              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira do Estudante URE Digital</h3>
               <p className="text-sm text-muted-foreground mb-4">Educação básica ao ensino superior</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-ure-blue">
@@ -838,7 +838,7 @@ const Index = () => {
           </Badge>
           <CardContent className="pt-8 pb-6 flex flex-col h-full">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira do <strong>Estudante de Direito</strong> URE | Digital</h3>
+              <h3 className="text-2xl font-bold text-foreground mb-2">Carteira do <strong>Estudante de Direito</strong> URE Digital</h3>
               <p className="text-sm text-muted-foreground mb-4">Exclusiva para estudantes de Direito</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-ure-yellow">

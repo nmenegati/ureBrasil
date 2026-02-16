@@ -5,7 +5,7 @@ const STEPS = [
   { key: 'profile', label: 'Perfil', icon: User },
   { key: 'payment', label: 'Pagamento', icon: CreditCard },
   { key: 'documents', label: 'Documentos', icon: FileText },
-  { key: 'card', label: 'Carteirinha', icon: GraduationCap },
+  { key: 'card', label: 'Carteira URE', icon: GraduationCap },
 ] as const;
 
 type StepKey = (typeof STEPS)[number]['key'];

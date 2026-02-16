@@ -684,7 +684,7 @@ export default function Checkout() {
                   </div>
                   <p className="text-sm md:text-base text-muted-foreground mt-1">
                     {isUpsell
-                      ? "Adicional • Entrega em 7-10 dias úteis"
+                      ? "Envio em até 7 dias úteis"
                       : `Pagamento único • Válida até ${getValidityDate()}`}
                   </p>
                 </div>
@@ -708,7 +708,7 @@ export default function Checkout() {
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-green-500" />
-                      <span>Carteirinha digital com QR Code de verificação</span>
+                      <span>Carteirinha física com QR Code de verificação</span>
                     </li>
                     {plan.is_direito && (
                       <li className="flex items-center gap-2">
@@ -729,7 +729,7 @@ export default function Checkout() {
                     {isUpsell && (
                       <li className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-green-500" />
-                        <span>Carteirinha física em PVC inclusa</span>
+                        <span>Frete Grátis para todo Brasil</span>
                       </li>
                     )}
                   </ul>

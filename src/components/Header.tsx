@@ -238,7 +238,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
     const sectionIds: Record<string, string> = {
       'Como Funciona': 'como-funciona',
       'Benefícios': 'beneficios',
-      'Carteira Direito': 'lex-praxis',
+      'Carteira de Direito': 'lex-praxis',
       'Modelos': 'planos',
       'Dúvidas': 'faq',
     };
@@ -252,7 +252,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
     }
   };
 
-  const menuItems = ['Como Funciona', 'Benefícios', 'Carteira Direito', 'Modelos', 'Dúvidas'];
+  const menuItems = ['Como Funciona', 'Benefícios', 'Carteira de Direito', 'Modelos', 'Dúvidas'];
   
   // Header sempre claro; na rolagem adiciona apenas sombra sutil
   const headerBg = scrolled

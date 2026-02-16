@@ -11,6 +11,9 @@ import { toast } from 'sonner';
 import { BorderTrail } from '@/components/ui/border-trail';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 import { formatPrice } from '@/utils/payment-helpers';
+import {
+  getValidityDate,
+} from "@/utils/payment-helpers";
 
 // Configuração visual dos planos digitais (descrições e features fixas)
 const digitalPlansConfig = [
@@ -31,7 +34,7 @@ const digitalPlansConfig = [
     type: 'direito_digital' as const,
     description: 'Exclusiva para estudantes de Direito',
     features: [
-      'inhCarteira digital',
+      'Carteira digital',
       'QR Code de verificação',
       'Validade até 31/03/2026',
       'Emissão em até 2h',
@@ -41,7 +44,7 @@ const digitalPlansConfig = [
       'Rede de networking jurídico'
     ],
     highlight: true as const,
-    badge: 'LEXPRAXIS' as const
+    badge: 'Direito' as const
   }
 ];
 
@@ -233,16 +236,11 @@ export default function EscolherPlano() {
           <ProgressBar currentStep="payment" />
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
               Escolha sua Carteira URE
             </h1>
-            <div className="flex justify-center mb-3">
-              <div className="h-1 w-40 bg-ure-yellow rounded-full" />
-            </div>
             <p className="text-base text-muted-foreground">
-              {isLawStudent
-                ? 'Benefícios exclusivos para estudantes de Direito com a LexPraxis'
-                : 'Carteira digital URE com QR Code de verificação e meia‑entrada'}
+                Documento válido para identificação estudantil
             </p>
           </div>
 
@@ -304,7 +302,7 @@ export default function EscolherPlano() {
                       onClick={() => handleSelectPlan(plan.type, plan.name)}
                     >
                       {selecting === plan.type && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                      {plan.type === 'direito_digital' ? 'Solicitar LexPraxis' : 'Solicitar Agora'}
+                      {plan.type === 'direito_digital' ? 'Solicitar Agora' : 'Solicitar Agora'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -314,7 +312,7 @@ export default function EscolherPlano() {
 
           {/* Informação sobre versão física */}
           <div className="mt-8">
-            <Card className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/50 backdrop-blur-sm">
+            <Card className="bg-gradient-to-r from-blue-500/5 to-purple-500/5 border-blue-500/50 backdrop-blur-sm">
               <CardContent className="p-6 text-center">
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <CreditCard className="w-6 h-6 text-blue-500" />
@@ -326,7 +324,7 @@ export default function EscolherPlano() {
                   Após concluir o pagamento da carteira digital, você poderá adquirir a versão física por <strong className="text-foreground">{upsellPrice !== null ? formatPrice(upsellPrice) : 'R$ ...'}</strong>, com frete incluso para todo o Brasil.
                 </p>
                 <p className="text-sm text-muted-foreground text-center">
-                  Material PVC durável — Frete incluso para todo Brasil — Disponível como adicional pós‑pagamento
+                  Material durável — Frete incluso para todo Brasil — Disponível como adicional pós‑pagamento
                 </p>
               </CardContent>
             </Card>
@@ -335,7 +333,7 @@ export default function EscolherPlano() {
           {/* Footer */}
           <div className="mt-10 text-center text-sm text-muted-foreground">
             <p>🔒 Pagamento 100% seguro</p>
-            <p className="mt-2">Dúvidas? contato@urebrasil.com.br</p>
+            <p className="mt-2">Dúvidas? suporte@urebrasil.com.br</p>
           </div>
         </div>
       </main>
