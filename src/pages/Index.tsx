@@ -299,7 +299,7 @@ const Index = () => {
 
               {/* Subtitle */}
               <p className="text-base sm:text-lg lg:text-xl text-gray-50 font-medium max-w-2xl mx-auto lg:mx-0 leading-relaxed drop-shadow-md">
-                Pare de pagar inteira. Emita sua Carteira do Estudante URE, válida pela Lei da Meia-Entrada. Economize em cinemas, shows, teatros e eventos culturais.
+                Pare de pagar inteira. Solicite sua Carteira do Estudante URE, válida pela Lei da Meia-Entrada. Economize em cinemas, shows, teatros e eventos culturais.
               </p>
 
               {/* Feature Badges - Removed as per new design focus on text, or keep if user didn't ask to remove? 
@@ -924,7 +924,7 @@ const Index = () => {
                 <div className="flex flex-wrap justify-center gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-ure-green" />
-                    <span className="text-foreground">Material PVC durável</span>
+                    <span className="text-foreground">Material durável</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-ure-green" />
@@ -957,8 +957,8 @@ const Index = () => {
                 <span className="text-lg font-semibold text-foreground">Como funciona a validação dos documentos?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                Utilizamos inteligência artificial para validar seus documentos automaticamente. Em casos duvidosos,
-                nossa equipe faz revisão manual rapidamente. Todo o processo digital leva poucos minutos.
+                Utilizamos inteligência artificial para validar seus documentos automaticamente. Em casos de dúvidas,
+                nossa equipe faz revisão manual. Todo o processo digital leva poucos minutos.
               </AccordionContent>
             </AccordionItem>
 
@@ -987,8 +987,8 @@ const Index = () => {
                 <span className="text-lg font-semibold text-foreground">Quais documentos preciso enviar?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                RG ou CNH, comprovante de matrícula ou declaração da
-                instituição, uma foto 3x4 com fundo neutro e uma selfie.
+                Comprovante de matrícula ou declaração da instituição,
+                RG ou CNH, uma foto 3x4 com fundo neutro e uma selfie.
               </AccordionContent>
             </AccordionItem>
 
@@ -1056,7 +1056,7 @@ const Index = () => {
 
             {/* Subtitle */}
             <p className="text-xl lg:text-2xl text-white/90 font-medium">
-              Sua carteira do estudante válida em todo Brasil. Aprovação rápida, uso imediato.
+              Sua carteira do estudante URE válida em todo Brasil. Aprovação rápida, uso imediato.
             </p>
 
         {/* Counters removed */}
@@ -1078,7 +1078,7 @@ const Index = () => {
             ) : (
               <>
                 <Rocket className="mr-2 h-5 w-5" />
-                Emitir Carteira Agora
+                Solicitar Carteira Agora
               </>
             )}
           </Button>
