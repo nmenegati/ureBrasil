@@ -485,6 +485,8 @@ export default function UploadDocumentos() {
   const [hasCameraSupport, setHasCameraSupport] = useState(true);
   const [manualRequested, setManualRequested] = useState(false);
   const [faceValidationPending, setFaceValidationPending] = useState(false);
+  const [showManualFallback, setShowManualFallback] = useState(false);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -903,6 +905,15 @@ const handleUpload = async (file: File, type: DocumentType) => {
   };
 
   useEffect(() => {
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!faceValidationPending) return;
     if (!faceValidation) return;
 
@@ -1011,6 +1022,10 @@ const handleUpload = async (file: File, type: DocumentType) => {
                     return;
                   }
 
+                  if (faceValidationPending) {
+                    return;
+                  }
+
                   try {
                     let ip = 'unknown';
                     try {
@@ -1045,6 +1060,74 @@ const handleUpload = async (file: File, type: DocumentType) => {
                     setTermsAccepted(true);
                     setTermsAcceptedDate(new Date().toISOString());
                     setTermsVersion('1.0');
+
+                    // Se já estiver validado (ex.: usuário voltou a esta tela), avançar direto
+                    if (profile.face_validated) {
+                      const { data: advanced, error: advanceError } = await supabase.rpc(
+                        'advance_to_review',
+                        { p_student_id: profile.id }
+                      );
+
+                      if (!advanceError && advanced === true) {
+                        window.location.href = '/gerar-carteirinha';
+                      } else {
+                        toast.error('Erro ao avançar. Recarregue a página.');
+                      }
+                      return;
+                    }
+
+                    setShowManualFallback(false);
+                    setFaceValidationPending(true);
+
+                    setTimeout(() => {
+                      let attempts = 0;
+
+                      if (pollRef.current) {
+                        clearInterval(pollRef.current);
+                        pollRef.current = null;
+                      }
+
+                      pollRef.current = setInterval(async () => {
+                        attempts++;
+
+                        const { data: faceRow, error: faceError } = await supabase
+                          .from('student_profiles')
+                          .select('face_validated')
+                          .eq('id', profile.id)
+                          .maybeSingle();
+
+                        if (faceError) {
+                          console.error('[TERMOS] Erro ao verificar face_validated:', faceError);
+                        }
+
+                        if (faceRow?.face_validated) {
+                          if (pollRef.current) {
+                            clearInterval(pollRef.current);
+                            pollRef.current = null;
+                          }
+
+                          const { data: advanced, error: advanceError } = await supabase.rpc(
+                            'advance_to_review',
+                            { p_student_id: profile.id }
+                          );
+
+                          if (!advanceError && advanced === true) {
+                            window.location.href = '/gerar-carteirinha';
+                          } else {
+                            setFaceValidationPending(false);
+                            toast.error('Erro ao avançar. Recarregue a página.');
+                          }
+                        } else if (attempts >= 15) {
+                          if (pollRef.current) {
+                            clearInterval(pollRef.current);
+                            pollRef.current = null;
+                          }
+                          setFaceValidationPending(false);
+                          toast.info('Validação demorando. Solicite validação manual.');
+                          setShowManualFallback(true);
+                        }
+                      }, 3000);
+                    }, 2000);
                   } catch (err) {
                     console.error('[TERMOS] Erro inesperado ao salvar aceite imediato:', err);
                     toast.error('Erro ao salvar aceitação do termo');
@@ -1136,43 +1219,45 @@ const handleUpload = async (file: File, type: DocumentType) => {
               onClick={handleGoToReview}
               disabled={faceValidationPending}
             >
-              Ir para revisão e geração da sua carteira
+              Ir para revisão e geração da carteirinha
             </Button>
           </>
         )}
 
-        {!canGenerateCard && (
-          <>
-            <Button
-              disabled={!canSubmit || faceValidationPending}
-              onClick={handleSubmit}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed py-6 text-lg"
-            >
-              Enviar para validação
-            </Button>
-            <Button
-              variant="outline"
-              disabled={manualRequested}
-              onClick={handleManualValidation}
-              className="w-full mt-3"
-            >
-              Solicitar validação manual
-            </Button>
-          </>
+        {!canGenerateCard && showManualFallback && (
+          <Button
+            variant="outline"
+            disabled={manualRequested}
+            onClick={handleManualValidation}
+            className="w-full mt-3"
+          >
+            Solicitar validação manual
+          </Button>
         )}
   
-                {showCamera && (  
-                  <CameraCapture  
-                    onCapture={(file) => {  
-                      handleUpload(file, 'selfie');  
-                      setShowCamera(false);  
-                    }}  
-                    onCancel={() => setShowCamera(false)}  
-                  />  
-                )}  
-              </div>  
-            </main>  
-          </div>  
-        );
+        {showCamera && (
+          <CameraCapture
+            onCapture={(file) => {
+              handleUpload(file, 'selfie');
+              setShowCamera(false);
+            }}
+            onCancel={() => setShowCamera(false)}
+          />
+        )}
 
+        {faceValidationPending && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+            <div className="bg-white rounded-xl p-8 text-center max-w-sm mx-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground">Validando sua identidade...</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Isso pode levar alguns segundos
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  </div>
+);
 }
