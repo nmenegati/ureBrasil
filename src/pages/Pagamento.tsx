@@ -114,8 +114,8 @@ const detectCardBrand = (cardNumber: string) => {
  * - displayAmount: valor final cobrado (pode incluir descontos/ofertas).
  *
  * GUARDS:
- * - useOnboardingGuard('payment'): garante que o usuário só acesse /pagamento
- *   na etapa correta do funil.
+ * - useOnboardingGuard(['choose_plan', 'payment']): garante que o usuário
+ *   só acesse /pagamento a partir de escolher plano ou do próprio passo payment.
  * - Redireciona para login ou escolher plano se não houver sessão ou plano válido.
  *
  * DEPENDÊNCIAS BACKEND:
@@ -124,7 +124,7 @@ const detectCardBrand = (cardNumber: string) => {
  * - Triggers que criam student_cards e atualizam current_onboarding_step após pagamento.
  */
 export default function Pagamento() {
-  const { isChecking } = useOnboardingGuard("payment");
+  const { isChecking } = useOnboardingGuard(["choose_plan", "payment"]);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();

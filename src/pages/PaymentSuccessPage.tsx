@@ -146,32 +146,6 @@ const PaymentSuccessPage = () => {
         }
       }
 
-      if (user) {
-        const { data: profileRow, error: profileError } = await supabase
-          .from("student_profiles")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("[PAYMENT_SUCCESS] Erro ao buscar profileRow para upsell:", {
-            userId: user.id,
-            error: profileError.message,
-          });
-        }
-
-        if (profileRow?.id) {
-          const { error: stepError } = await supabase
-            .from("student_profiles")
-            .update({ current_onboarding_step: "payment_upsell" })
-            .eq("id", profileRow.id);
-
-          if (stepError) {
-            console.warn("[PAYMENT_SUCCESS] Erro ao atualizar current_onboarding_step (não crítico):", stepError);
-          }
-        }
-      }
-
       if (paymentId) {
         localStorage.setItem(
           "upsell_data",

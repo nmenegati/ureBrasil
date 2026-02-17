@@ -89,8 +89,8 @@ export default function Checkout() {
    * - isFormValid: valida campos de cartão quando gateway não é Mercado Pago.
    *
    * GUARDS:
-   * - useOnboardingGuard('payment_upsell'): garante que o aluno está na etapa correta
-   *   do funil antes de acessar /checkout.
+   * - useOnboardingGuard(['upsell_physical', 'payment_upsell']): garante que o aluno
+   *   está em um dos passos de upsell antes de acessar /checkout.
    * - Redirects adicionais dependendo de current_onboarding_step e presence de upsell data.
    *
    * DEPENDÊNCIAS BACKEND:
@@ -98,7 +98,7 @@ export default function Checkout() {
    * - Funções de pagamento (pagbank-payment-v2, mercadopago-payment, efi-payment).
    * - Triggers que criam/atualizam student_cards e current_onboarding_step após pagamento.
    */
-  const { isChecking } = useOnboardingGuard("payment_upsell");
+  const { isChecking } = useOnboardingGuard(["upsell_physical", "payment_upsell"]);
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();

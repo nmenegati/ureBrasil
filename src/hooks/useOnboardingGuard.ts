@@ -17,7 +17,7 @@ export const STEP_ROUTES: Record<string, string> = {
 /**
  * Hook de guarda de onboarding baseado em current_onboarding_step.
  *
- * @param requiredStep - Nome do passo esperado (ex.: 'upload_documents', 'payment').
+ * @param requiredStep - Nome do passo esperado ou lista de passos válidos.
  * @returns { isChecking } - Booleano indicando se ainda está validando o passo atual.
  *
  * Efeitos:
@@ -30,7 +30,7 @@ export const STEP_ROUTES: Record<string, string> = {
  * - Tabela student_profiles.current_onboarding_step.
  * - Convenção de rotas definidas em STEP_ROUTES.
  */
-export function useOnboardingGuard(requiredStep: string) {
+export function useOnboardingGuard(requiredStep: string | string[]) {
   const { user } = useAuth() as any;
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
@@ -60,8 +60,9 @@ export function useOnboardingGuard(requiredStep: string) {
         }
 
         const step = data.current_onboarding_step as string;
+        const steps = Array.isArray(requiredStep) ? requiredStep : [requiredStep];
 
-        if (step === requiredStep) {
+        if (steps.includes(step)) {
           setIsChecking(false);
           return;
         }

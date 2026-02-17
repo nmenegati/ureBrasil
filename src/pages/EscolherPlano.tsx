@@ -199,17 +199,6 @@ export default function EscolherPlano() {
 
       toast.success(`Plano "${planName}" selecionado!`);
 
-      if (profileId) {
-        const { error: stepError } = await supabase
-          .from('student_profiles')
-          .update({ current_onboarding_step: 'payment' })
-          .eq('id', profileId);
-
-        if (stepError) {
-          console.warn('Erro ao atualizar current_onboarding_step (não crítico):', stepError);
-        }
-      }
-
       navigate('/pagamento');
     } catch (error: unknown) {
       toast.error('Erro ao selecionar plano');
