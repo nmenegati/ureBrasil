@@ -1,4 +1,18 @@
 -- 1. Atualizar trigger create_student_card_on_payment para status 'pending_docs'
+-- FUNÇÃO: create_student_card_on_payment()
+-- DISPARO: AFTER UPDATE em payments, quando status muda para 'approved'.
+-- FLUXO:
+--   - Ignora pagamentos marcados como upsell (metadata.is_upsell = true), atualizando
+--     apenas is_physical da carteirinha original.
+--   - Para pagamentos normais:
+--       1) Busca o plano associado em plans.
+--       2) Gera card_number e calcula valid_until.
+--       3) Cria registro em student_cards com status 'pending_docs' ou 'active'
+--          (dependendo da versão desta migration).
+-- EFEITOS NO BANCO:
+--   - INSERT em student_cards (uma carteirinha por pagamento aprovado).
+-- ATENÇÃO:
+--   - Depende de funções auxiliares generate_card_number() e calculate_card_validity().
 CREATE OR REPLACE FUNCTION public.create_student_card_on_payment()
 RETURNS trigger
 LANGUAGE plpgsql

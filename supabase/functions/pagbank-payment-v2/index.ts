@@ -1,3 +1,25 @@
+/**
+ * pagbank-payment-v2: Processa pagamentos via PagBank (cartão / gateways alternativos).
+ *
+ * TRIGGER: chamada HTTP autenticada a partir do frontend (Authorization: Bearer access_token).
+ *
+ * FLUXO:
+ * 1. Valida o token de autenticação e cria cliente Supabase.
+ * 2. Lê do body: amount, installments, dados de cartão e metadata (ex.: is_physical_avulsa).
+ * 3. Monta requisição HTTP para a API do PagBank com retry e backoff (fetchWithRetry).
+ * 4. Interpreta a resposta do gateway (aprovado, recusado, erro de validação).
+ * 5. Registra ou atualiza o registro em payments com status apropriado.
+ * 6. Retorna JSON para o frontend com sucesso ou erro detalhado.
+ *
+ * EFEITOS NO BANCO:
+ * - SELECT em student_profiles / payments conforme a implementação interna.
+ * - INSERT/UPDATE em payments com status, amount e metadados.
+ * - Pode acionar triggers que criam/atualizam student_cards.
+ *
+ * ATENÇÃO:
+ * - Usa SERVICE_ROLE_KEY internamente, protegido por autenticação de bearer token.
+ * - Erros de rede são tratados com retry; erros finais retornam status HTTP não-200.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 

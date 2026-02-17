@@ -72,6 +72,32 @@ const getValidityDate = () => {
 };
 
 export default function Checkout() {
+  /**
+   * FLUXO DO USUÁRIO:
+   * 1. Chega em /checkout como parte do fluxo de upsell físico após pagamento digital.
+   * 2. Página resolve o estado de upsell (valor, originalPaymentId) a partir de location.state
+   *    ou de dados persistidos (localStorage).
+   * 3. Carrega plano e perfil do estudante para preencher resumo e dados do pagador.
+   * 4. Usuário escolhe forma de pagamento (cartão ou PIX) e gateway disponível.
+   * 5. Em caso de cartão, preenche dados via CardForm ou SDK do Mercado Pago.
+   * 6. Ao confirmar, processa o pagamento do upsell e atualiza student_cards / step de onboarding.
+   *
+   * ESTADOS DERIVADOS:
+   * - isUpsell: indica se está em modo de oferta adicional ou fluxo normal.
+   * - resolvedUpsell: contém amount e originalPaymentId resolvidos (ou fluxo padrão).
+   * - displayAmount: valor efetivo cobrado (pode ser diferente do plano base).
+   * - isFormValid: valida campos de cartão quando gateway não é Mercado Pago.
+   *
+   * GUARDS:
+   * - useOnboardingGuard('payment_upsell'): garante que o aluno está na etapa correta
+   *   do funil antes de acessar /checkout.
+   * - Redirects adicionais dependendo de current_onboarding_step e presence de upsell data.
+   *
+   * DEPENDÊNCIAS BACKEND:
+   * - Tabela payments (para buscar pagamento original e registrar novos).
+   * - Funções de pagamento (pagbank-payment-v2, mercadopago-payment, efi-payment).
+   * - Triggers que criam/atualizam student_cards e current_onboarding_step após pagamento.
+   */
   const { isChecking } = useOnboardingGuard("payment_upsell");
   const navigate = useNavigate();
   const location = useLocation();

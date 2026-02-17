@@ -1,3 +1,26 @@
+/**
+ * mercadopago-payment: Cria pagamentos via Mercado Pago (cartão ou PIX).
+ *
+ * TRIGGER: chamada HTTP autenticada a partir do frontend (Authorization: Bearer access_token).
+ *
+ * FLUXO:
+ * 1. Valida o token do Supabase e identifica o usuário.
+ * 2. Carrega student_profiles para obter dados do pagador (nome, CPF, endereço).
+ * 3. Lê o body com dados do pagamento (amount, plan_id, card_token, payment_method_id...).
+ * 4. Monta e envia a requisição para a API do Mercado Pago (cartão ou PIX).
+ * 5. Registra o resultado em payments e vincula a planos/carteirinhas conforme metadata.
+ * 6. Retorna ao frontend JSON com status do pagamento e dados adicionais (ex.: PIX QR code).
+ *
+ * EFEITOS NO BANCO:
+ * - SELECT em student_profiles para obter dados do estudante.
+ * - INSERT/UPDATE em payments (dependendo da implementação interna).
+ * - Pode disparar triggers que criam/atualizam student_cards.
+ *
+ * ATENÇÃO:
+ * - Usa SERVICE_ROLE_KEY e deve ser exposta apenas a clientes autenticados.
+ * - metadata pode incluir flags como is_upsell, is_physical_avulsa e original_payment_id;
+ *   é responsabilidade de outras funções/triggers interpretar essas flags.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 

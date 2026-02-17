@@ -14,6 +14,25 @@ interface Progress {
   digital_card_url: string | null;
 }
 
+/**
+ * Hook para acompanhar o progresso geral do onboarding do estudante.
+ *
+ * @param userId - user_id do auth (não o student_id).
+ * @returns { progress, loading } - progress é o registro de student_progress para o usuário.
+ *
+ * Efeitos:
+ * - Busca inicialmente o registro em student_progress para o user_id informado.
+ * - Cria subscription realtime em:
+ *   - student_profiles (filtrado por user_id),
+ *   - documents,
+ *   - payments,
+ *   e refaz a consulta sempre que houver mudanças.
+ * - Remove o canal realtime no unmount do componente.
+ *
+ * Depende de:
+ * - View/tabela public.student_progress agregando estado de perfil, documentos, pagamentos e carteirinha.
+ * - Triggers ou jobs que mantenham student_progress consistente com as tabelas base.
+ */
 export function useProgress(userId: string | undefined) {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [loading, setLoading] = useState(true);

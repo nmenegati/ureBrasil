@@ -10,6 +10,30 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 import { useAuth } from "@/hooks/useAuth";
 
+/**
+ * FLUXO DO USUÁRIO:
+ * 1. Chega em /pagamento/sucesso após pagamento aprovado do plano digital.
+ * 2. Página lê dados do pagamento de location.state ou de recent_payment_id no localStorage.
+ * 3. Exibe confirmação de pagamento e, após um pequeno delay, abre modal de upsell
+ *    oferecendo a carteira física com desconto (fisica_upsell).
+ * 4. Usuário pode aceitar a oferta (navega para /checkout com dados de upsell) ou recusar
+ *    e seguir para o fluxo padrão (ex.: upload de documentos ou carteirinha).
+ *
+ * ESTADOS DERIVADOS:
+ * - isPhysicalPlan / isStandalonePhysical: indicam se o plano original já era físico.
+ * - upsellPrice: valor atual do plano fisica_upsell buscado em plans.
+ * - showUpsellModal: controla exibição do modal de oferta especial.
+ *
+ * GUARDS:
+ * - useOnboardingGuard('upsell_physical'): garante que a página só é acessada na etapa
+ *   correta do funil de pagamento.
+ * - Verificações adicionais de usuário autenticado via useAuth.
+ *
+ * DEPENDÊNCIAS BACKEND:
+ * - Tabela payments (identificação do pagamento recém-aprovado).
+ * - Tabela plans (leitura do preço atual do plano fisica_upsell).
+ * - Fluxo de checkout físico (/checkout) que usa originalPaymentId para adicionar a física.
+ */
 const PaymentSuccessPage = () => {
   const { isChecking } = useOnboardingGuard("upsell_physical");
   const navigate = useNavigate();

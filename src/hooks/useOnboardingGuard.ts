@@ -14,6 +14,22 @@ export const STEP_ROUTES: Record<string, string> = {
   completed: '/carteirinha',
 };
 
+/**
+ * Hook de guarda de onboarding baseado em current_onboarding_step.
+ *
+ * @param requiredStep - Nome do passo esperado (ex.: 'upload_documents', 'payment').
+ * @returns { isChecking } - Booleano indicando se ainda está validando o passo atual.
+ *
+ * Efeitos:
+ * - Busca em student_profiles o campo current_onboarding_step para o user_id atual.
+ * - Se o passo atual for diferente de requiredStep, redireciona para a rota mapeada em STEP_ROUTES.
+ * - Se o usuário não estiver logado ou não houver step, apenas libera a página (isChecking = false).
+ *
+ * Depende de:
+ * - Hook useAuth para obter user.id.
+ * - Tabela student_profiles.current_onboarding_step.
+ * - Convenção de rotas definidas em STEP_ROUTES.
+ */
 export function useOnboardingGuard(requiredStep: string) {
   const { user } = useAuth() as any;
   const navigate = useNavigate();

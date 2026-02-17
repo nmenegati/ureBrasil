@@ -1,3 +1,27 @@
+/**
+ * chat-support: Endpoint de chat/FAQ híbrido (FAQ em banco + LLM via OpenRouter).
+ *
+ * TRIGGER: chamada HTTP pública pelo frontend (widget de chat).
+ *
+ * FLUXO:
+ * 1. Recebe mensagem do usuário e contexto (opcional) no body.
+ * 2. Tenta responder usando base de conhecimento interna:
+ *    - Busca chat_faq ativos e tenta casar keywords.
+ *    - Atualiza usage_count do FAQ utilizado.
+ * 3. Se não encontrar resposta adequada, consulta planos atuais em plans
+ *    e monta contexto de preços/benefícios.
+ * 4. Chama modelo de linguagem via OpenRouter para gerar resposta final.
+ * 5. Retorna texto para o frontend e registra logs/resumos se necessário.
+ *
+ * EFEITOS NO BANCO:
+ * - SELECT/UPDATE em chat_faq (uso de perguntas frequentes).
+ * - SELECT em plans para obter preços atualizados.
+ * - Pode gravar logs de conversas em tabela dedicada (se configurado).
+ *
+ * ATENÇÃO:
+ * - Usa SERVICE_ROLE_KEY; deve ser usado apenas pelo frontend do projeto.
+ * - Falhas na LLM não devem derrubar o endpoint; retorna mensagens de fallback.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 

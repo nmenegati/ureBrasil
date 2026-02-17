@@ -1,3 +1,27 @@
+/**
+ * cleanup-rejected-documents: Limpa documentos rejeitados antigos e registra auditoria.
+ *
+ * TRIGGER: chamada agendada via pg_cron/pg_net (cron diário) ou manual via HTTP
+ *          com autenticação por bearer token de admin.
+ *
+ * FLUXO:
+ * 1. Valida o token do Supabase (usuário administrador/sistema).
+ * 2. Calcula a data de corte (90 dias atrás).
+ * 3. Busca até 50 documentos com status 'rejected' criados antes da data de corte.
+ * 4. Para cada documento:
+ *    - Remove o arquivo correspondente do bucket documents (se existir).
+ *    - Remove o registro da tabela documents (ou registra erro se falhar).
+ * 5. Registra operação em audit_logs com detalhes de quantos arquivos/registros foram removidos.
+ * 6. Retorna resumo JSON da execução (success, results).
+ *
+ * EFEITOS NO BANCO:
+ * - DELETE em documents (registros antigos rejeitados).
+ * - INSERT em audit_logs com ação system_cleanup.
+ *
+ * ATENÇÃO:
+ * - Usa SERVICE_ROLE_KEY internamente; deve ser exposto apenas a chamadas internas/cron.
+ * - Em caso de falha ao remover arquivos, o registro pode ser mantido para evitar órfãos.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 

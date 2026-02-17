@@ -1,3 +1,27 @@
+/**
+ * delete-user-data: Remove dados de um usuário autenticado (LGPD/encerramento).
+ *
+ * TRIGGER: chamada HTTP autenticada (Bearer token) a partir do painel/app.
+ *
+ * FLUXO:
+ * 1. Valida o token do Supabase e identifica o usuário autenticado.
+ * 2. Busca student_profiles associado (incluindo student_cards).
+ * 3. Remove/anonimiza dados relacionados:
+ *    - documents (registros e arquivos em storage).
+ *    - profile-photos (arquivos ligados ao user.id).
+ *    - student-cards (arquivos digitais em storage).
+ *    - registros em audit_logs e outras tabelas relacionadas ao student_id.
+ * 4. Opcionalmente apaga ou anonimiza informações sensíveis (CPF, e‑mail).
+ * 5. Retorna status 200/204 em caso de sucesso, 4xx/5xx em erro.
+ *
+ * EFEITOS NO BANCO:
+ * - DELETE/UPDATE em student_profiles, documents, payments, audit_logs.
+ * - Remoção de arquivos nos buckets documents, profile-photos, student-cards.
+ *
+ * ATENÇÃO:
+ * - Usa SUPABASE_SERVICE_ROLE_KEY, portanto deve ser protegido por autenticação forte.
+ * - Falhas em etapas individuais podem deixar dados residuais; respostas parciais não são diferenciadas.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createHash } from "https://deno.land/std@0.119.0/hash/mod.ts";

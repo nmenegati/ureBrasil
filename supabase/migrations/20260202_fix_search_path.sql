@@ -55,6 +55,19 @@ $$;
 
 
 -- Função 2
+-- FUNÇÃO: auto_generate_card_data()
+-- DISPARO: BEFORE INSERT/UPDATE em student_cards (conforme triggers configurados).
+-- FLUXO:
+--   1) Gera card_number se ainda não houver.
+--   2) Gera usage_code se ainda não houver.
+--   3) Calcula valid_until se ainda não houver (usando calculate_card_validity).
+--   4) Busca dados do estudante em student_profiles para montar JSON do QR Code.
+--   5) Preenche qr_code com JSON serializado contendo dados mascarados do CPF e info da carteira.
+-- EFEITOS NO BANCO:
+--   - Usa student_profiles apenas para leitura.
+--   - Atualiza campos da própria linha de student_cards (NEW.*).
+-- ATENÇÃO:
+--   - Não altera status da carteirinha; isso é responsabilidade de outras funções/trigger.
 CREATE OR REPLACE FUNCTION auto_generate_card_data()
 RETURNS TRIGGER
 LANGUAGE plpgsql

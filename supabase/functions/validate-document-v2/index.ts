@@ -1,3 +1,27 @@
+/**
+ * validate-document-v2: Valida documentos enviados usando IA (Claude/OpenRouter).
+ *
+ * TRIGGER: chamada pelo trigger trigger_validate_document em documents
+ *          (via pg_net) e também pode ser chamada diretamente via HTTP
+ *          com body contendo record ou { document_id, student_id, type, file_url }.
+ *
+ * FLUXO:
+ * 1. Recebe o registro do documento (id, type, file_url, student_id).
+ * 2. Baixa o arquivo do bucket documents.
+ * 3. Verifica tipo de arquivo permitido por tipo de documento (imagem/PDF).
+ * 4. Envia conteúdo para o modelo via OpenRouter/Claude com prompt específico.
+ * 5. Interpreta resposta da IA (aprovado/reprovado, motivos, ajustes sugeridos).
+ * 6. Atualiza documents.status, rejection_reason, validated_at e outros campos derivados.
+ * 7. Registra logs em audit_logs (quando aplicável) para rastreio.
+ *
+ * EFEITOS NO BANCO:
+ * - UPDATE na tabela documents (status, rejection_reason, validated_at, metadata).
+ * - INSERT opcional em audit_logs com detalhes da validação.
+ *
+ * ATENÇÃO:
+ * - Não altera student_profiles nem student_cards diretamente.
+ * - Deve sempre retornar status HTTP coerente (400 para input inválido, 502 para falhas externas).
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 

@@ -2,6 +2,25 @@ import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Hook de autenticação global baseado no Supabase Auth.
+ *
+ * @returns { user, session, loading, profile, signIn, signUp, signOut }
+ * - user: objeto User do Supabase (ou null se não autenticado).
+ * - session: sessão atual (tokens, expiração).
+ * - loading: true enquanto a sessão inicial está sendo verificada.
+ * - profile: registro correspondente em student_profiles (ligado por user_id).
+ * - signIn / signUp / signOut: wrappers simples para operações de auth.
+ *
+ * Efeitos:
+ * - Chama supabase.auth.getSession() ao montar para restaurar a sessão.
+ * - Registra listener supabase.auth.onAuthStateChange para manter user/session em sync.
+ * - Consulta student_profiles sempre que user.id muda.
+ *
+ * Depende de:
+ * - Supabase Auth configurado no projeto.
+ * - Tabela public.student_profiles com coluna user_id.
+ */
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);

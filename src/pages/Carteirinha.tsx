@@ -38,6 +38,29 @@ interface CardData {
 }
 
 export default function Carteirinha() {
+  /**
+   * FLUXO DO USUÁRIO:
+   * 1. Após concluir o onboarding e ter carteirinha ativa, acessa /carteirinha.
+   * 2. Página busca student_profiles e student_cards ativos para montar a visualização.
+   * 3. Usuário pode alternar entre frente/verso, fazer swipe (mobile/desktop) e baixar
+   *    a imagem da carteirinha (html2canvas + download).
+   * 4. Caso não encontre carteirinha ativa, redireciona para passos anteriores ou mostra erro.
+   *
+   * ESTADOS DERIVADOS:
+   * - side: controla se está mostrando frente ou verso.
+   * - profilePhotoUrl: URL da foto do perfil usada no layout.
+   * - qrCodeUrl: data URL do QRCode gerado a partir de usage_code.
+   *
+   * GUARDS:
+   * - useOnboardingGuard('completed'): garante que apenas alunos com fluxo concluído
+   *   acessem /carteirinha (baseado em current_onboarding_step).
+   * - Redireciona para /login se não houver usuário autenticado.
+   *
+   * DEPENDÊNCIAS BACKEND:
+   * - student_profiles (dados pessoais, instituição, curso, matrícula).
+   * - student_cards (card_number, usage_code, status, digital_card_url).
+   * - Triggers de pagamentos e documentos que mantêm o card em status 'active'.
+   */
   const { isChecking } = useOnboardingGuard('completed');
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);

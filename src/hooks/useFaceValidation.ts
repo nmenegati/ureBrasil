@@ -12,6 +12,22 @@ interface FaceValidationResult {
   created_at: string;
 }
 
+/**
+ * Hook para acompanhar o resultado da validação facial de um estudante.
+ *
+ * @param studentId - ID da tabela student_profiles (não é o user_id do auth).
+ * @returns { result, loading } - result é o último registro em face_validations para o studentId.
+ *
+ * Efeitos:
+ * - Faz uma consulta inicial em face_validations buscando o registro mais recente.
+ * - Cria uma subscription realtime (postgres_changes) para INSERTs em face_validations
+ *   filtrados por student_id e atualiza o result automaticamente.
+ * - Remove o canal realtime no unmount do componente.
+ *
+ * Depende de:
+ * - Tabela public.face_validations com coluna student_id e created_at.
+ * - Edge function compare-faces e triggers que inserem registros em face_validations.
+ */
 export function useFaceValidation(studentId: string | undefined) {
   const [result, setResult] = useState<FaceValidationResult | null>(null);
   const [loading, setLoading] = useState(true);

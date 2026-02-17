@@ -99,6 +99,30 @@ const detectCardBrand = (cardNumber: string) => {
   return "visa";
 };
 
+/**
+ * FLUXO DO USUÁRIO:
+ * 1. Chega em /pagamento após escolher um plano digital (geral ou direito).
+ * 2. Página carrega o plano selecionado e o perfil do estudante.
+ * 3. Usuário escolhe forma de pagamento (cartão ou PIX) e gateway disponível.
+ * 4. Em caso de cartão, preenche dados via CardForm ou SDK Mercado Pago.
+ * 5. Ao confirmar, a edge function de pagamento é chamada e cria/atualiza o registro em payments.
+ * 6. Triggers backend criam o student_card digital e avançam o onboarding.
+ *
+ * ESTADOS DERIVADOS:
+ * - paymentMethod: null, 'card' ou 'pix', controlando qual UI exibir.
+ * - isFormValid: valida campos de cartão para gateways não-Mercado Pago.
+ * - displayAmount: valor final cobrado (pode incluir descontos/ofertas).
+ *
+ * GUARDS:
+ * - useOnboardingGuard('payment'): garante que o usuário só acesse /pagamento
+ *   na etapa correta do funil.
+ * - Redireciona para login ou escolher plano se não houver sessão ou plano válido.
+ *
+ * DEPENDÊNCIAS BACKEND:
+ * - Tabela payments (criação de transações e vinculação a plans/student_profiles).
+ * - Edge functions mercadopago-payment, pagbank-payment-v2 e efi-payment.
+ * - Triggers que criam student_cards e atualizam current_onboarding_step após pagamento.
+ */
 export default function Pagamento() {
   const { isChecking } = useOnboardingGuard("payment");
   const navigate = useNavigate();

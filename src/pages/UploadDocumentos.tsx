@@ -465,6 +465,36 @@ const DocumentCard = ({
   );
 };
 
+/**
+ * FLUXO DO USUÁRIO:
+ * 1. Faz login e cai em /upload-documentos (guarded por useOnboardingGuard).
+ * 2. Envia 4 documentos: matrícula, documento de identidade (RG/CNH), foto 3x4 e selfie.
+ * 3. Cada upload dispara validação automática (validate-document-v2 + IA) e atualiza status.
+ * 4. Quando os 4 documentos estão aprovados, o checkbox de termos é exibido.
+ * 5. Ao aceitar os termos, inicia polling de face_validated e chama advance_to_review.
+ * 6. Quando face_validated e advance_to_review retornam OK, usuário é redirecionado
+ *    para /gerar-carteirinha para revisão final dos dados.
+ *
+ * ESTADOS DERIVADOS:
+ * - allDocsUploaded: existem registros para todos os 4 tipos de documento.
+ * - allDocsApproved: todos os 4 documentos estão com status 'approved'.
+ * - termsOk: termsAccepted || termsAlreadyAccepted.
+ * - faceOk: profile.face_validated === true.
+ * - canGenerateCard: allDocsApproved && faceOk && termsOk.
+ * - canSubmit: allDocsUploaded && termsOk (controle de CTA legado).
+ *
+ * GUARDS:
+ * - useOnboardingGuard('upload_documents'): impede acesso fora da etapa certa
+ *   e redireciona conforme current_onboarding_step.
+ * - Bloqueio adicional se usuário não estiver autenticado (redirect para /login).
+ *
+ * DEPENDÊNCIAS BACKEND:
+ * - Edge function validate-document-v2: valida cada documento e atualiza documents.
+ * - Edge function compare-faces: compara selfie com documentos de rosto e atualiza
+ *   face_validated + face_validations.
+ * - RPC advance_to_review: checa se docs/face/termos estão ok e muda passo para review_data.
+ * - Triggers em documents/payments/student_cards que mantêm o fluxo sincronizado.
+ */
 export default function UploadDocumentos() {
   const { isChecking } = useOnboardingGuard('upload_documents');
   const { user, loading: authLoading } = useAuth();

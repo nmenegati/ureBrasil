@@ -40,6 +40,25 @@ const loadMercadoPagoSDK = (): Promise<void> => {
   });
 };
 
+/**
+ * Hook de integração com o SDK do Mercado Pago no frontend.
+ *
+ * @returns {
+ *  sdkReady, loading, error,
+ *  initCardForm, processCardPayment, processPixPayment
+ * } - estados e ações para inicializar o CardForm e disparar pagamentos.
+ *
+ * Efeitos:
+ * - Injeta o script do SDK Mercado Pago (https://sdk.mercadopago.com/js/v2) no DOM.
+ * - Inicializa o cardForm (iframes seguros) com IDs fornecidos pelo chamador.
+ * - Usa supabase.functions.invoke('mercadopago-payment') para processar pagamentos
+ *   de cartão/PIX, repassando metadados (plan_id, amount, is_upsell etc.).
+ *
+ * Depende de:
+ * - Edge function mercadopago-payment configurada no Supabase.
+ * - Variável de ambiente VITE_MP_PUBLIC_KEY válida no frontend.
+ * - Autenticação do usuário (supabase.auth.getSession) para obter access_token.
+ */
 export function useMercadoPago() {
   const [mp, setMp] = useState<any>(null);
   const [cardForm, setCardForm] = useState<any>(null);

@@ -1,3 +1,29 @@
+/**
+ * compare-faces: Compara selfie com documentos de rosto via AWS Rekognition.
+ *
+ * TRIGGER: chamada pela trigger de documentos (on_document_approved_compare_faces)
+ *          e/ou manualmente via Edge Function HTTP com body { student_id }.
+ *
+ * FLUXO:
+ * 1. Recebe student_id no body da requisição.
+ * 2. Busca em documents os arquivos mais recentes de tipo 'selfie', 'rg' e 'foto'.
+ * 3. Se não houver selfie + ao menos um documento com foto, retorna ready: false.
+ * 4. Faz download dos arquivos relevantes do bucket de documents.
+ * 5. Chama AWS Rekognition CompareFaces para cada par (selfie x rg, selfie x foto).
+ * 6. Calcula se a similaridade passou do threshold configurado.
+ * 7. Atualiza student_profiles.face_validated e insere registro em face_validations.
+ * 8. Registra log em audit_logs com detalhes da comparação.
+ *
+ * EFEITOS NO BANCO:
+ * - SELECT em documents para obter arquivos de rosto.
+ * - UPDATE em student_profiles.face_validated (true/false).
+ * - INSERT em face_validations com resultado e similaridades.
+ * - INSERT em audit_logs (ação face_comparison).
+ *
+ * ATENÇÃO:
+ * - Não altera current_onboarding_step nem o status do student_card.
+ * - Falhas ao gravar em audit_logs são logadas mas não interrompem o fluxo principal.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts"
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"

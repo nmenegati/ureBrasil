@@ -224,7 +224,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
         : 'Carteira Física',
       icon: Package,
       highlight: true,
-      onClick: () => navigate('/adquirir-fisica'),
+      onClick: () => navigate('/checkout-fisica'),
     });
   }
 
