@@ -145,7 +145,17 @@ export default function CheckoutFisica() {
           .eq("status", "active")
           .maybeSingle();
 
-        if (cardError || !studentCard) {
+        if (cardError) {
+          console.error("[CHECKOUT_FISICA] Erro ao buscar carteirinha digital ativa:", {
+            studentId: profile.id,
+            error: cardError.message,
+          });
+          toast.error("Erro ao verificar sua carteirinha digital.");
+          navigate("/carteirinha", { replace: true });
+          return;
+        }
+
+        if (!studentCard) {
           setNoDigitalCard(true);
           return;
         }
@@ -160,6 +170,11 @@ export default function CheckoutFisica() {
           .single();
 
         if (planError || !physicalPlan) {
+          if (planError) {
+            console.error("[CHECKOUT_FISICA] Erro ao buscar plano fisica_avulsa:", {
+              error: planError.message,
+            });
+          }
           toast.error("Plano de carteirinha física não encontrado.");
           return;
         }
@@ -173,11 +188,17 @@ export default function CheckoutFisica() {
           is_direito: physicalPlan.is_direito,
         });
 
-        const { data: gatewayConfig } = await supabase
+        const { data: gatewayConfig, error: gatewayError } = await supabase
           .from("payment_gateway_config")
           .select("gateway_name")
           .eq("is_active", true)
           .single();
+
+        if (gatewayError) {
+          console.error("[CHECKOUT_FISICA] Erro ao carregar gateway ativo:", {
+            error: gatewayError.message,
+          });
+        }
 
         if (gatewayConfig?.gateway_name) {
           setActiveGateway(gatewayConfig.gateway_name);

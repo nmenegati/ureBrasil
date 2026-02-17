@@ -339,11 +339,20 @@ export default function Checkout() {
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("student_profiles")
         .select("current_onboarding_step")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      if (error) {
+        console.error("[CHECKOUT] Erro ao buscar current_onboarding_step:", {
+          userId: user.id,
+          error: error.message,
+        });
+        navigate("/complete-profile", { replace: true });
+        return;
+      }
 
       const step = (data?.current_onboarding_step as string | null) ?? "complete_profile";
       const redirectTo = STEP_ROUTES[step] || STEP_ROUTES["complete_profile"];
@@ -391,11 +400,18 @@ export default function Checkout() {
             profile.education_level === "stricto_sensu");
         setIsValidLawStudent(validLaw);
 
-        const { data: originalPayment } = await supabase
+        const { data: originalPayment, error: originalPaymentError } = await supabase
           .from("payments")
           .select("plan_id, plans(name)")
           .eq("id", resolvedUpsell.originalPaymentId)
           .single();
+
+        if (originalPaymentError) {
+          console.error("[CHECKOUT] Erro ao carregar pagamento original:", {
+            originalPaymentId: resolvedUpsell.originalPaymentId,
+            error: originalPaymentError.message,
+          });
+        }
 
         const originalPlanName = originalPayment?.plans
           ? (originalPayment.plans as { name: string }).name
@@ -412,8 +428,8 @@ export default function Checkout() {
 
         console.log("[Checkout] plan set with originalPlanName:", originalPlanName);
       } catch (error) {
-        console.error("Erro ao carregar:", error);
-        toast.error("Erro ao carregar informações");
+        console.error("[CHECKOUT] Erro ao carregar dados de upsell:", error);
+        toast.error("Erro ao carregar informações de pagamento");
       } finally {
         setLoading(false);
       }
@@ -431,11 +447,20 @@ export default function Checkout() {
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("student_profiles")
         .select("current_onboarding_step")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      if (error) {
+        console.error("[CHECKOUT] Erro ao buscar current_onboarding_step (handleSubmit):", {
+          userId: user.id,
+          error: error.message,
+        });
+        navigate("/complete-profile", { replace: true });
+        return;
+      }
 
       const step = (data?.current_onboarding_step as string | null) ?? "complete_profile";
       const redirectTo = STEP_ROUTES[step] || STEP_ROUTES["complete_profile"];
@@ -580,8 +605,9 @@ export default function Checkout() {
       }
 
     } catch (error: unknown) {
-      console.error("Erro no pagamento:", error);
-      const errorMessage = error instanceof Error ? error.message : "Erro ao processar pagamento";
+      console.error("[CHECKOUT] Erro no pagamento de upsell:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro ao processar pagamento do upsell";
       toast.error(errorMessage);
     } finally {
       setProcessing(false);

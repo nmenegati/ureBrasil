@@ -47,7 +47,12 @@ export function useProgress(userId: string | undefined) {
         .eq('user_id', userId)
         .single();
 
-      if (!error && data) {
+      if (error) {
+        console.error('[useProgress] Erro ao buscar progresso do estudante:', {
+          userId,
+          error: error.message,
+        });
+      } else if (data) {
         setProgress(data as Progress);
       }
       setLoading(false);

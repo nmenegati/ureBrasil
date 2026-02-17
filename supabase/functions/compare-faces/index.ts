@@ -159,27 +159,45 @@ serve(async (req) => {
 
       if (passed) {
           console.log('Validação facial APROVADA')
-          await supabase.from('student_profiles')
+          const { error: updateProfileError } = await supabase.from('student_profiles')
             .update({ face_validated: true })
             .eq('id', student_id)
+          if (updateProfileError) {
+            console.error('[FACE] Erro ao atualizar student_profiles.face_validated:', {
+              student_id,
+              error: updateProfileError.message,
+            })
+          }
 
-          // ADICIONAR AQUI ↓
-          await supabase.from('face_validations').insert({
+          const { error: validationInsertOkError } = await supabase.from('face_validations').insert({
             student_id,
             rg_similarity: matchRG.similarity || 0,
             foto_similarity: matchFoto.similarity || 0,
             passed: true,
             attempt_number: 1,
-          });
+          })
+          if (validationInsertOkError) {
+            console.error('[FACE] Erro ao registrar face_validations (aprovado):', {
+              student_id,
+              error: validationInsertOkError.message,
+            })
+          }
 
           const docIdsToApprove = [selfie.id]
           if (rg) docIdsToApprove.push(rg.id)
           if (foto) docIdsToApprove.push(foto.id)
           
-          await supabase.from('documents')
+          const { error: approveDocsError } = await supabase.from('documents')
               .update({ status: 'approved' })
               .in('id', docIdsToApprove)
               .eq('status', 'pending')
+          if (approveDocsError) {
+            console.error('[FACE] Erro ao atualizar documentos para approved:', {
+              student_id,
+              docs: docIdsToApprove,
+              error: approveDocsError.message,
+            })
+          }
 
           if (foto?.file_url) {
             await copyPhotoToPublicBucket(supabase, student_id, foto.file_url)
@@ -192,19 +210,31 @@ serve(async (req) => {
           if (!matchRG.match) reason += `Rosto não confere com RG (${Math.round(matchRG.similarity)}%). `
           if (!matchFoto.match) reason += `Rosto não confere com Foto 3x4 (${Math.round(matchFoto.similarity)}%).`
 
-          // ADICIONAR AQUI ↓
-          await supabase.from('face_validations').insert({
+          const { error: validationInsertFailError } = await supabase.from('face_validations').insert({
             student_id,
             rg_similarity: matchRG.similarity || 0,
             foto_similarity: matchFoto.similarity || 0,
             passed: false,
             attempt_number: 1,
-          });
+          })
+          if (validationInsertFailError) {
+            console.error('[FACE] Erro ao registrar face_validations (reprovado):', {
+              student_id,
+              error: validationInsertFailError.message,
+            })
+          }
 
-          await supabase.from('documents').update({
+          const { error: rejectDocError } = await supabase.from('documents').update({
               status: 'rejected',
               rejection_reason: reason.trim()
           }).eq('id', selfie.id)
+          if (rejectDocError) {
+            console.error('[FACE] Erro ao marcar selfie como rejeitada:', {
+              selfieId: selfie.id,
+              student_id,
+              error: rejectDocError.message,
+            })
+          }
 
           await logAudit(supabase, student_id, 'rejected', { ...details, reason })
       }
@@ -225,7 +255,7 @@ serve(async (req) => {
         error: message
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
+        status: 500
       })
     }
 
@@ -301,16 +331,18 @@ async function compareTwoFaces(client: AWSSignerV4, region: string, source: Uint
 }
 
 async function logAudit(supabase: SupabaseClient, studentId: string, result: string, details: Record<string, unknown>) {
-    try {
-        await supabase.from('audit_logs').insert({
-            action: 'face_comparison',
-            resource_type: 'student_profile',
-            resource_id: studentId, 
-            student_id: studentId,
-            details: { result, ...details }
-        })
-    } catch (e) {
-        console.error('Audit log error:', e)
+    const { error } = await supabase.from('audit_logs').insert({
+        action: 'face_comparison',
+        resource_type: 'student_profile',
+        resource_id: studentId, 
+        student_id: studentId,
+        details: { result, ...details }
+    })
+    if (error) {
+      console.error('[FACE] Audit log insert error:', {
+        studentId,
+        error: error.message,
+      })
     }
 }
 

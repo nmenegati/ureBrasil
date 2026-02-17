@@ -44,7 +44,12 @@ export function useFaceValidation(studentId: string | undefined) {
         .limit(1)
         .maybeSingle();
 
-      if (!error && data) {
+      if (error) {
+        console.error('[useFaceValidation] Erro ao buscar validação facial:', {
+          studentId,
+          error: error.message,
+        });
+      } else if (data) {
         setResult(data as FaceValidationResult);
       }
       setLoading(false);

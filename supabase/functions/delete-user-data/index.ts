@@ -106,12 +106,19 @@ serve(async (req) => {
     if (card) {
       const cpfHash = hashCpf(profile.cpf as string);
 
-      const { count } = await supabase
+      const { count, error: auditCountError } = await supabase
         .from("auditoria_cie")
         .select("*", { count: "exact", head: true })
         .eq("hash_cpf", cpfHash);
 
-      await supabase.from("auditoria_cie").insert({
+      if (auditCountError) {
+        console.error('[DELETE_USER_DATA] Erro ao contar auditoria_cie:', {
+          studentId,
+          error: auditCountError.message,
+        });
+      }
+
+      const { error: auditInsertError } = await supabase.from("auditoria_cie").insert({
         hash_cpf: cpfHash,
         data_emissao: card.issued_at,
         data_expiracao: card.valid_until,
@@ -122,16 +129,37 @@ serve(async (req) => {
         quantidade_exclusoes_anteriores: count || 0,
         timestamp_exclusao_lgpd: new Date().toISOString(),
       });
+
+      if (auditInsertError) {
+        console.error('[DELETE_USER_DATA] Erro ao registrar auditoria_cie:', {
+          studentId,
+          error: auditInsertError.message,
+        });
+      }
     }
 
-    await supabase.rpc("mark_payment_as_anonymized", {
+    const { error: markError } = await supabase.rpc("mark_payment_as_anonymized", {
       payment_student_id: studentId,
     });
 
-    const { data: docs } = await supabase
+    if (markError) {
+      console.error('[DELETE_USER_DATA] Erro ao marcar pagamentos como anonimizados:', {
+        studentId,
+        error: markError.message,
+      });
+    }
+
+    const { data: docs, error: docsError } = await supabase
       .from("documents")
       .select("file_url")
       .eq("student_id", studentId);
+
+    if (docsError) {
+      console.error('[DELETE_USER_DATA] Erro ao buscar documentos para remoção:', {
+        studentId,
+        error: docsError.message,
+      });
+    }
 
     if (docs && docs.length > 0) {
       const filePaths = docs
@@ -167,21 +195,119 @@ serve(async (req) => {
     }
     
     await supabase.storage.from('student-cards').remove([user.id]);
-    await supabase.from("audit_logs").delete().eq("student_id", studentId);
-    await supabase.from("documents").delete().eq("student_id", studentId);
-    await supabase.from("student_cards").delete().eq("student_id", studentId);
-    await supabase.from("student_profiles").delete().eq("id", studentId);
+
+    const { error: auditDeleteError } = await supabase.from("audit_logs").delete().eq("student_id", studentId);
+    if (auditDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover audit_logs:', {
+        studentId,
+        error: auditDeleteError.message,
+      });
+    }
+
+    const { error: docsDeleteError } = await supabase.from("documents").delete().eq("student_id", studentId);
+    if (docsDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover documents:', {
+        studentId,
+        error: docsDeleteError.message,
+      });
+    }
+
+    const { error: cardsDeleteError } = await supabase.from("student_cards").delete().eq("student_id", studentId);
+    if (cardsDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover student_cards:', {
+        studentId,
+        error: cardsDeleteError.message,
+      });
+    }
+
+    const { error: profilesDeleteError } = await supabase.from("student_profiles").delete().eq("id", studentId);
+    if (profilesDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover student_profiles:', {
+        studentId,
+        error: profilesDeleteError.message,
+      });
+    }
     // Apagar profile photos
     await supabase.storage.from('profile-photos').remove([`${user.id}`]);
-    await supabase.from("face_validations").delete().eq("student_id", studentId);
-    await supabase.from("support_messages").delete().in("ticket_id", 
-    (await supabase.from("support_tickets").select("id").eq("student_id", studentId)).data?.map(t => t.id) || [] );
-    await supabase.from("support_tickets").delete().eq("student_id", studentId);
-    await supabase.from("support_escalations").delete().eq("student_id", studentId);
-    await supabase.from("notifications").delete().eq("student_id", studentId);
-    await supabase.from("activity_log").delete().eq("student_id", studentId);
-    await supabase.from("physical_card_prints").delete().eq("student_id", studentId);
-    await supabase.from("cpf_validations").delete().eq("cpf", profile.cpf?.replace(/\D/g, ''));
+
+    const { error: faceDeleteError } = await supabase.from("face_validations").delete().eq("student_id", studentId);
+    if (faceDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover face_validations:', {
+        studentId,
+        error: faceDeleteError.message,
+      });
+    }
+
+    const ticketsResponse = await supabase.from("support_tickets").select("id").eq("student_id", studentId);
+    if (ticketsResponse.error) {
+      console.error('[DELETE_USER_DATA] Erro ao buscar support_tickets:', {
+        studentId,
+        error: ticketsResponse.error.message,
+      });
+    }
+    const ticketIds = ticketsResponse.data?.map(t => t.id) || [];
+
+    const { error: messagesDeleteError } = await supabase
+      .from("support_messages")
+      .delete()
+      .in("ticket_id", ticketIds);
+    if (messagesDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover support_messages:', {
+        studentId,
+        error: messagesDeleteError.message,
+      });
+    }
+
+    const { error: ticketsDeleteError } = await supabase.from("support_tickets").delete().eq("student_id", studentId);
+    if (ticketsDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover support_tickets:', {
+        studentId,
+        error: ticketsDeleteError.message,
+      });
+    }
+
+    const { error: escalationsDeleteError } = await supabase.from("support_escalations").delete().eq("student_id", studentId);
+    if (escalationsDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover support_escalations:', {
+        studentId,
+        error: escalationsDeleteError.message,
+      });
+    }
+
+    const { error: notificationsDeleteError } = await supabase.from("notifications").delete().eq("student_id", studentId);
+    if (notificationsDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover notifications:', {
+        studentId,
+        error: notificationsDeleteError.message,
+      });
+    }
+
+    const { error: activityDeleteError } = await supabase.from("activity_log").delete().eq("student_id", studentId);
+    if (activityDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover activity_log:', {
+        studentId,
+        error: activityDeleteError.message,
+      });
+    }
+
+    const { error: printsDeleteError } = await supabase.from("physical_card_prints").delete().eq("student_id", studentId);
+    if (printsDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover physical_card_prints:', {
+        studentId,
+        error: printsDeleteError.message,
+      });
+    }
+
+    const { error: cpfValidationsDeleteError } = await supabase
+      .from("cpf_validations")
+      .delete()
+      .eq("cpf", profile.cpf?.replace(/\D/g, ''));
+    if (cpfValidationsDeleteError) {
+      console.error('[DELETE_USER_DATA] Erro ao remover cpf_validations:', {
+        studentId,
+        error: cpfValidationsDeleteError.message,
+      });
+    }
 
     const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
     if (deleteError) throw deleteError;

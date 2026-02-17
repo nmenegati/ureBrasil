@@ -234,11 +234,18 @@ export default function Pagamento() {
 
   useEffect(() => {
     const fetchGateway = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("payment_gateway_config")
         .select("gateway_name")
         .eq("is_active", true)
         .single();
+
+      if (error) {
+        console.error("[PAGAMENTO] Erro ao carregar gateway ativo:", {
+          error: error.message,
+        });
+        return;
+      }
 
       if (data?.gateway_name) {
         setActiveGateway(data.gateway_name);
@@ -423,7 +430,10 @@ export default function Pagamento() {
           ));
         }
 
-        if (error) throw error;
+        if (error) {
+          console.error("[PAGAMENTO] Erro na função create-payment (PIX):", error);
+          throw error;
+        }
 
         if (data?.pix_code) {
           navigate("/pagamento/pix", { state: { paymentData: data } });
@@ -431,11 +441,18 @@ export default function Pagamento() {
           toast.success("Pagamento processado com sucesso!");
           const nextStep = plan.is_physical ? "upload_documents" : "upsell_physical";
 
-          const { data: profileRow } = await supabase
+          const { data: profileRow, error: profileError } = await supabase
             .from("student_profiles")
             .select("id")
             .eq("user_id", user.id)
             .maybeSingle();
+
+          if (profileError) {
+            console.error("[PAGAMENTO] Erro ao buscar profileRow para atualizar step (PIX):", {
+              userId: user.id,
+              error: profileError.message,
+            });
+          }
 
           if (profileRow?.id) {
             const { error: stepError } = await supabase
@@ -560,7 +577,10 @@ export default function Pagamento() {
           ));
         }
 
-        if (error) throw error;
+        if (error) {
+          console.error("[PAGAMENTO] Erro em função de pagamento (cartão):", error);
+          throw error;
+        }
 
         if (!data?.success) {
           const msg =
@@ -572,12 +592,18 @@ export default function Pagamento() {
         toast.success("Pagamento processado com sucesso!");
         const nextStep = plan.is_physical ? "upload_documents" : "upsell_physical";
 
-        const { data: profileRow } = await supabase
+        const { data: profileRow, error: profileError } = await supabase
           .from("student_profiles")
           .select("id")
           .eq("user_id", user.id)
           .maybeSingle();
 
+        if (profileError) {
+          console.error("[PAGAMENTO] Erro ao buscar profileRow para atualizar step (cartão):", {
+            userId: user.id,
+            error: profileError.message,
+          });
+        }
         if (profileRow?.id) {
           const { error: stepError } = await supabase
             .from("student_profiles")

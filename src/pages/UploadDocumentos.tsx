@@ -551,7 +551,14 @@ export default function UploadDocumentos() {
       .select('*')
       .eq('student_id', profile.id);
       
-    if (error) return;
+    if (error) {
+      console.error('[UPLOAD_DOCUMENTOS] Erro ao carregar documentos:', {
+        studentId: profile.id,
+        error: error.message,
+      });
+      toast.error('Erro ao carregar documentos');
+      return;
+    }
     
     const docsMap: Record<string, DocumentRecord> = {};
     const newPreviews: Record<string, string> = {};
@@ -600,12 +607,20 @@ export default function UploadDocumentos() {
     const checkTerms = async () => {
       if (!profile?.id) return;
       
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('student_profiles')
         .select('terms_accepted, terms_accepted_at, terms_version')
         .eq('id', profile.id)
         .maybeSingle();
-      
+
+      if (error) {
+        console.error('[UPLOAD_DOCUMENTOS] Erro ao carregar termos:', {
+          profileId: profile.id,
+          error: error.message,
+        });
+        return;
+      }
+
       if (data?.terms_accepted) {
         setTermsAccepted(true);
         setTermsAlreadyAccepted(true);
@@ -620,11 +635,19 @@ export default function UploadDocumentos() {
   useEffect(() => {
     const checkIfLocked = async () => {
       if (!profile?.id) return;
-      const { data: card } = await supabase
+      const { data: card, error } = await supabase
         .from('student_cards')
         .select('status')
         .eq('student_id', profile.id)
         .maybeSingle();
+
+      if (error) {
+        console.error('[UPLOAD_DOCUMENTOS] Erro ao verificar bloqueio de documentos:', {
+          profileId: profile.id,
+          error: error.message,
+        });
+        return;
+      }
       if (card?.status === 'active') {
         toast.error('Documentos não podem ser alterados com carteira ativa. Entre em contato com suporte.');
       }
@@ -879,7 +902,8 @@ const handleUpload = async (file: File, type: DocumentType) => {
       }, 5000);
      
     } catch (error) {
-      toast.error('Erro ao processar. Tente novamente.');
+      console.error('[TERMOS] Erro inesperado ao salvar aceitação do termo:', error);
+      toast.error('Erro ao salvar aceitação do termo. Tente novamente.');
     }
   };
   
@@ -888,9 +912,16 @@ const handleUpload = async (file: File, type: DocumentType) => {
       toast.error('Perfil não carregado.');
       return;
     }
-    const { data } = await supabase.rpc('advance_to_review', {
+    const { data, error } = await supabase.rpc('advance_to_review', {
       p_student_id: profile.id,
     });
+
+    if (error) {
+      console.error('[UPLOAD_DOCUMENTOS] RPC advance_to_review erro:', error);
+      toast.error('Erro interno ao avançar para revisão. Tente novamente.');
+      return;
+    }
+
     if (data === true) {
       window.location.href = '/gerar-carteirinha';
     } else {

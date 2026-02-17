@@ -89,12 +89,19 @@ const PaymentSuccessPage = () => {
     }, 2000);
 
     const loadUpsellPrice = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("plans")
         .select("price")
         .eq("type", "fisica_upsell")
         .eq("is_active", true)
         .single();
+
+      if (error) {
+        console.error("[PAYMENT_SUCCESS] Erro ao carregar preço de fisica_upsell:", {
+          error: error.message,
+        });
+        return;
+      }
 
       if (data) {
         setUpsellPrice(data.price);
@@ -117,25 +124,41 @@ const PaymentSuccessPage = () => {
         state.paymentId || localStorage.getItem("recent_payment_id");
 
       if (incomingPaymentId) {
-        const { data: payment } = await supabase
+        const { data: payment, error: paymentError } = await supabase
           .from("payments")
           .select("id, status")
           .eq("id", incomingPaymentId)
           .single();
 
+        if (paymentError) {
+          console.error("[PAYMENT_SUCCESS] Erro ao buscar pagamento para upsell:", {
+            paymentId: incomingPaymentId,
+            error: paymentError.message,
+          });
+          navigate("/pagamento");
+          return;
+        }
+
         if (!payment || payment.status !== "approved") {
-          console.warn("Payment not found or not approved:", incomingPaymentId);
+          console.warn("[PAYMENT_SUCCESS] Pagamento não encontrado ou não aprovado:", incomingPaymentId);
           navigate("/pagamento");
           return;
         }
       }
 
       if (user) {
-        const { data: profileRow } = await supabase
+        const { data: profileRow, error: profileError } = await supabase
           .from("student_profiles")
           .select("id")
           .eq("user_id", user.id)
           .maybeSingle();
+
+        if (profileError) {
+          console.error("[PAYMENT_SUCCESS] Erro ao buscar profileRow para upsell:", {
+            userId: user.id,
+            error: profileError.message,
+          });
+        }
 
         if (profileRow?.id) {
           const { error: stepError } = await supabase
@@ -144,7 +167,7 @@ const PaymentSuccessPage = () => {
             .eq("id", profileRow.id);
 
           if (stepError) {
-            console.warn("Erro ao atualizar current_onboarding_step (não crítico):", stepError);
+            console.warn("[PAYMENT_SUCCESS] Erro ao atualizar current_onboarding_step (não crítico):", stepError);
           }
         }
       }
@@ -179,11 +202,18 @@ const PaymentSuccessPage = () => {
     localStorage.removeItem("recent_payment_id");
 
     if (user) {
-      const { data: profileRow } = await supabase
+      const { data: profileRow, error: profileError } = await supabase
         .from("student_profiles")
         .select("id")
         .eq("user_id", user.id)
         .maybeSingle();
+
+      if (profileError) {
+        console.error("[PAYMENT_SUCCESS] Erro ao buscar profileRow ao recusar upsell:", {
+          userId: user.id,
+          error: profileError.message,
+        });
+      }
 
       if (profileRow?.id) {
         const { error: stepError } = await supabase
@@ -192,7 +222,7 @@ const PaymentSuccessPage = () => {
           .eq("id", profileRow.id);
 
         if (stepError) {
-          console.warn("Erro ao atualizar current_onboarding_step (não crítico):", stepError);
+          console.warn("[PAYMENT_SUCCESS] Erro ao atualizar current_onboarding_step (não crítico):", stepError);
         }
       }
     }
