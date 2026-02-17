@@ -268,7 +268,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
             <img
               src={ureBrasilLogo}
               alt="URE Brasil - União Representativa dos Estudantes"
-              className="h-8 sm:h-9 lg:h-10 w-auto object-contain"
+              className="h-7 sm:h-9 lg:h-10 w-auto object-contain"
             />
             <div
               className="flex flex-col items-start justify-center -space-y-0.5 ml-2 max-w-[140px] sm:max-w-none bg-gradient-to-r from-foreground via-primary to-foreground bg-[length:200%_auto] bg-clip-text text-transparent animate-shimmer"
