@@ -18,6 +18,7 @@ import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { goToStudentCardFlow } from '@/lib/cardNavigation';
 import { formatPrice } from '@/utils/payment-helpers';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface HeaderProps {
   variant?: 'landing' | 'app';
@@ -38,6 +39,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isInstalled, canInstall, promptInstall } = usePWAInstall();
   
   const isLandingPage = location.pathname === '/';
   const isCarteirinhaPage = location.pathname === '/carteirinha';
@@ -225,6 +227,16 @@ export function Header({ variant = 'app' }: HeaderProps) {
       icon: Package,
       highlight: true,
       onClick: () => navigate('/checkout-fisica'),
+    });
+  }
+
+  if (!isInstalled && canInstall) {
+    avatarMenuItems.push({
+      label: 'Instalar app',
+      icon: Home,
+      onClick: () => {
+        promptInstall();
+      },
     });
   }
 

@@ -640,8 +640,8 @@ export default function Perfil() {
         </Card>
 
         {!isInstalled && (
-          <Card className="mb-6 bg-emerald-50 border border-emerald-200">
-            <CardHeader className="pb-2">
+          <Card className="mb-6 bg-yellow-200 border border-emerald-500">
+            <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold text-emerald-900">
                 Instalar aplicativo URE Brasil
               </CardTitle>
