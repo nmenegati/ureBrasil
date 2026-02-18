@@ -57,4 +57,3 @@ export function usePWAInstall() {
 
   return { canInstall, isInstalled, promptInstall };
 }
-

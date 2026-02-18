@@ -1,3 +1,0 @@
-Placeholder for icon-512x512.png
-Use URE Brasil logo with size 512x512 and background #1B6B3A.
-
