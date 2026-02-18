@@ -19,6 +19,7 @@ import CompleteProfile from "./pages/CompleteProfile";
 import EscolherPlano from "./pages/EscolherPlano";
 import Pagamento from "./pages/Pagamento";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PagamentoPix from "./pages/PagamentoPix";
 import Checkout from "./pages/Checkout";
 import CheckoutFisica from "./pages/CheckoutFisica";
 import UploadDocumentos from "./pages/UploadDocumentos";
@@ -107,6 +108,11 @@ const App = () => {
                   <Pagamento />
                 </ProtectedRoute>
               } />
+              <Route path="/pagamento/pix" element={
+                <ProtectedRoute>
+                  <PagamentoPix />
+                </ProtectedRoute>
+              } />
               <Route path="/pagamento/sucesso" element={
                 <ProtectedRoute>
                   <PaymentSuccessPage />
@@ -137,6 +143,7 @@ const App = () => {
                   <Carteirinha />
                 </ProtectedRoute>
               } />
+              <Route path="/verificar" element={<VerificarCarteirinha />} />
               <Route path="/verificar/:usageCode" element={<VerificarCarteirinha />} />
 
               {/* PÁGINAS SECUNDÁRIAS (Lazy Loading) */}

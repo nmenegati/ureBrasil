@@ -299,7 +299,14 @@ export function useMercadoPago() {
       if (fnError) throw new Error(fnError.message);
       if (!data.success) throw new Error(data.error || 'Erro ao gerar PIX');
 
-      return data as PaymentResult;
+      if (fnError) throw new Error(fnError.message);
+      if (!data.success) throw new Error(data.error || 'Erro ao gerar PIX');
+      return {
+        ...data,
+        pix_code: data.pix_qr_code,
+        qr_code_base64: data.pix_qr_code_base64,
+      } as PaymentResult;
+      
     } catch (err: any) {
       const msg = err.message || 'Erro desconhecido';
       setError(msg);

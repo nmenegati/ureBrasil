@@ -487,7 +487,7 @@ const Index = () => {
           <div className="text-center mb-12">
             {/* Linha decorativa amarela */}
 
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">Use a meia-entrada no dia a dia</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">No dia a dia com a sua meia-entrada</h2>
           </div>
           {/* Cards de Benefícios */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
@@ -964,10 +964,10 @@ const Index = () => {
 
             <AccordionItem value="item-2" className="border border-border rounded-lg px-6 bg-card">
               <AccordionTrigger className="hover:no-underline text-left">
-                <span className="text-lg font-semibold text-foreground">A carteira é válida em todo Brasil?</span>
+                <span className="text-lg font-semibold text-foreground">A carteira do estudante é válida em todo Brasil?</span>
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
-                Sim! A carteira URE é válida em todo território nacional, seguindo a legislação de meia-entrada
+                Sim! A carteira do estudante URE é válida em todo território nacional, seguindo a legislação de meia-entrada
                 estudantil.
               </AccordionContent>
             </AccordionItem>

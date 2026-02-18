@@ -496,6 +496,82 @@ export default function Checkout() {
         throw new Error("Sessão expirada. Faça login novamente.");
       }
 
+      if (paymentMethod === "pix" && resolvedUpsell.isUpsell && resolvedUpsell.originalPaymentId) {
+        let data: any;
+        let error: any;
+
+        if (activeGateway === "mercadopago") {
+          const result = await processPixPayment({
+            plan_id: plan.id,
+            amount: resolvedUpsell.amount,
+            payer_email: user!.email!,
+            is_upsell: true,
+            original_payment_id: resolvedUpsell.originalPaymentId,
+            metadata: {
+              is_upsell: true,
+              is_physical_upsell: true,
+              original_payment_id: resolvedUpsell.originalPaymentId,
+            },
+          });
+          if (!result.success) {
+            throw new Error(result.error || "Erro PIX");
+          }
+          data = result;
+          error = null;
+        } else {
+          ({ data, error } = await supabase.functions.invoke("create-payment", {
+            body: {
+              plan_id: plan.id,
+              payment_method: "pix",
+              amount: resolvedUpsell.amount,
+              metadata: {
+                is_upsell: true,
+                is_physical_upsell: true,
+                original_payment_id: resolvedUpsell.originalPaymentId,
+              },
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }));
+        }
+
+        if (error) throw error;
+
+        if (data?.pix_code) {
+          navigate("/pagamento/pix", {
+            state: {
+              paymentData: {
+                ...data,
+                amount: resolvedUpsell.amount,  // ← garantir que amount vai ser o mesmo
+              },
+              returnTo: "/upload-documentos",
+              successMessage:
+                "Carteirinha física adicionada! Envio em 7-10 dias úteis.",
+            },
+          });
+          return;
+        }
+
+        const { error: updateError } = await supabase
+          .from("student_cards")
+          .update({
+            is_physical: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("payment_id", resolvedUpsell.originalPaymentId);
+
+        if (updateError) {
+          console.error("[CHECKOUT] Erro update card:", updateError);
+        }
+
+        localStorage.removeItem("recent_payment_id");
+        localStorage.removeItem("upsell_data");
+        toast.success("Carteirinha física adicionada!");
+        navigate("/upload-documentos", { replace: true });
+        return;
+      }
+
       if (resolvedUpsell.isUpsell && resolvedUpsell.originalPaymentId) {
         console.log("💳 Processando upsell via gateway:", activeGateway);
 

@@ -83,6 +83,8 @@ const fieldConfiguration = {
       '8º semestre',
       '9º semestre',
       '10º semestre',
+      '11º semestre',
+      '12º semestre',
     ],
   },
   pos_lato: {

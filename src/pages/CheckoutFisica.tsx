@@ -347,7 +347,17 @@ export default function CheckoutFisica() {
         if (error) throw error;
 
         if (data?.pix_code) {
-          navigate("/pagamento/pix", { state: { paymentData: data } });
+          navigate("/pagamento/pix", {
+            state: {
+              paymentData: {
+                ...data,
+                amount: plan.price,
+              },
+              returnTo: "/carteirinha",
+              successMessage:
+                "Carteirinha física adquirida! Envio em 7-10 dias úteis.",
+            },
+          });
           return;
         }
 

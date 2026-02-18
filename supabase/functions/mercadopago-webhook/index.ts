@@ -21,6 +21,15 @@ serve(async (req) => {
     );
     const mpData = await mpResponse.json();
 
+    if (!mpResponse.ok) {
+      console.error("[WEBHOOK_MP] Erro ao consultar MP API:", { 
+        paymentId, 
+        status: mpResponse.status, 
+        body: mpData 
+      });
+      return new Response("mp api error", { status: 200 });
+    }
+
     // Mapear status
     const statusMap: Record<string, string> = {
       approved: "approved",
@@ -39,12 +48,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    await supabase
+    const { data: existingPayment, error: fetchError } = await supabase
+      .from("payments")
+      .select("metadata")
+      .eq("gateway_charge_id", String(paymentId))
+      .eq("gateway_name", "mercadopago")
+      .single();
+
+    if (fetchError) {
+      console.error("[WEBHOOK_MP] Erro ao buscar payment:", { paymentId, error: fetchError.message });
+    }
+
+    const existingMetadata = (existingPayment?.metadata as Record<string, unknown>) || {};
+
+    const { error: updateError } = await supabase
       .from("payments")
       .update({
         status: newStatus,
         confirmed_at: newStatus === "approved" ? new Date().toISOString() : null,
         metadata: {
+          ...existingMetadata,
           mp_status: mpData.status,
           mp_status_detail: mpData.status_detail,
           webhook_updated_at: new Date().toISOString(),
@@ -52,6 +75,10 @@ serve(async (req) => {
       })
       .eq("gateway_charge_id", String(paymentId))
       .eq("gateway_name", "mercadopago");
+
+    if (updateError) {
+      console.error("[WEBHOOK_MP] Erro ao atualizar payment:", { paymentId, error: updateError.message });
+    }
 
     return new Response("ok", { status: 200 });
   } catch (error) {

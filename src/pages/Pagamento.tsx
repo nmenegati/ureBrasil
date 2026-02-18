@@ -436,7 +436,16 @@ export default function Pagamento() {
         }
 
         if (data?.pix_code) {
-          navigate("/pagamento/pix", { state: { paymentData: data } });
+          navigate("/pagamento/pix", {
+            state: {
+              paymentData: {
+                ...data,
+                amount: paymentAmount,
+              },
+              returnTo: plan.is_physical ? "/upload-documentos" : "/pagamento/sucesso",
+              successMessage: "Pagamento confirmado!",
+            },
+          });
         } else {
           toast.success("Pagamento processado com sucesso!");
           const nextStep = plan.is_physical ? "upload_documents" : "upsell_physical";
@@ -755,7 +764,7 @@ export default function Pagamento() {
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-green-500" />
-                      <span>Carteirinha digital com QR Code de verificação</span>
+                      <span>Carteira digital com QR Code de verificação</span>
                     </li>
                     {plan.is_direito && (
                       <li className="flex items-center gap-2">
@@ -1015,12 +1024,12 @@ export default function Pagamento() {
             <DialogHeader>
               <DialogTitle>Termos de Uso – URE Brasil</DialogTitle>
               <DialogDescription>
-                Condições gerais para uso da plataforma e emissão de carteirinhas estudantis.
+                Condições gerais para uso da plataforma e emissão de carteiras estudantis.
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-[70vh] overflow-y-auto pr-2 text-sm text-muted-foreground space-y-4">
               <p>
-                Ao acessar ou utilizar a página da URE Brasil e solicitar a emissão de carteirinhas de estudante,
+                Ao acessar ou utilizar a página da URE Brasil e solicitar a emissão de carteiras de estudante,
                 você aceita estes Termos de Uso integralmente. Estes termos regem o serviço de emissão de carteiras
                 estudantis padronizadas (DNE/CIE), conforme Lei 12.933/2013.
               </p>
@@ -1047,11 +1056,11 @@ export default function Pagamento() {
                 <h3 className="text-sm font-semibold text-foreground">Processo de emissão</h3>
                 <ul className="list-disc list-inside space-y-1">
                   <li>
-                    após o envio dos dados e do comprovante de matrícula, a carteirinha digital é emitida, em regra,
+                    após o envio dos dados e do comprovante de matrícula, a carteira digital é emitida, em regra,
                     em até 48 horas úteis;
                   </li>
                   <li>
-                    a carteirinha possui elementos de segurança (como QR Code, trama anti-scanner e microletras) para
+                    a carteira possui elementos de segurança (como QR Code, trama anti-scanner e microletras) para
                     uso em pedidos de meia-entrada em eventos;
                   </li>
                   <li>
@@ -1064,14 +1073,14 @@ export default function Pagamento() {
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-foreground">Uso permitido</h3>
                 <p>
-                  A carteirinha pode ser utilizada exclusivamente para obtenção de meia-entrada em eventos culturais,
+                  A carteira do estudante URE pode ser utilizada exclusivamente para obtenção de meia-entrada em eventos culturais,
                   esportivos e de lazer previstos em lei. É proibido:
                 </p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>falsificar, adulterar ou revender carteirinhas;</li>
+                  <li>falsificar, adulterar ou revender carteiras;</li>
                   <li>emprestar ou compartilhar o documento com terceiros;</li>
                   <li>divulgar cópias digitais de forma pública ou sem autorização;</li>
-                  <li>utilizar a carteirinha para fins não previstos na legislação aplicável.</li>
+                  <li>utilizar a carteira para fins não previstos na legislação aplicável.</li>
                 </ul>
               </div>
 
@@ -1079,7 +1088,7 @@ export default function Pagamento() {
                 <h3 className="text-sm font-semibold text-foreground">Limitações e isenção de responsabilidade</h3>
                 <ul className="list-disc list-inside space-y-1">
                   <li>
-                    a URE Brasil não garante a aceitação universal da carteirinha, pois a conferência do direito à
+                    a URE Brasil não garante a aceitação universal da carteira, pois a conferência do direito à
                     meia-entrada também depende da política de cada organizador de evento;
                   </li>
                   <li>

@@ -1,66 +1,81 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-
-type VerificationStatus = 'loading' | 'valid' | 'invalid' | 'not_found' | 'rate_limited' | 'error';
-
-interface PublicCardRow {
-  student_id: string | null;
-  usage_code: string | null;
-  status: string | null;
-  valid_until: string | null;
-  issued_year: number | null;
-}
-
-interface PublicProfileRow {
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+ 
+type VerificationState = "idle" | "loading" | "success" | "error";
+ 
+type CardStatus = "valid" | "expired" | "invalid";
+ 
+interface VerifiedStudent {
   full_name: string;
   institution: string | null;
   course: string | null;
-  profile_photo_url: string | null;
+  photo_url: string | null;
+  cpf_last5: string | null;
+  card_number: string | null;
+  valid_until: string | null;
+  is_physical: boolean;
+  status: CardStatus;
 }
-
-interface PublicCardData {
-  fullName: string;
-  institution: string | null;
-  course: string | null;
-  validUntil: string | null;
-  issuedYear: number | null;
-  status: string;
-  photoUrl: string | null;
-}
-
-const LOCAL_LIMIT_KEY = 'ure-card-verify-requests';
-const LOCAL_LIMIT_WINDOW_MS = 60_000;
-const LOCAL_LIMIT_MAX_REQUESTS = 10;
-
+ 
+const formatDateBR = (isoDate: string | null) => {
+  if (!isoDate) return "Sem informação";
+  const [year, month, day] = isoDate.split("-");
+  if (!year || !month || !day) return isoDate;
+  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
+};
+ 
+const formatMaskedCpf = (last5: string | null) => {
+  if (!last5 || last5.length < 1) return "***.***.***-**";
+  const digits = last5.slice(-5).padStart(5, "*");
+  return `***.***.${digits.slice(0, 3)}-${digits.slice(3)}`;
+};
+ 
 export default function VerificarCarteirinha() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const params = useParams();
-  const usageCode = params.usageCode || '';
+ 
+  const queryCode = searchParams.get("code") || "";
+  const paramCode = params.usageCode || "";
+  const initialCode = (queryCode || paramCode || "").toUpperCase();
+ 
+  const [usageCode, setUsageCode] = useState(initialCode);
+  const [birthDate, setBirthDate] = useState("");
+  const [state, setState] = useState<VerificationState>("idle");
+  const [student, setStudent] = useState<VerifiedStudent | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [codeFromQuery, setCodeFromQuery] = useState(
+    Boolean(queryCode || paramCode),
+  );
 
-  const [status, setStatus] = useState<VerificationStatus>('loading');
-  const [cardData, setCardData] = useState<PublicCardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const birthDateInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const metaSelector = 'meta[name="robots"]';
-    const existing = document.querySelector(metaSelector) as HTMLMetaElement | null;
-    const previousContent = existing?.getAttribute('content') ?? null;
-
+    const existing = document.querySelector(metaSelector) as
+      | HTMLMetaElement
+      | null;
+    const previousContent = existing?.getAttribute("content") ?? null;
+ 
     let meta = existing;
     let created = false;
-
+ 
     if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'robots';
+      meta = document.createElement("meta");
+      meta.name = "robots";
       created = true;
       document.head.appendChild(meta);
     }
-
-    meta.content = 'noindex,nofollow';
-
+ 
+    meta.content = "noindex,nofollow";
+ 
     return () => {
       if (!meta) return;
       if (created) {
@@ -74,295 +89,349 @@ export default function VerificarCarteirinha() {
       }
     };
   }, []);
-
+ 
   useEffect(() => {
-    const now = Date.now();
-
-    try {
-      const raw = window.localStorage.getItem(LOCAL_LIMIT_KEY);
-      const parsed = raw ? (JSON.parse(raw) as number[]) : [];
-      const recent = parsed.filter((ts) => now - ts < LOCAL_LIMIT_WINDOW_MS);
-
-      if (recent.length >= LOCAL_LIMIT_MAX_REQUESTS) {
-        setStatus('rate_limited');
-        setLoading(false);
-        return;
-      }
-
-      recent.push(now);
-      window.localStorage.setItem(LOCAL_LIMIT_KEY, JSON.stringify(recent));
-    } catch (error) {
-      console.error('Erro ao aplicar limite local de verificações', error);
+    if (codeFromQuery && birthDateInputRef.current) {
+      birthDateInputRef.current.focus();
     }
-
-    const fetchData = async () => {
-      if (!usageCode) {
-        setStatus('not_found');
-        setCardData(null);
-        setLoading(false);
+  }, [codeFromQuery]);
+ 
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!usageCode || !birthDate) return;
+ 
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey =
+      import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+      import.meta.env.VITE_SUPABASE_ANON_KEY;
+ 
+    if (!supabaseUrl || !anonKey) {
+      setApiError("Configuração de verificação indisponível.");
+      setState("error");
+      return;
+    }
+ 
+    setState("loading");
+    setApiError(null);
+    setStudent(null);
+ 
+    try {
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/verify-student-card`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: anonKey,
+          },
+          body: JSON.stringify({
+            usage_code: usageCode,
+            birth_date: birthDate,
+          }),
+        },
+      );
+ 
+      const data = await response.json().catch(() => null);
+ 
+      if (!response.ok || !data || data.success !== true) {
+        const message =
+          data?.error ||
+          "Carteirinha não encontrada ou dados incorretos.";
+        setApiError(message);
+        setState("error");
         return;
       }
-
-      setLoading(true);
-      setStatus('loading');
-
-      try {
-        const { data: card, error: cardError } = await supabase
-          .from('student_cards')
-          .select('student_id, usage_code, status, valid_until, issued_year')
-          .eq('usage_code', usageCode)
-          .maybeSingle<PublicCardRow>();
-
-        if (cardError) {
-          throw cardError;
-        }
-
-        if (!card) {
-          setCardData(null);
-          setStatus('not_found');
-          setLoading(false);
-          return;
-        }
-
-        const studentId = card.student_id;
-
-        if (!studentId) {
-          setCardData(null);
-          setStatus('error');
-          setLoading(false);
-          return;
-        }
-
-        const { data: profile, error: profileError } = await supabase
-          .from('student_profiles')
-          .select('full_name, institution, course, profile_photo_url')
-          .eq('id', studentId)
-          .maybeSingle<PublicProfileRow>();
-
-        if (profileError) {
-          throw profileError;
-        }
-
-        let photoUrl: string | null = null;
-
-        if (profile?.profile_photo_url) {
-          const { data: publicData } = supabase.storage
-            .from('profile-photos')
-            .getPublicUrl(profile.profile_photo_url);
-
-          if (publicData?.publicUrl) {
-            photoUrl = publicData.publicUrl;
-          } else {
-            const { data: signedData, error: signedError } = await supabase.storage
-              .from('documents')
-              .createSignedUrl(profile.profile_photo_url, 600);
-
-            if (!signedError && signedData?.signedUrl) {
-              photoUrl = signedData.signedUrl;
-            }
-          }
-        }
-
-        const publicData: PublicCardData = {
-          fullName: profile?.full_name ?? '',
-          institution: profile?.institution ?? null,
-          course: profile?.course ?? null,
-          validUntil: card.valid_until ?? null,
-          issuedYear: card.issued_year ?? null,
-          status: card.status ?? '',
-          photoUrl,
-        };
-
-        setCardData(publicData);
-
-        if (card.status === 'active') {
-          setStatus('valid');
-        } else {
-          setStatus('invalid');
-        }
-      } catch (error) {
-        console.error('Erro ao verificar carteirinha', error);
-        setStatus('error');
-      } finally {
-        setLoading(false);
-      }
+ 
+      setStudent(data.student as VerifiedStudent);
+      setState("success");
+    } catch (error) {
+      console.error("[VERIFICAR_CARTEIRINHA] Erro ao chamar API:", error);
+      setApiError("Erro ao verificar carteirinha. Tente novamente.");
+      setState("error");
+    }
+  };
+ 
+  const handleNewSearch = () => {
+    setUsageCode("");
+    setBirthDate("");
+    setStudent(null);
+    setApiError(null);
+    setState("idle");
+    setCodeFromQuery(false);
+    navigate("/verificar", { replace: true });
+  };
+ 
+  const formattedName = useMemo(() => {
+    if (!student?.full_name) return "";
+    return student.full_name;
+  }, [student?.full_name]);
+ 
+  const cardStatus = student?.status ?? "invalid";
+ 
+  const statusBadge = (() => {
+    if (cardStatus === "valid") {
+      return {
+        label: "Carteirinha Válida",
+        color: "bg-green-100 text-green-800 border-green-300",
+        icon: <CheckCircle className="w-4 h-4 mr-1" />,
+      };
+    }
+    if (cardStatus === "expired") {
+      return {
+        label: "Carteirinha Expirada",
+        color: "bg-yellow-100 text-yellow-800 border-yellow-300",
+        icon: <AlertTriangle className="w-4 h-4 mr-1" />,
+      };
+    }
+    return {
+      label: "Carteirinha Inválida",
+      color: "bg-red-100 text-red-800 border-red-300",
+      icon: <XCircle className="w-4 h-4 mr-1" />,
     };
-
-    fetchData();
-  }, [usageCode]);
-
-  const abbreviatedName = useMemo(() => {
-    if (!cardData?.fullName) return '';
-    const parts = cardData.fullName.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0];
-
-    const first = parts[0];
-    const last = parts[parts.length - 1] || '';
-    if (!last) return first;
-
-    return `${first} ${last[0].toUpperCase()}.`;
-  }, [cardData?.fullName]);
-
-  const formattedValidity = useMemo(() => {
-    if (!cardData?.validUntil) return null;
-    const date = new Date(cardData.validUntil);
-    if (Number.isNaN(date.getTime())) return null;
-    return date.toLocaleDateString('pt-BR');
-  }, [cardData?.validUntil]);
-
-  const issuedYearLabel = useMemo(() => {
-    if (!cardData?.issuedYear) return null;
-    return String(cardData.issuedYear);
-  }, [cardData?.issuedYear]);
-
-  const isValid = status === 'valid';
-  const isInvalid = status === 'invalid';
-
+  })();
+ 
+  const borderColor =
+    cardStatus === "valid"
+      ? "border-green-500"
+      : cardStatus === "expired"
+      ? "border-yellow-500"
+      : "border-red-500";
+ 
+  const showResult = state === "success" && student;
+ 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <img
-            src={ureBrasilLogo}
-            alt="URE Brasil"
-            className="h-10 w-auto object-contain"
-          />
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <header className="border-b bg-white">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <img
+              src={ureBrasilLogo}
+              alt="URE Brasil"
+              className="h-10 w-auto"
+            />
+            <div className="flex flex-col">
+              <h1 className="text-base font-semibold text-slate-900">
+                Verificar Carteirinha Estudantil
+              </h1>
+              <p className="text-xs text-slate-500">
+                Confirme a autenticidade de uma carteirinha URE Brasil
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-slate-600"
+            onClick={() => navigate("/")}
+          >
+            ← Voltar ao site
+          </Button>
         </div>
-
-        <Card className="bg-card border border-border shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-lg font-semibold text-foreground">
-              Verificação de Carteirinha
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {loading && (
-              <div className="flex flex-col items-center gap-3 py-6">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  Verificando carteirinha...
-                </p>
-              </div>
-            )}
-
-            {!loading && status === 'rate_limited' && (
-              <div className="flex flex-col items-center gap-3 py-4 text-center">
-                <AlertTriangle className="h-8 w-8 text-amber-500" />
-                <div className="space-y-1">
-                  <p className="text-base font-semibold text-foreground">
-                    Muitas consultas em pouco tempo
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Aguarde alguns instantes e tente novamente.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!loading && status === 'not_found' && (
-              <div className="flex flex-col items-center gap-3 py-4 text-center">
-                <XCircle className="h-8 w-8 text-red-500" />
-                <div className="space-y-1">
-                  <p className="text-base font-semibold text-foreground">
-                    Código não encontrado
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Verifique se o código lido está correto ou entre em contato com a instituição.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!loading && status === 'error' && (
-              <div className="flex flex-col items-center gap-3 py-4 text-center">
-                <AlertTriangle className="h-8 w-8 text-red-500" />
-                <div className="space-y-1">
-                  <p className="text-base font-semibold text-foreground">
-                    Erro ao verificar carteirinha
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Tente novamente em instantes. Se o problema persistir, contate o suporte.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!loading && (isValid || isInvalid) && cardData && (
-              <div className="space-y-4">
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <div
-                    className={
-                      isValid
-                        ? 'inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-700 px-3 py-1 text-xs font-semibold'
-                        : 'inline-flex items-center gap-2 rounded-full bg-red-100 text-red-700 px-3 py-1 text-xs font-semibold'
+      </header>
+ 
+      <main className="flex-1">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="flex flex-col items-center">
+            <Card className="w-full max-w-md shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  Buscar carteirinha
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">
+                      Código de uso
+                    </label>
+                    <Input
+                      type="text"
+                      value={usageCode}
+                      onChange={(e) =>
+                        setUsageCode(e.target.value.toUpperCase())
+                      }
+                      placeholder="Ex: URE-A1B2C3"
+                      className="uppercase"
+                      disabled={codeFromQuery || state === "loading"}
+                    />
+                  </div>
+ 
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">
+                      Data de nascimento do estudante
+                    </label>
+                    <Input
+                      ref={birthDateInputRef}
+                      type="date"
+                      value={birthDate}
+                      onChange={(e) => setBirthDate(e.target.value)}
+                      disabled={state === "loading"}
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      Informe no formato DD/MM/AAAA.
+                    </p>
+                  </div>
+ 
+                  {apiError && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{apiError}</AlertDescription>
+                    </Alert>
+                  )}
+ 
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={
+                      !usageCode || !birthDate || state === "loading"
                     }
                   >
-                    {isValid ? (
-                      <CheckCircle className="h-4 w-4" />
+                    {state === "loading" ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Verificando...
+                      </>
                     ) : (
-                      <XCircle className="h-4 w-4" />
+                      "Verificar Carteirinha"
                     )}
-                    <span>
-                      {isValid ? 'CARTEIRINHA VÁLIDA' : 'CARTEIRINHA INVÁLIDA/EXPIRADA'}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    Código de uso: {usageCode}
-                  </p>
-                </div>
-
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-28 h-36 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                    {cardData.photoUrl ? (
-                      <img
-                        src={cardData.photoUrl}
-                        alt="Foto do estudante"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        Foto não disponível
-                      </span>
+                  </Button>
+ 
+                  {state !== "idle" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full text-xs"
+                      onClick={handleNewSearch}
+                      disabled={state === "loading"}
+                    >
+                      Nova consulta
+                    </Button>
+                  )}
+                </form>
+              </CardContent>
+            </Card>
+ 
+            {showResult && student && (
+              <div className="w-full max-w-md mt-6 animate-in fade-in-10">
+                <Card className={`border-2 ${borderColor}`}>
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Badge
+                        variant="outline"
+                        className={`border ${statusBadge.color}`}
+                      >
+                        {statusBadge.icon}
+                        {statusBadge.label}
+                      </Badge>
+                    </div>
+ 
+                    <div className="flex items-center gap-4">
+                      {student.photo_url ? (
+                        <img
+                          src={student.photo_url}
+                          alt={student.full_name}
+                          className="w-20 h-20 rounded-lg object-cover border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-lg border border-dashed border-slate-300 flex items-center justify-center text-[11px] text-slate-400">
+                          Sem foto
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <p className="text-lg font-semibold text-slate-900">
+                          {formattedName}
+                        </p>
+                        <p className="text-xs text-slate-600">
+                          {student.institution || "Instituição não informada"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {student.course || "Curso não informado"}
+                        </p>
+                      </div>
+                    </div>
+ 
+                    <div className="grid grid-cols-2 gap-3 text-xs text-slate-700">
+                      <div className="space-y-1">
+                        <p className="text-slate-500">Número da carteirinha</p>
+                        <p className="font-medium">
+                          {student.card_number || "Não informado"}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-slate-500">CPF</p>
+                        <p className="font-medium">
+                          {formatMaskedCpf(student.cpf_last5)}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-slate-500">Válida até</p>
+                        <p
+                          className={`font-medium ${
+                            cardStatus === "expired"
+                              ? "text-red-600"
+                              : "text-slate-800"
+                          }`}
+                        >
+                          {formatDateBR(student.valid_until)}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-slate-500">Tipo</p>
+                        <p className="font-medium">
+                          {student.is_physical
+                            ? "Digital + Física"
+                            : "Digital"}
+                        </p>
+                      </div>
+                    </div>
+ 
+                    {cardStatus === "invalid" && (
+                      <Alert variant="destructive">
+                        <AlertDescription className="text-xs">
+                          Esta carteirinha não está ativa. Oriente o estudante a
+                          entrar em contato com o suporte da URE Brasil.
+                        </AlertDescription>
+                      </Alert>
                     )}
-                  </div>
-
-                  <div className="w-full space-y-2 text-sm text-foreground">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Nome</p>
-                      <p className="font-semibold">{abbreviatedName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        Instituição
-                      </p>
-                      <p>{cardData.institution || 'Não informado'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Curso</p>
-                      <p>{cardData.course || 'Não informado'}</p>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Validade
-                        </p>
-                        <p>{formattedValidity || 'Não informado'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Ano de emissão
-                        </p>
-                        <p>{issuedYearLabel || 'Não informado'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+ 
+                    {cardStatus === "expired" && (
+                      <Alert variant="destructive">
+                        <AlertDescription className="text-xs">
+                          Esta carteirinha está expirada. Para uso em meia-entrada,
+                          é necessário emitir uma nova carteirinha válida.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+ 
+            {state === "idle" && !student && (
+              <div className="mt-6 max-w-md text-xs text-slate-500 text-center">
+                Aponte a câmera do celular para o QR Code da carteirinha URE
+                Brasil. O link deve abrir nesta página com o código preenchido.
+                Em seguida, informe a data de nascimento do estudante para
+                confirmar a autenticidade.
+              </div>
+            )}
+          </div>
+ 
+          <footer className="mt-10 border-t pt-4 text-center text-[11px] text-slate-500">
+            <p>URE Brasil - União Representativa dos Estudantes</p>
+            <p className="mt-1">
+              Verificação conforme Lei 12.933/13. Acesse a página oficial em{" "}
+              <button
+                type="button"
+                className="underline underline-offset-2"
+                onClick={() => navigate("/")}
+              >
+                urebrasil.com
+              </button>
+              .
+            </p>
+          </footer>
+        </div>
+      </main>
     </div>
   );
 }
