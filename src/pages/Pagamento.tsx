@@ -261,16 +261,12 @@ export default function Pagamento() {
     if (!cardAmountForGateway) return;
     if (paymentMethod !== "card") return;
     if (mpFormInitializedRef.current) {
-      console.log("[Pagamento] CardForm MP já inicializado, ignorando");
+      console.info("[Pagamento] CardForm MP já inicializado, ignorando");
       return;
     }
 
     const timer = setTimeout(() => {
       const formElement = document.getElementById("form-checkout");
-      console.log(
-        "[Pagamento] form-checkout encontrado?",
-        !!formElement
-      );
 
       if (!formElement) {
         console.error(
@@ -289,7 +285,7 @@ export default function Pagamento() {
         identificationTypeId: "mp-identification-type",
         identificationNumberId: "mp-identification-number",
         onReady: () =>
-          console.log("CardForm MP pronto - iframes carregados!"),
+          console.info("CardForm MP pronto - iframes carregados!"),
         onError: (err) => console.error("CardForm MP erro:", err),
       });
 

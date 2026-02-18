@@ -312,7 +312,9 @@ serve(async (req) => {
     const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
     if (deleteError) throw deleteError;
 
-    console.log(`✅ Usuário ${user.email} deletado (LGPD) - CPF liberado para recadastro após 48h`);
+    console.info("✅ [DELETE_USER_DATA] Usuário deletado (LGPD); CPF liberado para recadastro após 48h", {
+      userId: user.id,
+    });
 
     return new Response(
       JSON.stringify({

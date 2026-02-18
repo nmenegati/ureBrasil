@@ -15,10 +15,10 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "favicon.png", "robots.txt"],
       manifest: {
-        name: "URE Brasil - Carteira do Estudante",
+        name: "URE Brasil",
         short_name: "URE Brasil",
         description:
-          "Carteira do Estudante URE Brasil - Digital e Física",
+          "Carteira do Estudante URE Brasil",
         theme_color: "#1B6B3A",
         background_color: "#ffffff",
         display: "standalone",

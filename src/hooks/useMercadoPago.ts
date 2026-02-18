@@ -116,7 +116,7 @@ export function useMercadoPago() {
     if (!mp) return null;
 
     if (cardFormInitializedRef.current) {
-      console.log('[MP] CardForm já inicializado, ignorando');
+      console.info('[MP] CardForm já inicializado, ignorando');
       return cardForm;
     }
 
@@ -138,10 +138,10 @@ export function useMercadoPago() {
         callbacks: {
           onFormMounted: (error: any) => {
             if (error) {
-              console.warn('CardForm mount error:', error);
+              console.warn('CardForm mount error:', { message: error?.message || String(error) });
               formConfig.onError?.(error);
             } else {
-              console.log('CardForm montado com sucesso');
+              console.info('CardForm montado com sucesso');
               formConfig.onReady?.();
             }
           },
@@ -149,8 +149,6 @@ export function useMercadoPago() {
             event.preventDefault();
 
             const cardFormData: CardFormData = form.getCardFormData();
-            console.log('[MP onSubmit] token:', cardFormData.token);
-            console.log('[MP onSubmit] data:', JSON.stringify(cardFormData));
 
             if (!paymentResolverRef.current) return;
 
@@ -196,7 +194,7 @@ export function useMercadoPago() {
             }
           },
           onFetching: (resource: string) => {
-            console.log('[MP] Fetching:', resource);
+            console.info('[MP] Fetching recurso do Mercado Pago', { resource });
           },
         },
       });

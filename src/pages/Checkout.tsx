@@ -140,12 +140,6 @@ export default function Checkout() {
   } = useMercadoPago();
 
   useEffect(() => {
-    console.log("[Checkout] isChecking:", isChecking);
-    console.log("[Checkout] resolvedUpsell:", resolvedUpsell);
-    console.log("[Checkout] resolvingUpsell:", resolvingUpsell);
-  }, [isChecking, resolvedUpsell, resolvingUpsell]);
-
-  useEffect(() => {
     const fetchGateway = async () => {
       const { data } = await supabase
         .from("payment_gateway_config")
@@ -168,13 +162,12 @@ export default function Checkout() {
     if (paymentMethod !== "card") return;
     if (!studentProfile?.cpf) return;
     if (mpFormInitializedRef.current) {
-      console.log("[Checkout] CardForm MP já inicializado, ignorando");
+      console.info("[Checkout] CardForm MP já inicializado, ignorando");
       return;
     }
 
     const timer = setTimeout(() => {
       const formElement = document.getElementById("form-checkout");
-      console.log("[Checkout] form-checkout encontrado?", !!formElement);
       if (!formElement) {
         console.error("[Checkout] form-checkout NÃO encontrado no DOM");
         return;
@@ -189,7 +182,7 @@ export default function Checkout() {
         installmentsId: "mp-installments",
         identificationTypeId: "mp-identification-type",
         identificationNumberId: "mp-identification-number",
-        onReady: () => console.log("[Checkout] CardForm MP pronto!"),
+        onReady: () => console.info("[Checkout] CardForm MP pronto!"),
         onError: (err) => console.error("[Checkout] CardForm MP erro:", err),
       });
 
@@ -333,7 +326,7 @@ export default function Checkout() {
       }
 
       setResolvingUpsell(false);
-      console.log("[Checkout] resolveUpsell fallback, no valid upsell. Fetching step for redirect...");
+      console.info("[Checkout] resolveUpsell fallback, step redirect para fluxo principal");
       if (!user) {
         navigate("/complete-profile", { replace: true });
         return;
@@ -370,8 +363,6 @@ export default function Checkout() {
     if (!resolvedUpsell || !resolvedUpsell.isUpsell || !resolvedUpsell.originalPaymentId) return;
 
     const fetchPlanAndProfile = async () => {
-      console.log("[Checkout] fetching studentProfile and plan...");
-
       try {
         const { data: profile, error: profileError } = await supabase
           .from("student_profiles")
@@ -384,8 +375,6 @@ export default function Checkout() {
           navigate("/dashboard");
           return;
         }
-
-        console.log("[Checkout] studentProfile loaded:", profile);
 
         setStudentProfile({
           cpf: profile.cpf,
@@ -736,15 +725,6 @@ export default function Checkout() {
   }
 
   if (loading || resolvingUpsell) {
-    console.log("[Checkout] render check:", {
-      isChecking,
-      resolvingUpsell,
-      upsellResolved,
-      studentProfile: !!studentProfile,
-      plan: !!plan,
-      resolvedUpsell: !!resolvedUpsell,
-    });
-
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import React, { Suspense, useEffect } from "react";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ProfileProvider } from "./contexts/ProfileContext";
+import { PWAInstallBanner } from "./components/PWAInstallBanner";
 import { ChatWrapper } from "./components/ChatWrapper";
 
 // ========================================
@@ -204,6 +205,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            <PWAInstallBanner />
           </BrowserRouter>
           </ProfileProvider>
         </TooltipProvider>

@@ -839,21 +839,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
   const canGenerateCard = allDocsApproved && faceOk && termsOk;
   const canSubmit = allDocsUploaded && termsOk;
 
-  console.log('[DEBUG] canSubmit?', {
-    allDocsUploaded,
-    allDocsApproved,
-    termsAccepted,
-    termsAlreadyAccepted,
-    canSubmit,
-  });
-
   const handleSubmit = async () => {
-    console.log('[TERMOS] handleSubmit chamado', {
-      termsAccepted,
-      termsAlreadyAccepted,
-      profileId: profile?.id,
-      userId: user?.id,
-    });
     if (!termsAccepted && !termsAlreadyAccepted) {
       toast.error('Você precisa aceitar a declaração de veracidade');
       return;
@@ -1095,8 +1081,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
                       ip = ipData.ip;
                     } catch (e) {}
 
-                    console.log('[TERMOS] onCheckedChange – salvando aceite imediato para profile.id:', profile.id);
-
                     const { data, error } = await supabase
                       .from('student_profiles')
                       .update({
@@ -1107,8 +1091,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
                       })
                       .select('id, user_id, terms_accepted, terms_accepted_at, terms_ip_address')
                       .eq('id', profile.id);
-
-                    console.log('[TERMOS] onCheckedChange update result:', { data, error });
 
                     if (error) {
                       console.error('[TERMOS] Erro ao salvar aceite imediato:', error);

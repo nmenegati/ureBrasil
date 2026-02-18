@@ -464,9 +464,6 @@ export default function CompleteProfile() {
     // ID do plano Geral Digital para não-Direito
     const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
 
-    // APENAS UPDATE - perfil SEMPRE existe graças à trigger do banco
-    console.log('Salvando período:', period);
-
     const { error } = await supabase
       .from('student_profiles')
       .update({

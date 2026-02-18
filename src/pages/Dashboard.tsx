@@ -190,8 +190,6 @@ export default function Dashboard() {
       setDocumentsApproved(approved);
 
       // 3. Buscar último pagamento aprovado (pode haver múltiplos)
-      console.log('🔍 Buscando pagamento para student_id:', profileData.id);
-      
       const { data: paymentsApproved, error: paymentError } = await supabase
         .from('payments')
         .select('*')
@@ -203,11 +201,6 @@ export default function Dashboard() {
       // Pegar primeiro resultado (mais recente)
       const payment = paymentsApproved?.[0] || null;
 
-      console.log('💳 PAGAMENTOS APROVADOS:', paymentsApproved);
-      console.log('💳 ÚLTIMO PAGAMENTO:', payment);
-      console.log('💳 ERRO NA QUERY:', paymentError);
-      console.log('💳 paymentApproved será:', !!payment);
-
       setPaymentApproved(!!payment);
 
       // 4. Buscar carteirinha
@@ -216,9 +209,6 @@ export default function Dashboard() {
         .select('*')
         .eq('student_id', profileData.id)
         .maybeSingle();
-
-      console.log('🎴 CARD COMPLETO:', JSON.stringify(cardData, null, 2));
-      console.log('📦 is_physical:', cardData?.is_physical, '| tipo:', typeof cardData?.is_physical);
 
       setCard(cardData);
       setDigitalAttempts(cardData?.generation_attempts ?? 0);
@@ -230,7 +220,6 @@ export default function Dashboard() {
         payment: !!payment,
         card: cardData?.status === 'active'
       };
-      console.log('📊 PROGRESSO CALCULADO:', newProgress);
       setProgress(newProgress);
       
     } catch (error) {
@@ -636,13 +625,8 @@ export default function Dashboard() {
                   <p className="text-primary text-sm font-medium">Carteirinha Digital</p>
                   
                   {/* Badges para carteirinha física */}
-                  {(() => {
-                    console.log('🔍 Verificando is_physical no render:', card?.is_physical);
-                    return null;
-                  })()}
                   {card.is_physical && (
                     <>
-                      {console.log('✅ Renderizando badges de carteirinha física')}
                       <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
                         <Truck className="w-3 h-3" />
                         + Física

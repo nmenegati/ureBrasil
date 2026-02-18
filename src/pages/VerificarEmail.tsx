@@ -13,8 +13,6 @@ export default function VerificarEmail() {
   const email =
     searchParams.get('email') ||
     (typeof window !== 'undefined' ? window.localStorage.getItem('pending_email') || '' : '')
-
-  console.log('📧 Email na tela de confirmação:', email)
   const [loading, setLoading] = useState(false)
   const [cooldown, setCooldown] = useState(0)
 

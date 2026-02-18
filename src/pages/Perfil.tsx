@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface StudentProfile {
   id: string;
@@ -558,11 +559,6 @@ export default function Perfil() {
     setDeletingAccount(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('DEBUG deleteAccount - sessão:', {
-        exists: !!session,
-        token: session?.access_token ? session.access_token.substring(0, 20) + '...' : null,
-        expires: session?.expires_at,
-      });
 
       if (!session?.access_token) {
         throw new Error('Sessão expirada. Faça login novamente.');
@@ -573,8 +569,6 @@ export default function Perfil() {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
-
-      console.log('DEBUG deleteAccount - resposta função:', { data, error });
 
       if (error) {
         throw error;
@@ -603,6 +597,8 @@ export default function Perfil() {
       : periodOptions;
   const initials = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
+  const { isInstalled, canInstall, promptInstall } = usePWAInstall();
+
   if (authLoading || loading) {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -616,7 +612,6 @@ export default function Perfil() {
       <Header variant="app" />
       
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Avatar Section */}
         <Card className="mb-6 bg-white/95 backdrop-blur-sm border border-white/20">
           <CardContent className="pt-6">
             <div className="flex flex-row items-center gap-6">
@@ -643,6 +638,26 @@ export default function Perfil() {
             </div>
           </CardContent>
         </Card>
+
+        {!isInstalled && (
+          <Card className="mb-6 bg-emerald-50 border border-emerald-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-emerald-900">
+                Instalar aplicativo URE Brasil
+              </CardTitle>
+              <CardDescription className="text-xs text-emerald-800">
+                Adicione o app à tela inicial para acessar sua carteirinha com mais rapidez.
+              </CardDescription>
+            </CardHeader>
+            {canInstall && (
+              <CardContent className="pt-0">
+                <Button size="sm" onClick={promptInstall}>
+                  Instalar
+                </Button>
+              </CardContent>
+            )}
+          </Card>
+        )}
 
         {/* Tabs */}
         <Card className="bg-white/95 backdrop-blur-sm border border-white/20">
