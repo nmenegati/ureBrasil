@@ -460,11 +460,11 @@ export function Header({ variant = 'app' }: HeaderProps) {
                   variant="hero-primary" 
                   className="w-full"
                   onClick={() => {
-                    navigate('/dashboard');
+                    navigate('/carteirinha');
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  Minha Carteirinha
+                  Minha Carteira URE
                 </Button>
               ) : (
                 <>
