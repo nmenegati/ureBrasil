@@ -25,6 +25,15 @@ import {
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { ProgressBar } from '@/components/ProgressBar';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 
 const educationLevels = [
@@ -146,7 +155,6 @@ const institutionSuggestions = [
   "Universidade Federal do Rio de Janeiro (UFRJ)",
   "Universidade Federal do Rio Grande (FURG)",
   "Universidade Federal do Rio Grande do Norte (UFRN)",
-  "Universidade Federal do Rio Grande do Sul (UFRGS)",
   "Universidade Federal do Rio Grande do Sul (UFRGS)",
   "Universidade Federal do Tocantins (UFT)",
   "Universidade Federal dos Vales do Jequitinhonha e Mucuri (UFVJM)",
@@ -280,6 +288,8 @@ export default function CompleteProfile() {
   >('graduacao');
   const [loading, setLoading] = useState(false);
   const [isCepResolved, setIsCepResolved] = useState(false);
+  const [openInstitution, setOpenInstitution] = useState(false);
+  const [openCourse, setOpenCourse] = useState(false);
   const [courseType, setCourseType] = useState<'direito' | 'outro'>('outro');
   const [customCourseName, setCustomCourseName] = useState('');
 
@@ -746,25 +756,66 @@ export default function CompleteProfile() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="institution" className="text-foreground">Instituição de ensino *</Label>
-                    <Input
-                      id="institution"
-                      type="text"
-                      spellCheck={true}
-                      lang="pt-BR"
-                      list="institution-suggestions"
-                      placeholder={institutionPlaceholder}
-                      value={institution}
-                      onChange={(e) => setInstitution(e.target.value)}
-                      onBlur={() =>
-                        setInstitution((prev) =>
-                          normalizeWithSuggestions(prev, institutionSuggestions)
-                        )
-                      }
-                      maxLength={70}
-                      className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                      required
-                    />
+                    <Label htmlFor="institution" className="text-foreground">
+                      Instituição de ensino *
+                    </Label>
+                    <Popover open={openInstitution} onOpenChange={setOpenInstitution}>
+                      <PopoverTrigger asChild>
+                        <Input
+                          id="institution"
+                          type="text"
+                          spellCheck={true}
+                          lang="pt-BR"
+                          placeholder={institutionPlaceholder}
+                          value={institution}
+                          onChange={(e) => {
+                            setInstitution(e.target.value);
+                            setOpenInstitution(true);
+                          }}
+                          maxLength={70}
+                          className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                          required
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-full max-w-2xl" align="start">
+                        <Command>
+                          <CommandInput
+                            value={institution}
+                            onValueChange={(value) => setInstitution(value)}
+                            placeholder="Digite para buscar..."
+                          />
+                          <CommandList className="max-h-48 overflow-y-auto">
+                            <CommandEmpty>
+                              {institution.trim().length < 2
+                                ? "Digite o nome da instituição de ensino."
+                                : "Nenhuma sugestão. Continue digitando."}
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {institutionSuggestions
+                                .filter((name) => {
+                                  const query = institution.trim().toLowerCase();
+                                  if (query.length < 2) return false;
+                                  return name.toLowerCase().includes(query);
+                                })
+                                .slice(0, 8)
+                                .map((name) => (
+                                  <CommandItem
+                                    key={name}
+                                    value={name}
+                                    className="text-sm"
+                                    onSelect={() => {
+                                      setInstitution(name);
+                                      setOpenInstitution(false);
+                                    }}
+                                  >
+                                    {name}
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {config.showCourseField && (
@@ -808,41 +859,80 @@ export default function CompleteProfile() {
                           <Label htmlFor="course" className="text-foreground">
                             {config.courseLabel}
                           </Label>
-                          <Input
-                            id="course"
-                            type="text"
-                            spellCheck={true}
-                            lang="pt-BR"
-                            placeholder={coursePlaceholder}
-                            value={courseType === 'direito' ? 'Direito' : customCourseName}
-                            list={courseType === 'direito' ? undefined : "course-suggestions"}
-                            onChange={(e) => {
-                              if (courseType === 'outro') {
-                                setCustomCourseName(e.target.value);
-                                setCourse(e.target.value);
-                              }
-                            }}
-                            onBlur={() => {
-                              if (courseType === 'outro') {
-                                const formatted = normalizeWithSuggestions(
-                                  customCourseName,
-                                  courseSuggestions
-                                );
-                                setCustomCourseName(formatted);
-                                setCourse(formatted);
-                              }
-                            }}
-                            readOnly={courseType === 'direito'}
-                            tabIndex={courseType === 'direito' ? -1 : 0}
-                            maxLength={100}
-                            className={
-                              'border-input focus:border-primary focus:ring-primary/20 h-11 text-base ' +
-                              (courseType === 'direito'
-                                ? 'bg-sky-200 border border-sky-400 text-foreground cursor-default pointer-events-none'
-                                : 'bg-background text-foreground placeholder:text-muted-foreground')
-                            }
-                            required
-                          />
+                          {courseType === 'direito' ? (
+                            <Input
+                              id="course"
+                              type="text"
+                              value="Direito"
+                              readOnly
+                              tabIndex={-1}
+                              className="border-input focus:border-primary focus:ring-primary/20 h-11 text-base bg-sky-200 border border-sky-400 text-foreground cursor-default pointer-events-none"
+                              required
+                            />
+                          ) : (
+                            <Popover open={openCourse} onOpenChange={setOpenCourse}>
+                              <PopoverTrigger asChild>
+                                <Input
+                                  id="course"
+                                  type="text"
+                                  spellCheck={true}
+                                  lang="pt-BR"
+                                  placeholder={coursePlaceholder}
+                                  value={customCourseName}
+                                  onChange={(e) => {
+                                    setCustomCourseName(e.target.value);
+                                    setCourse(e.target.value);
+                                    setOpenCourse(true);
+                                  }}
+                                  maxLength={100}
+                                  className="border-input focus:border-primary focus:ring-primary/20 h-11 text-base bg-background text-foreground placeholder:text-muted-foreground"
+                                  required
+                                />
+                              </PopoverTrigger>
+                              <PopoverContent className="p-0 w-full max-w-2xl" align="start">
+                                <Command>
+                                  <CommandInput
+                                    value={customCourseName}
+                                    onValueChange={(value) => {
+                                      setCustomCourseName(value);
+                                      setCourse(value);
+                                    }}
+                                    placeholder="Digite para buscar..."
+                                  />
+                                  <CommandList className="max-h-48 overflow-y-auto">
+                                    <CommandEmpty>
+                                      {customCourseName.trim().length < 2
+                                        ? "Digite o nome do seu curso."
+                                        : "Nenhuma sugestão. Continue digitando."}
+                                    </CommandEmpty>
+                                    <CommandGroup>
+                                      {courseSuggestions
+                                        .filter((name) => {
+                                          const query = customCourseName.trim().toLowerCase();
+                                          if (query.length < 2) return false;
+                                          return name.toLowerCase().includes(query);
+                                        })
+                                        .slice(0, 8)
+                                        .map((name) => (
+                                          <CommandItem
+                                            key={name}
+                                            value={name}
+                                            className="text-sm"
+                                            onSelect={() => {
+                                              setCustomCourseName(name);
+                                              setCourse(name);
+                                              setOpenCourse(false);
+                                            }}
+                                          >
+                                            {name}
+                                          </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -850,24 +940,63 @@ export default function CompleteProfile() {
                         <Label htmlFor="course" className="text-foreground">
                           {config.courseLabel}
                         </Label>
-                        <Input
-                          id="course"
-                          type="text"
-                          spellCheck={true}
-                          lang="pt-BR"
-                          placeholder={coursePlaceholder}
-                          value={course}
-                          list="course-suggestions"
-                          onChange={(e) => setCourse(e.target.value)}
-                          onBlur={() =>
-                            setCourse((prev) =>
-                              normalizeWithSuggestions(prev, courseSuggestions)
-                            )
-                          }
-                          maxLength={70}
-                          className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
-                          required
-                        />
+                        <Popover open={openCourse} onOpenChange={setOpenCourse}>
+                          <PopoverTrigger asChild>
+                            <Input
+                              id="course"
+                              type="text"
+                              spellCheck={true}
+                              lang="pt-BR"
+                              placeholder={coursePlaceholder}
+                              value={course}
+                              onChange={(e) => {
+                                setCourse(e.target.value);
+                                setOpenCourse(true);
+                              }}
+                              maxLength={70}
+                              className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
+                              required
+                            />
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0 w-full max-w-2xl" align="start">
+                            <Command>
+                              <CommandInput
+                                value={course}
+                                onValueChange={(value) => setCourse(value)}
+                                placeholder="Digite para buscar..."
+                              />
+                              <CommandList className="max-h-48 overflow-y-auto">
+                                <CommandEmpty>
+                                  {course.trim().length < 2
+                                    ? "Digite o nome da instituição de ensino."
+                                    : "Nenhuma sugestão. Continue digitando."}
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {courseSuggestions
+                                    .filter((name) => {
+                                      const query = course.trim().toLowerCase();
+                                      if (query.length < 2) return false;
+                                      return name.toLowerCase().includes(query);
+                                    })
+                                    .slice(0, 8)
+                                    .map((name) => (
+                                      <CommandItem
+                                        key={name}
+                                        value={name}
+                                        className="text-sm"
+                                        onSelect={() => {
+                                          setCourse(name);
+                                          setOpenCourse(false);
+                                        }}
+                                      >
+                                        {name}
+                                      </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     )
                   )}
@@ -921,18 +1050,6 @@ export default function CompleteProfile() {
                     <p>Esses dados aparecerão na sua carteirinha.</p>
                   </div>
                 </div>
-
-                <datalist id="institution-suggestions">
-                  {institutionSuggestions.map((name) => (
-                    <option key={name} value={name} />
-                  ))}
-                </datalist>
-
-                <datalist id="course-suggestions">
-                  {courseSuggestions.map((name) => (
-                    <option key={name} value={name} />
-                  ))}
-                </datalist>
 
                 {/* Botão Continuar */}
                 <Button
