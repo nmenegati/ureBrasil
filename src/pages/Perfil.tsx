@@ -598,6 +598,12 @@ export default function Perfil() {
   const initials = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
   const { isInstalled, canInstall, promptInstall } = usePWAInstall();
+  const isIOS =
+    typeof navigator !== 'undefined' &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const pwaInstructionText = isIOS
+    ? "Toque no botão ⬆ (compartilhar) do Safari e selecione 'Adicionar à Tela de Início'."
+    : "Toque no menu ⋮ do navegador e selecione 'Adicionar à tela inicial'.";
 
   if (authLoading || loading) {
       return (
@@ -649,13 +655,17 @@ export default function Perfil() {
                 Adicione o app à tela inicial para acessar sua carteirinha com mais rapidez.
               </CardDescription>
             </CardHeader>
-            {canInstall && (
-              <CardContent className="pt-0">
+            <CardContent className="pt-0 space-y-2">
+              {canInstall ? (
                 <Button size="sm" onClick={promptInstall}>
                   Instalar
                 </Button>
-              </CardContent>
-            )}
+              ) : (
+                <p className="text-xs text-emerald-900">
+                  {pwaInstructionText}
+                </p>
+              )}
+            </CardContent>
           </Card>
         )}
 

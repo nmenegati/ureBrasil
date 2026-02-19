@@ -8,10 +8,15 @@ type BeforeInstallPromptEvent = Event & {
 export function usePWAInstall() {
   const [canInstall, setCanInstall] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [wasPromptAvailable, setWasPromptAvailable] = useState(false);
   const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    if (window.localStorage.getItem("pwa-prompt-available") === "true") {
+      setWasPromptAvailable(true);
+    }
 
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
@@ -28,6 +33,11 @@ export function usePWAInstall() {
       e.preventDefault();
       deferredPrompt.current = e as BeforeInstallPromptEvent;
       setCanInstall(true);
+      setWasPromptAvailable(true);
+      try {
+        window.localStorage.setItem("pwa-prompt-available", "true");
+      } catch {
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -55,5 +65,5 @@ export function usePWAInstall() {
     return outcome === "accepted";
   };
 
-  return { canInstall, isInstalled, promptInstall };
+  return { canInstall, isInstalled, promptInstall, wasPromptAvailable };
 }

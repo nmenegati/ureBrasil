@@ -12,13 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, Sun, Moon, User, LogOut, Home, CreditCard, Bell, Package } from 'lucide-react';
+import { Menu, X, Sun, Moon, User, LogOut, Download, CheckCircle, CreditCard, Bell, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 import { goToStudentCardFlow } from '@/lib/cardNavigation';
 import { formatPrice } from '@/utils/payment-helpers';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   variant?: 'landing' | 'app';
@@ -39,7 +40,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isInstalled, canInstall, promptInstall } = usePWAInstall();
+  const { canInstall, isInstalled, promptInstall } = usePWAInstall();
   
   const isLandingPage = location.pathname === '/';
   const isCarteirinhaPage = location.pathname === '/carteirinha';
@@ -161,6 +162,21 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const profileLink = isProfileComplete ? '/perfil' : '/complete-profile';
   const showPhysicalOption = hasActiveCard && !hasPhysicalCard;
 
+  const handleInstallClick = async () => {
+    if (canInstall) {
+      await promptInstall();
+      return;
+    }
+
+    if (typeof navigator === 'undefined') return;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const message = isIOS
+      ? "Toque no botão ⬆ (compartilhar) do Safari e selecione 'Adicionar à Tela de Início'"
+      : "Toque no menu ⋮ do navegador e selecione 'Adicionar à tela inicial'";
+
+    toast.info(message);
+  };
+
   const handleMyCardClick = async () => {
     await goToStudentCardFlow(navigate);
   };
@@ -190,6 +206,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
     onClick: () => void;
     highlight?: boolean;
     primary?: boolean;
+    disabled?: boolean;
+    separatorAbove?: boolean;
   }[] = [];
 
   if (isCarteirinhaPage) {
@@ -230,13 +248,20 @@ export function Header({ variant = 'app' }: HeaderProps) {
     });
   }
 
-  if (!isInstalled && canInstall) {
+  if (!isInstalled) {
     avatarMenuItems.push({
-      label: 'Instalar app',
-      icon: Home,
-      onClick: () => {
-        promptInstall();
-      },
+      label: 'Instalar aplicativo',
+      icon: Download,
+      onClick: handleInstallClick,
+      separatorAbove: true,
+    });
+  } else if (isInstalled) {
+    avatarMenuItems.push({
+      label: 'Aplicativo instalado',
+      icon: CheckCircle,
+      onClick: () => {},
+      disabled: true,
+      separatorAbove: true,
     });
   }
 
@@ -244,6 +269,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
     label: 'Sair',
     icon: LogOut,
     onClick: handleSignOut,
+    separatorAbove: true,
   });
   
   const scrollToSection = (sectionName: string) => {
@@ -406,15 +432,21 @@ export function Header({ variant = 'app' }: HeaderProps) {
                       } else if (item.highlight) {
                         itemClass += ' bg-ure-yellow/10 text-foreground hover:bg-ure-yellow/20 font-semibold py-2';
                       }
+                      if (item.disabled) {
+                        itemClass += ' opacity-60';
+                      }
                       return (
-                        <DropdownMenuItem
-                          key={index}
-                          onClick={item.onClick}
-                          className={itemClass}
-                        >
-                          <item.icon className="mr-2 h-4 w-4" />
-                          {item.label}
-                        </DropdownMenuItem>
+                        <div key={index}>
+                          {item.separatorAbove && <DropdownMenuSeparator />}
+                          <DropdownMenuItem
+                            disabled={item.disabled}
+                            onClick={item.onClick}
+                            className={itemClass}
+                          >
+                            <item.icon className="mr-2 h-4 w-4" />
+                            {item.label}
+                          </DropdownMenuItem>
+                        </div>
                       );
                     })}
                   </DropdownMenuContent>
