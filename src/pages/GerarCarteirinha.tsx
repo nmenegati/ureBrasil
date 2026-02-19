@@ -176,7 +176,7 @@ export default function GerarCarteirinha() {
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <main className="container mx-auto px-4 pt8 pb-20 max-w-2xl">
         <div className="mb-4">
           <ProgressBar currentStep="card" />
         </div>
