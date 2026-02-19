@@ -6,12 +6,13 @@ import { Header } from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageCircle } from 'lucide-react';
 import { ProgressBar } from '@/components/ProgressBar';
 import { formatBirthDate } from '@/lib/dateUtils';
 import { formatEnrollmentNumber } from '@/lib/validators';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 import { toast } from 'sonner';
+import { SupportModal } from '@/components/SupportModal';
 
 interface ProfileData {
   id: string;
@@ -61,6 +62,7 @@ export default function GerarCarteirinha() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -249,17 +251,21 @@ export default function GerarCarteirinha() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full bg-amber-500 hover:bg-amber-600 text-white border-none"
-                onClick={() => {
-                  toast.info('Em breve você poderá abrir um chamado de suporte com todos os dados necessários.');
-                }}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white border-none flex items-center justify-center gap-2"
+                onClick={() => setSupportOpen(true)}
               >
+                <MessageCircle className="w-4 h-4" />
                 Pedir ajuda ao suporte
               </Button>
             </div>
           </CardContent>
         </Card>
       </main>
+      <SupportModal
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        defaultCategory="Carteirinha não gerou"
+      />
     </div>
   );
 }

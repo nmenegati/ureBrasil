@@ -24,12 +24,14 @@ import {
   CreditCard,
   User,
   SquareUserRound,
+  MessageCircle,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CameraCapture } from '@/components/CameraCapture';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 import { useFaceValidation } from '@/hooks/useFaceValidation';
+import { SupportModal } from '@/components/SupportModal';
 
 type DocumentType = 'rg' | 'matricula' | 'foto' | 'selfie';
 
@@ -154,7 +156,6 @@ const DocumentCard = ({
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log('🚀 FILE SELECT!', file?.name, 'tipo:', config.type);
     if (file) {
       onUpload(file, config.type);
     }
@@ -517,6 +518,7 @@ export default function UploadDocumentos() {
   const [faceValidationPending, setFaceValidationPending] = useState(false);
   const [showManualFallback, setShowManualFallback] = useState(false);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -861,8 +863,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
         ip = ipData.ip;
       } catch (e) {}
 
-      console.log('[TERMOS] Tentando salvar para profile.id:', profile!.id);
-
       const { data, error } = await supabase
         .from('student_profiles')
         .update({
@@ -873,8 +873,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
         })
         .select('id, user_id, terms_accepted, current_onboarding_step')
         .eq('id', profile!.id);
-
-      console.log('[TERMOS] update result:', { data, error });
 
       if (error) {
         console.error('Erro ao salvar termos:', error);
@@ -1193,6 +1191,9 @@ const handleUpload = async (file: File, type: DocumentType) => {
 
             <Dialog open={showFullTerms} onOpenChange={setShowFullTerms}>
               <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+              <DialogTitle className="sr-only">
+                Termo de Responsabilidade por Veracidade dos Documentos
+              </DialogTitle>
                 <div className="space-y-3 text-sm text-slate-600">
                   <h2 className="text-lg font-semibold text-foreground">
                     Termo de Responsabilidade por Veracidade dos Documentos
@@ -1300,6 +1301,30 @@ const handleUpload = async (file: File, type: DocumentType) => {
           </div>
         )}
       </div>
+      {profile && (
+        <>
+          <div className="mt-8 flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => setSupportOpen(true)}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Não conseguiu resolver? Abra uma solicitação
+            </Button>
+          </div>
+          <SupportModal
+            open={supportOpen}
+            onClose={() => setSupportOpen(false)}
+            defaultCategory={
+              Object.values(documents).some((doc) => doc.status === 'rejected')
+                ? 'Documento rejeitado'
+                : undefined
+            }
+          />
+        </>
+      )}
     </main>
   </div>
 );

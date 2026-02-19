@@ -204,7 +204,9 @@ export default function Checkout() {
     if (upsellResolved) return;
 
     const resolveUpsell = async () => {
-      console.log("[Checkout] resolveUpsell start. upsellState:", upsellState);
+      console.info("[CHECKOUT] resolveUpsell:", {
+        isUpsell: !!upsellState?.isUpsell,
+      });
 
       const fetchUpsellPrice = async () => {
         const { data } = await supabase
@@ -397,7 +399,6 @@ export default function Checkout() {
 
         if (originalPaymentError) {
           console.error("[CHECKOUT] Erro ao carregar pagamento original:", {
-            originalPaymentId: resolvedUpsell.originalPaymentId,
             error: originalPaymentError.message,
           });
         }
@@ -414,8 +415,6 @@ export default function Checkout() {
           is_physical: true,
           is_direito: false,
         });
-
-        console.log("[Checkout] plan set with originalPlanName:", originalPlanName);
       } catch (error) {
         console.error("[CHECKOUT] Erro ao carregar dados de upsell:", error);
         toast.error("Erro ao carregar informações de pagamento");
@@ -562,7 +561,9 @@ export default function Checkout() {
       }
 
       if (resolvedUpsell.isUpsell && resolvedUpsell.originalPaymentId) {
-        console.log("💳 Processando upsell via gateway:", activeGateway);
+        console.info("[CHECKOUT] Processando upsell via gateway:", {
+          gateway: activeGateway,
+        });
 
         const [month, year] = cardExpiry.split("/");
         const expYear = year && year.length === 2 ? `20${year}` : year;
@@ -630,9 +631,7 @@ export default function Checkout() {
           .eq("payment_id", resolvedUpsell.originalPaymentId);
 
         if (updateError) {
-          console.error("Erro ao atualizar carteirinha:", updateError);
-        } else {
-          console.log("✅ Carteirinha atualizada para física");
+          console.error("[CHECKOUT] Erro ao atualizar carteirinha física:", updateError);
         }
 
         // Atualizar step de onboarding para upload de documentos

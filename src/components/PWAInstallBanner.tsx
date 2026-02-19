@@ -39,7 +39,10 @@ export function PWAInstallBanner() {
   };
 
   const isAdminPath = location.pathname.startsWith("/admin");
-  const shouldShow = canInstall && !isInstalled && !dismissed && !isAdminPath;
+  const allowedPaths = ["/carteirinha"];
+  const isAllowedPath = allowedPaths.includes(location.pathname);
+  const shouldShow =
+    canInstall && !isInstalled && !dismissed && !isAdminPath && isAllowedPath;
 
   if (!shouldShow) return null;
 

@@ -12,6 +12,8 @@ import { CardLayoutFront } from '@/components/CardLayoutFront';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
+import { ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { SupportModal } from '@/components/SupportModal';
 
 interface StudentProfile {
   id: string;
@@ -66,13 +68,13 @@ export default function Carteirinha() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [card, setCard] = useState<CardData | null>(null);
-  const [side, setSide] = useState<'front' | 'back'>('front');
+  const [activeIndex, setActiveIndex] = useState(0);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const touchStartX = useRef<number | null>(null);
-  const mouseStartX = useRef<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -333,117 +335,129 @@ export default function Carteirinha() {
     ? '/templates/direito-verso-template-v.png'
     : '/templates/geral-verso-template-v.png';
 
-  const handleSwipeLeft = () => {
-    setSide('back');
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const scrollLeft = scrollRef.current.scrollLeft;
+    const width = scrollRef.current.offsetWidth;
+    if (!width) return;
+    setActiveIndex(Math.round(scrollLeft / width));
   };
 
-  const handleSwipeRight = () => {
-    setSide('front');
-  };
-
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchStartX.current = e.touches[0]?.clientX ?? null;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartX.current == null) return;
-    const deltaX = e.changedTouches[0]?.clientX - touchStartX.current;
-    touchStartX.current = null;
-    if (deltaX == null) return;
-    if (Math.abs(deltaX) < 40) return;
-    if (deltaX < 0) {
-      handleSwipeLeft();
-    } else {
-      handleSwipeRight();
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    mouseStartX.current = e.clientX;
-  };
-
-  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (mouseStartX.current == null) return;
-    const deltaX = e.clientX - mouseStartX.current;
-    mouseStartX.current = null;
-    if (Math.abs(deltaX) < 60) return;
-    if (deltaX < 0) {
-      handleSwipeLeft();
-    } else {
-      handleSwipeRight();
-    }
+  const scrollToIndex = (index: number) => {
+    if (!scrollRef.current) return;
+    scrollRef.current.scrollTo({
+      left: index * scrollRef.current.offsetWidth,
+      behavior: 'smooth',
+    });
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       <main className="container mx-auto px-4 py-8 max-w-sm">
-        <div
-          className="bg-white rounded-lg overflow-hidden border border-border touch-pan-y select-none"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-        >
-          {side === 'front' ? (
-            card.digital_card_url ? (
-              <img
-                src={card.digital_card_url}
-                alt="Carteirinha digital - frente"
-                className="w-full h-auto"
-              />
-            ) : (
-              <div ref={cardRef}>
-                <CardLayoutFront
-                  mode={mode}
-                  templateSrc={frontImageUrl}
-                  fullName={profile.full_name}
-                  cpf={profile.cpf}
-                  birthDate={formatBirthDate(profile.birth_date)}
-                  institution={profile.institution}
-                  educationLabel={formatEducationLevel(profile.education_level)}
-                  period={profile.period}
-                  course={profile.course}
-                  enrollmentNumber={
-                    profile.enrollment_number
-                      ? formatEnrollmentNumber(String(profile.enrollment_number))
-                      : null
-                  }
-                  usageCode={card.usage_code}
-                  validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
-                  photoUrl={profilePhotoUrl}
-                  qrImageUrl={qrCodeUrl}
+        <div className="relative group">
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex overflow-x-auto snap-x snap-mandatory touch-pan-y select-none scroll-smooth"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            <div className="min-w-full snap-center flex-shrink-0">
+              <div className="bg-white rounded-lg overflow-hidden border border-border">
+                {card.digital_card_url ? (
+                  <img
+                    src={card.digital_card_url}
+                    alt="Carteirinha digital - frente"
+                    className="w-full h-auto"
+                  />
+                ) : (
+                  <div ref={cardRef}>
+                    <CardLayoutFront
+                      mode={mode}
+                      templateSrc={frontImageUrl}
+                      fullName={profile.full_name}
+                      cpf={profile.cpf}
+                      birthDate={formatBirthDate(profile.birth_date)}
+                      institution={profile.institution}
+                      educationLabel={formatEducationLevel(profile.education_level)}
+                      period={profile.period}
+                      course={profile.course}
+                      enrollmentNumber={
+                        profile.enrollment_number
+                          ? formatEnrollmentNumber(String(profile.enrollment_number))
+                          : null
+                      }
+                      usageCode={card.usage_code}
+                      validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
+                      photoUrl={profilePhotoUrl}
+                      qrImageUrl={qrCodeUrl}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="min-w-full snap-center flex-shrink-0">
+              <div className="bg-white rounded-lg overflow-hidden border border-border">
+                <img
+                  src={backImageUrl}
+                  alt="Carteirinha digital - verso"
+                  className="w-full h-auto"
                 />
               </div>
-            )
-          ) : (
-            <img
-              src={backImageUrl}
-              alt="Carteirinha digital - verso"
-              className="w-full h-auto rounded-xl"
-            />
+            </div>
+          </div>
+
+          {activeIndex > 0 && (
+            <button
+              type="button"
+              onClick={() => scrollToIndex(activeIndex - 1)}
+              className="hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/40 text-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+
+          {activeIndex < 1 && (
+            <button
+              type="button"
+              onClick={() => scrollToIndex(activeIndex + 1)}
+              className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/40 text-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           )}
         </div>
 
-        <div className="flex gap-2 mt-4 justify-center">
-          <Button
-            type="button"
-            variant={side === 'front' ? 'default' : 'outline'}
-            className="min-w-[100px]"
-            onClick={() => setSide('front')}
-          >
-            Frente
-          </Button>
-          <Button
-            type="button"
-            variant={side === 'back' ? 'default' : 'outline'}
-            className="min-w-[100px]"
-            onClick={() => setSide('back')}
-          >
-            Verso
-          </Button>
+        <div className="flex justify-center gap-2 py-3">
+          {[0, 1].map((i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => scrollToIndex(i)}
+              className={`rounded-full transition-all duration-300 ${
+                activeIndex === i
+                  ? 'w-2.5 h-2.5 bg-primary'
+                  : 'w-2 h-2 bg-muted-foreground/30'
+              }`}
+            />
+          ))}
         </div>
       </main>
+      <div className="mt-4 flex justify-center pb-6">
+        <Button
+          type="button"
+          variant="outline"
+          className="flex items-center gap-2"
+          onClick={() => setSupportOpen(true)}
+        >
+          <MessageCircle className="w-4 h-4" />
+          Precisa de ajuda? Abra uma solicitação
+        </Button>
+      </div>
+      <SupportModal
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+      />
     </div>
   );
 }

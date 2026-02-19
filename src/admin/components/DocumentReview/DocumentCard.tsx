@@ -4,7 +4,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ApprovalModal } from '@/admin/components/DocumentReview/ApprovalModal';
 import { RejectModal } from '@/admin/components/DocumentReview/RejectModal';
 import { OverrideFaceModal } from '@/admin/components/DocumentReview/OverrideFaceModal';
@@ -159,6 +159,7 @@ export function DocumentCard({ item, onUpdated }: DocumentCardProps) {
 
       <Dialog open={largeOpen} onOpenChange={setLargeOpen}>
         <DialogContent className="max-w-3xl">
+          <DialogTitle className="sr-only">Pré-visualização de documento</DialogTitle>
           {previewUrl ? (
             <img
               src={previewUrl}

@@ -28,6 +28,7 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -62,6 +63,28 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
       setTimeout(() => inputRef.current?.focus(), 100);
       setHasUnread(false);
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handler = () => setIsOpen(true);
+    window.addEventListener('ure-open-chat', handler);
+    return () => window.removeEventListener('ure-open-chat', handler);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const key = 'chat-hint-shown';
+    if (sessionStorage.getItem(key) === 'true') return;
+    if (isOpen) return;
+
+    setShowHint(true);
+    sessionStorage.setItem(key, 'true');
+
+    const timeout = setTimeout(() => {
+      setShowHint(false);
+    }, 4000);
+
+    return () => clearTimeout(timeout);
   }, [isOpen]);
 
   const handleSendMessage = async () => {
@@ -121,16 +144,23 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end pointer-events-none">
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="mb-4 w-[350px] sm:w-[380px] max-w-[calc(100vw-32px)] bg-background border border-border rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col h-[500px] max-h-[calc(100vh-120px)]"
-          >
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-[9998]"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end pointer-events-none">
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="mb-4 w-[350px] sm:w-[380px] max-w-[calc(100vw-32px)] bg-background border border-border rounded-xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col h-[500px] max-h-[calc(100vh-120px)]"
+            >
             {/* Header */}
             <div className="bg-primary p-4 flex items-center justify-between text-primary-foreground">
               <div className="flex items-center gap-3">
@@ -261,46 +291,63 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
                 </Button>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating Button */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="pointer-events-auto bg-primary text-primary-foreground w-14 h-14 rounded-full shadow-lg shadow-primary/25 flex items-center justify-center relative hover:bg-primary/90 transition-colors"
-      >
-        <AnimatePresence mode="wait">
-          {isOpen ? (
-            <motion.div
-              key="close"
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <X className="w-6 h-6" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="chat"
-              initial={{ rotate: 90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: -90, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <MessageCircle className="w-7 h-7" />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Unread Badge */}
-        {!isOpen && hasUnread && (
-          <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-background animate-pulse" />
-        )}
-      </motion.button>
-    </div>
+        {/* Hint bubble */}
+        <AnimatePresence>
+          {showHint && !isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.2 }}
+              className="mb-2 mr-16 px-3 py-2 rounded-lg bg-white shadow-md border border-border text-xs text-muted-foreground pointer-events-auto relative"
+            >
+              <span>Precisa de ajuda?</span>
+              <span className="absolute right-3 -bottom-1 w-2 h-2 bg-white border-r border-b border-border rotate-45" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Floating Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsOpen(!isOpen)}
+          className="pointer-events-auto bg-primary text-primary-foreground w-14 h-14 rounded-full shadow-lg shadow-primary/25 flex items-center justify-center relative hover:bg-primary/90 transition-colors"
+        >
+          <AnimatePresence mode="wait">
+            {isOpen ? (
+              <motion.div
+                key="close"
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <X className="w-6 h-6" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="chat"
+                initial={{ rotate: 90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: -90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <MessageCircle className="w-7 h-7" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Unread Badge */}
+          {!isOpen && hasUnread && (
+            <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-background animate-pulse" />
+          )}
+        </motion.button>
+      </div>
+    </>
   );
 }

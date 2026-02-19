@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { CheckCircle, Loader2, CreditCard, Truck, Shield, X, Info } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -268,6 +268,7 @@ const PaymentSuccessPage = () => {
       {/* Modal de Upsell */}
       <Dialog open={showUpsellModal} onOpenChange={() => {}}>
         <DialogContent className="max-w-md p-0 overflow-hidden border-0 bg-white">
+          <DialogTitle className="sr-only">Oferta de upgrade para carteirinha física</DialogTitle>
           {/* Header com gradiente */}
           <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-center relative">
             <button 

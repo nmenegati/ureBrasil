@@ -8,7 +8,7 @@ import { formatPrice } from '@/utils/payment-helpers';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { 
@@ -758,6 +758,7 @@ export default function Dashboard() {
           onPointerDownOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
+          <DialogTitle className="sr-only">Oferta de carteirinha física</DialogTitle>
           <div className="p-6">
             {/* Badge */}
             <div className="flex justify-center mb-4">

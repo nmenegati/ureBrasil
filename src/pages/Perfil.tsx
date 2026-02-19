@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -646,7 +646,7 @@ export default function Perfil() {
         </Card>
 
         {!isInstalled && (
-          <Card className="mb-6 bg-yellow-200 border border-emerald-500">
+          <Card className="mb-6 bg-blue-100 border border-blue-500">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold text-emerald-900">
                 Instalar aplicativo URE Brasil
@@ -1372,6 +1372,7 @@ export default function Perfil() {
         {docPreview && (
           <Dialog open={!!docPreview} onOpenChange={(open) => !open && setDocPreview(null)}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogTitle className="sr-only">Pré-visualização de documento enviado</DialogTitle>
               <div className="space-y-3">
                 <h2 className="text-lg font-semibold text-foreground">{docPreview.title}</h2>
                 <img

@@ -4,7 +4,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import AdminLayout from '@/admin/components/Layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { AdminTicketChat } from '@/admin/components/TicketManagement/TicketChat';
 import { MaskedCPF } from '@/admin/components/shared/MaskedCPF';
@@ -155,6 +155,7 @@ export default function AdminTicketsPage() {
           }}
         >
           <DialogContent className="max-w-4xl h-[75vh]">
+          <DialogTitle className="sr-only">Detalhes do ticket selecionado</DialogTitle>
             {selectedTicketId && <AdminTicketChat ticketId={selectedTicketId} />}
           </DialogContent>
         </Dialog>

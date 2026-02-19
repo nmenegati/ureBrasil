@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, Sun, Moon, User, LogOut, Download, CheckCircle, CreditCard, Bell, Package } from 'lucide-react';
+import { Menu, X, Sun, Moon, User, LogOut, Download, CheckCircle, CreditCard, Bell, Package, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,7 @@ import { goToStudentCardFlow } from '@/lib/cardNavigation';
 import { formatPrice } from '@/utils/payment-helpers';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { toast } from 'sonner';
+import { SupportModal } from '@/components/SupportModal';
 
 interface HeaderProps {
   variant?: 'landing' | 'app';
@@ -37,10 +38,13 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const [hasActiveCard, setHasActiveCard] = useState(false);
   const [hasPhysicalCard, setHasPhysicalCard] = useState(false);
   const [physicalAvulsaPrice, setPhysicalAvulsaPrice] = useState<number | null>(null);
+  const [studentProfileId, setStudentProfileId] = useState<string | null>(null);
+  const [openTicketsCount, setOpenTicketsCount] = useState(0);
   
   const [isPWA, setIsPWA] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { canInstall, isInstalled, promptInstall } = usePWAInstall();
+  const [supportOpen, setSupportOpen] = useState(false);
   
   const isLandingPage = location.pathname === '/';
   const isCarteirinhaPage = location.pathname === '/carteirinha';
@@ -93,6 +97,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
         setIsProfileComplete(false);
         setHasActiveCard(false);
         setHasPhysicalCard(false);
+        setStudentProfileId(null);
         return;
       }
       const { data: profile } = await supabase
@@ -104,8 +109,10 @@ export function Header({ variant = 'app' }: HeaderProps) {
         setIsProfileComplete(false);
         setHasActiveCard(false);
         setHasPhysicalCard(false);
+        setStudentProfileId(null);
         return;
       }
+      setStudentProfileId(profile.id);
       const profileCompletedByFields =
         !!profile.full_name &&
         !!profile.institution &&
@@ -130,6 +137,28 @@ export function Header({ variant = 'app' }: HeaderProps) {
     };
     checkPhysicalCard();
   }, [user]);
+
+  useEffect(() => {
+    const fetchOpenTicketsCount = async () => {
+      if (!studentProfileId) {
+        setOpenTicketsCount(0);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('id')
+        .eq('student_id', studentProfileId)
+        .in('status', ['open', 'in_progress', 'waiting_user']);
+
+      if (error || !data) {
+        setOpenTicketsCount(0);
+        return;
+      }
+      setOpenTicketsCount(data.length);
+    };
+
+    fetchOpenTicketsCount();
+  }, [studentProfileId]);
 
   useEffect(() => {
     const loadPhysicalAvulsaPrice = async () => {
@@ -208,6 +237,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
     primary?: boolean;
     disabled?: boolean;
     separatorAbove?: boolean;
+    badgeCount?: number;
   }[] = [];
 
   if (isCarteirinhaPage) {
@@ -247,16 +277,25 @@ export function Header({ variant = 'app' }: HeaderProps) {
       onClick: () => navigate('/checkout-fisica'),
     });
   }
+  
+  avatarMenuItems.push({
+    label: 'Suporte',
+    icon: MessageCircle,
+    onClick: () => setSupportOpen(true),
+
+    badgeCount: openTicketsCount > 0 ? openTicketsCount : undefined,
+  });
 
   if (!isInstalled) {
     avatarMenuItems.push({
-      label: 'Instalar aplicativo',
+      label: 'Instalar App URE Brasil',
       icon: Download,
-      onClick: handleInstallClick,
       separatorAbove: true,
+      onClick: handleInstallClick,
     });
   } else if (isInstalled) {
     avatarMenuItems.push({
+      separatorAbove: true,
       label: 'Aplicativo instalado',
       icon: CheckCircle,
       onClick: () => {},
@@ -269,7 +308,6 @@ export function Header({ variant = 'app' }: HeaderProps) {
     label: 'Sair',
     icon: LogOut,
     onClick: handleSignOut,
-    separatorAbove: true,
   });
   
   const scrollToSection = (sectionName: string) => {
@@ -298,6 +336,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
     : 'bg-background/95 backdrop-blur-lg border-b border-border';
   
   return (
+    <>
     <header className={`sticky top-0 z-50 ${headerBg}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-[72px]">
@@ -444,7 +483,12 @@ export function Header({ variant = 'app' }: HeaderProps) {
                             className={itemClass}
                           >
                             <item.icon className="mr-2 h-4 w-4" />
-                            {item.label}
+                            <span className="flex-1">{item.label}</span>
+                            {item.badgeCount != null && item.badgeCount > 0 && (
+                              <Badge variant="destructive" className="ml-auto text-[10px] px-1.5 py-0">
+                                {item.badgeCount}
+                              </Badge>
+                            )}
                           </DropdownMenuItem>
                         </div>
                       );
@@ -533,5 +577,12 @@ export function Header({ variant = 'app' }: HeaderProps) {
         )}
       </div>
     </header>
+    {user && (
+      <SupportModal
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+      />
+    )}
+    </>
   );
 }
