@@ -365,46 +365,52 @@ export default function Carteirinha() {
             <div className="min-w-full snap-center flex-shrink-0">
               <div className="bg-white rounded-lg overflow-hidden border border-border">
                 {card.digital_card_url ? (
-                  <img
-                    src={card.digital_card_url}
-                    alt="Carteirinha digital - frente"
-                    style={{ width: '384px' }}
-                    className="h-auto mx-auto"
-                  />
-                ) : (
-                  <div ref={cardRef} style={{ width: '384px' }} className="mx-auto">
-                    <CardLayoutFront
-                      mode={mode}
-                      templateSrc={frontImageUrl}
-                      fullName={profile.full_name}
-                      cpf={profile.cpf}
-                      birthDate={formatBirthDate(profile.birth_date)}
-                      institution={profile.institution}
-                      educationLabel={formatEducationLevel(profile.education_level)}
-                      period={profile.period}
-                      course={profile.course}
-                      enrollmentNumber={
-                        profile.enrollment_number
-                          ? formatEnrollmentNumber(String(profile.enrollment_number))
-                          : null
-                      }
-                      usageCode={card.usage_code}
-                      validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
-                      photoUrl={profilePhotoUrl}
-                      qrImageUrl={qrCodeUrl}
+                  <div className="w-full flex justify-center">
+                    <img
+                      src={card.digital_card_url}
+                      alt="Carteirinha digital - frente"
+                      style={{ width: '100%', maxWidth: '384px' }}
+                      className="h-auto"
                     />
+                  </div>
+                ) : (
+                  <div className="w-full flex justify-center">
+                    <div ref={cardRef} style={{ width: '100%', maxWidth: '384px' }}>
+                      <CardLayoutFront
+                        mode={mode}
+                        templateSrc={frontImageUrl}
+                        fullName={profile.full_name}
+                        cpf={profile.cpf}
+                        birthDate={formatBirthDate(profile.birth_date)}
+                        institution={profile.institution}
+                        educationLabel={formatEducationLevel(profile.education_level)}
+                        period={profile.period}
+                        course={profile.course}
+                        enrollmentNumber={
+                          profile.enrollment_number
+                            ? formatEnrollmentNumber(String(profile.enrollment_number))
+                            : null
+                        }
+                        usageCode={card.usage_code}
+                        validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
+                        photoUrl={profilePhotoUrl}
+                        qrImageUrl={qrCodeUrl}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
             </div>
             <div className="min-w-full snap-center flex-shrink-0">
               <div className="bg-white rounded-lg overflow-hidden border border-border">
-                <img
-                  src={backImageUrl}
-                  alt="Carteirinha digital - verso"
-                  style={{ width: '384px' }}
-                  className="h-auto mx-auto"
-                />
+                <div className="w-full flex justify-center">
+                  <img
+                    src={backImageUrl}
+                    alt="Carteirinha digital - verso"
+                    style={{ width: '100%', maxWidth: '384px' }}
+                    className="h-auto"
+                  />
+                </div>
               </div>
             </div>
           </div>
