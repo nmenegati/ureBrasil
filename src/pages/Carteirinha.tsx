@@ -368,10 +368,11 @@ export default function Carteirinha() {
                   <img
                     src={card.digital_card_url}
                     alt="Carteirinha digital - frente"
-                    className="w-full h-auto"
+                    style={{ width: '384px' }}
+                    className="h-auto mx-auto"
                   />
                 ) : (
-                  <div ref={cardRef} className="max-w-sm mx-auto">
+                  <div ref={cardRef} style={{ width: '384px' }} className="mx-auto">
                     <CardLayoutFront
                       mode={mode}
                       templateSrc={frontImageUrl}
@@ -401,7 +402,8 @@ export default function Carteirinha() {
                 <img
                   src={backImageUrl}
                   alt="Carteirinha digital - verso"
-                  className="w-full h-auto"
+                  style={{ width: '384px' }}
+                  className="h-auto mx-auto"
                 />
               </div>
             </div>
