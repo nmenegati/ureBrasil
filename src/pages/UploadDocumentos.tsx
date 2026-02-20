@@ -19,7 +19,7 @@ import {
   CheckCircle, 
   Clock, 
   AlertCircle,
-  File,
+  File as FileIcon,
   Smartphone,
   CreditCard,
   User,
@@ -80,6 +80,23 @@ interface DocumentCardProps {
   hasCameraSupport: boolean;
   onUpload: (file: File, type: DocumentType) => void;
   onOpenCamera: () => void;
+  isRgMissingSide?: boolean;
+  onAddSecondSide?: (file: File) => void;
+}
+
+function isRejectedForMissingSide(rejectionReason: string | null | undefined): boolean {
+  if (!rejectionReason) return false;
+  const lower = rejectionReason.toLowerCase();
+  return (
+    lower.includes('verso') ||
+    lower.includes('frente') ||
+    lower.includes('um lado') ||
+    lower.includes('um único lado') ||
+    lower.includes('apenas um') ||
+    lower.includes('frente e verso') ||
+    lower.includes('outro lado') ||
+    lower.includes('ambos os lados')
+  );
 }
 
 const documentConfigs: DocumentConfig[] = [
@@ -122,14 +139,18 @@ const DocumentCard = ({
   hasCameraSupport,
   onUpload,
   onOpenCamera,
+  isRgMissingSide,
+  onAddSecondSide,
 }: DocumentCardProps) => {
   const IconComponent = config.icon;
   const status = doc?.status;
   const isSelfie = config.type === 'selfie';
+  const isRg = config.type === 'rg';
   const canUpload = !doc || status === 'rejected';
   const disableUpload = !canUpload || isUploading;
   const inputId = `file-${config.type}`;
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isAddingSecondSide, setIsAddingSecondSide] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -157,7 +178,15 @@ const DocumentCard = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      onUpload(file, config.type);
+      if (isRg && isRgMissingSide && isAddingSecondSide && onAddSecondSide) {
+        onAddSecondSide(file);
+      } else {
+        onUpload(file, config.type);
+      }
+    }
+    setIsAddingSecondSide(false);
+    if (e.target) {
+      e.target.value = '';
     }
   };
 
@@ -284,6 +313,7 @@ const DocumentCard = ({
       onDrop={handleDrop}
       onClick={() => {
         if (!interactive || disableUpload) return;
+        if (doc) return;
         if (isSelfie) {
           onOpenCamera?.();
         } else {
@@ -354,7 +384,10 @@ const DocumentCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onOpenCamera}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenCamera();
+                }}
                 className="text-primary hover:text-primary/80 hover:bg-primary/10"
               >
                 Tirar nova selfie
@@ -366,7 +399,7 @@ const DocumentCard = ({
       ) : doc && !preview ? (
         <div className="mt-4">
           <div className="p-4 bg-slate-100 rounded-lg flex items-center gap-3">
-            <File className="w-8 h-8 text-slate-500" />
+            <FileIcon className="w-8 h-8 text-slate-500" />
             <p className="text-sm text-slate-900 truncate flex-1">{doc.file_name}</p>
           </div>
           {/* input único por card, renderizado mais abaixo */}
@@ -375,7 +408,13 @@ const DocumentCard = ({
         <div className="mt-6 space-y-3">
           {isSelfie ? (
             <>
-              <Button onClick={onOpenCamera} className="w-full py-3">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenCamera();
+                }}
+                className="w-full py-3"
+              >
                 <Camera className="w-4 h-4 mr-2" />
                 Tirar Selfie Agora
               </Button>
@@ -404,7 +443,10 @@ const DocumentCard = ({
                 variant="outline"
                 className="w-full"
                 disabled={disableUpload}
-                onClick={handleChooseFileClick}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleChooseFileClick();
+                }}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Escolher arquivo
@@ -430,24 +472,68 @@ const DocumentCard = ({
 
       {doc?.status === 'rejected' && !isSelfie && (
         <>
-          {isUploading ? (
-            <Button
-              type="button"
-              disabled
-              className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Enviar Novo Documento
-            </Button>
+          {isRg && isRgMissingSide ? (
+            <>
+              <p className="mt-3 text-xs text-slate-700">
+                Agora envie o outro lado do documento.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
+                  disabled={isUploading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (disableUpload) return;
+                    setIsAddingSecondSide(true);
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Adicionar outro lado
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full text-xs"
+                  disabled={isUploading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAddingSecondSide(false);
+                    if (!disableUpload) {
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                >
+                  Enviar documento único
+                </Button>
+              </div>
+            </>
           ) : (
-            <Button
-              type="button"
-              className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
-              onClick={handleChooseFileClick}
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Enviar Novo Documento
-            </Button>
+            <>
+              {isUploading ? (
+                <Button
+                  type="button"
+                  disabled
+                  className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Enviar Novo Documento
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  className="w-full mt-4 bg-red-500/20 hover:bg-red-500/30 text-red-600 border border-red-500/30"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleChooseFileClick();
+                  }}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Enviar Novo Documento
+                </Button>
+              )}
+            </>
           )}
         </>
       )}
@@ -572,7 +658,7 @@ export default function UploadDocumentos() {
         const { data: signedData } = await supabase.storage
           .from('documents')
           .createSignedUrl(doc.file_url, 3600);
-          
+
         if (signedData) {
           newPreviews[doc.type] = signedData.signedUrl;
         }
@@ -680,7 +766,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
       toast.error('Perfil não carregado. Recarregue a página.');
       return;
     }
-    
     if (type === 'foto') {
       const { data: card } = await supabase
         .from('student_cards')
@@ -840,6 +925,90 @@ const handleUpload = async (file: File, type: DocumentType) => {
   const faceOk = !!profile?.face_validated;
   const canGenerateCard = allDocsApproved && faceOk && termsOk;
   const canSubmit = allDocsUploaded && termsOk;
+
+  const handleAddRgSecondSide = async (secondFile: File) => {
+    if (!profile?.id || !user?.id) {
+      toast.error('Perfil não carregado. Recarregue a página.');
+      return;
+    }
+
+    const rgDoc = documents['rg'];
+    if (!rgDoc) {
+      toast.error('Documento RG não encontrado. Envie novamente.');
+      return;
+    }
+
+    const config = documentConfigs.find(d => d.type === 'rg');
+    if (!config) return;
+
+    if (!secondFile.type.startsWith('image/') && secondFile.type !== 'application/pdf') {
+      toast.error('Apenas imagens ou PDFs são aceitos');
+      return;
+    }
+    if (secondFile.size > 3 * 1024 * 1024) {
+      toast.error('Arquivo deve ter no máximo 3MB');
+      return;
+    }
+
+    const toastId = 'upload-rg-back';
+    toast.loading('Enviando outro lado do documento...', { id: toastId });
+
+    try {
+      setUploading(prev => ({ ...prev, rg: true }));
+      setUploadProgress(prev => ({ ...prev, rg: 0 }));
+
+      let fileToUpload = secondFile;
+      if (secondFile.type.startsWith('image/') && secondFile.size > 1024 * 1024) {
+        fileToUpload = await compressImage(secondFile, 2400, 2400, 0.9);
+      }
+
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => ({
+          ...prev,
+          rg: Math.min((prev['rg'] || 0) + 20, 90)
+        }));
+      }, 200);
+
+      const ext = fileToUpload.name.split('.').pop();
+      const filePath = `${user.id}/rg-back/${Date.now()}.${ext}`;
+
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, fileToUpload, { upsert: true });
+
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from('documents')
+        .update({
+          file_url_back: filePath,
+          status: 'pending',
+          rejection_reason: null,
+          rejection_notes: null,
+          rejection_reason_id: null,
+          validated_at: null,
+          validated_by: null
+        })
+        .eq('id', rgDoc.id);
+
+      if (dbError) throw dbError;
+
+      clearInterval(progressInterval);
+      setUploadProgress(prev => ({ ...prev, rg: 100 }));
+
+      toast.success('Documento enviado! Validando...', { id: toastId });
+      await fetchDocuments();
+
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erro ao enviar documento';
+      toast.error(message, { id: toastId });
+    } finally {
+      setUploading(prev => ({ ...prev, rg: false }));
+      setTimeout(() => {
+        setUploadProgress(prev => ({ ...prev, rg: 0 }));
+      }, 1000);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!termsAccepted && !termsAlreadyAccepted) {
@@ -1031,19 +1200,32 @@ const handleUpload = async (file: File, type: DocumentType) => {
           </div>  
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">  
-          {documentConfigs.map(config => (  
-            <DocumentCard
-              key={config.type}
-              config={config}
-              doc={documents[config.type]}
-              preview={previews[config.type]}
-              isUploading={uploading[config.type] || false}
-              progress={uploadProgress[config.type] || 0}
-              hasCameraSupport={hasCameraSupport}
-              onUpload={handleUpload}
-              onOpenCamera={() => setShowCamera(true)}
-            />  
-          ))}  
+          {documentConfigs.map(config => {
+            const doc = documents[config.type];
+            const isRgMissingSide =
+              config.type === 'rg' &&
+              doc &&
+              doc.status === 'rejected' &&
+              isRejectedForMissingSide((doc as any).rejection_reason);
+
+            return (
+              <DocumentCard
+                key={config.type}
+                config={config}
+                doc={doc}
+                preview={previews[config.type]}
+                isUploading={uploading[config.type] || false}
+                progress={uploadProgress[config.type] || 0}
+                hasCameraSupport={hasCameraSupport}
+                onUpload={handleUpload}
+                onOpenCamera={() => setShowCamera(true)}
+                isRgMissingSide={isRgMissingSide}
+                onAddSecondSide={
+                  config.type === 'rg' ? handleAddRgSecondSide : undefined
+                }
+              />
+            );
+          })}  
         </div>  
   
         <Alert className="bg-green-300 border-green-500 py-2">  

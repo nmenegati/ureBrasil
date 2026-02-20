@@ -61,16 +61,19 @@ serve(async (req) => {
 
     console.log(`Processando documento ${id} do tipo ${type}`)
 
-    // 2. Baixar arquivo do Storage
+    // 2. Baixar arquivo do Storage (frente)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
     const { data: file, error: downloadError } = await supabase
       .storage.from('documents').download(file_url)
     
     if (downloadError || !file) throw new Error(`Download: ${downloadError?.message || 'sem arquivo'}`)
-
     const mimeType = file.type || guessMimeType(file_url)
     const isImage = mimeType.startsWith('image/')
     const isPdf = mimeType === 'application/pdf'
+
+    // 2b. Baixar verso se existir (file_url_back)
+    let backBase64: string | null = null
+    let backMimeType: string | null = null
 
     // Regras de tipo por documento
     if ((type === 'foto' || type === 'selfie') && !isImage) {
@@ -109,11 +112,35 @@ serve(async (req) => {
       })
     }
 
-    // 3. Converter para base64 (Chunked para evitar RangeError)
+    const { data: backDocRow } = await supabase
+      .from('documents')
+      .select('file_url_back')
+      .eq('id', id)
+      .maybeSingle()
+
+    const chunkSize = 8192 // 8KB chunks
+
+    if (type === 'rg' && backDocRow?.file_url_back) {
+      const { data: backFile, error: backError } = await supabase
+        .storage.from('documents').download(backDocRow.file_url_back)
+
+      if (!backError && backFile) {
+        backMimeType = backFile.type || guessMimeType(backDocRow.file_url_back)
+        const backBuffer = await backFile.arrayBuffer()
+        const backBytes = new Uint8Array(backBuffer)
+        let backBinary = ''
+        for (let i = 0; i < backBytes.length; i += chunkSize) {
+          const chunk = backBytes.subarray(i, i + chunkSize)
+          backBinary += String.fromCharCode(...chunk)
+        }
+        backBase64 = btoa(backBinary)
+      }
+    }
+
+    // 3. Converter frente para base64 (Chunked para evitar RangeError)
     const buffer = await file.arrayBuffer()
     const bytes = new Uint8Array(buffer)
     let binary = ''
-    const chunkSize = 8192 // 8KB chunks
     
     for (let i = 0; i < bytes.length; i += chunkSize) {
       const chunk = bytes.subarray(i, i + chunkSize)
@@ -136,7 +163,7 @@ serve(async (req) => {
     let validation
 
     if (isImage) {
-      validation = await validateWithClaudeImage(base64, mimeType, prompt)
+      validation = await validateWithClaudeImage(base64, mimeType, prompt, backBase64, backMimeType)
     } else if (isPdf) {
       validation = await validateWithClaudePdf(base64, prompt)
     } else {
@@ -301,6 +328,18 @@ DADOS FORNECIDOS DO CADASTRO:
 - Nome: ${context.full_name || 'N/A'}
 - CPF: ${context.cpf || 'N/A'}
 
+Se duas imagens forem enviadas, são a FRENTE e o VERSO do mesmo documento (em qualquer ordem). Analise ambas como um único documento.
+
+IMPORTANTE - IMAGENS COMBINADAS:
+A imagem pode conter DOIS LADOS do documento lado a lado (frente e verso combinados em uma única imagem).
+Neste caso:
+- Trate como UM ÚNICO documento, não como dois documentos diferentes
+- Extraia os dados considerando AMBOS os lados como partes do mesmo documento
+- O CPF e nome podem aparecer em apenas um dos lados — isso é normal
+- NÃO compare dados de um lado contra o outro como se fossem documentos distintos
+- Se for CNH ou RG combinada (frente e verso), é o mesmo documento — valide normalmente
+- Ao comparar CPFs, IGNORE toda formatação (pontos, traços, espaços). Exemplo: "780.123.254-20" e "78012325420" são o MESMO CPF.
+
 APROVAR SE:
 1. RG, CNH ou PASSAPORTE válido (frente E verso se RG)
 2. Documento dentro da validade
@@ -419,7 +458,13 @@ IMPORTANTE: Responda APENAS com JSON válido no formato:
   return basePrompt
 }
 
-async function validateWithClaudeImage(base64: string, mimeType: string, prompt: string) {
+async function validateWithClaudeImage(
+  base64: string,
+  mimeType: string,
+  prompt: string,
+  backBase64?: string | null,
+  backMimeType?: string | null
+) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -434,7 +479,10 @@ async function validateWithClaudeImage(base64: string, mimeType: string, prompt:
         role: 'user',
         content: [
           { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
+          ...(backBase64 && backMimeType
+            ? [{ type: 'image_url', image_url: { url: `data:${backMimeType};base64,${backBase64}` } }]
+            : [])
         ]
       }]
     })

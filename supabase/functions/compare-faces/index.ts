@@ -135,10 +135,36 @@ serve(async (req) => {
 
       console.log('Iniciando comparação AWS Rekognition...')
 
+      // Substituir o bloco de comparação com RG:
+
       let matchRG = { match: true, similarity: 100, note: 'Skipped (no rg image)' as string | undefined }
       if (shouldCompareRg && rgBuffer) {
         matchRG = await compareTwoFaces(awsClient, region, selfieBuffer, rgBuffer)
-        console.log('Selfie vs RG:', matchRG)
+        console.log('Selfie vs RG (frente):', matchRG)
+
+        // Se falhou ou baixa similaridade, tentar file_url_back
+        if (!matchRG.match || matchRG.similarity < 80) {
+          const { data: rgDoc } = await supabase
+            .from('documents')
+            .select('file_url_back')
+            .eq('id', rg!.id)
+            .maybeSingle()
+
+          if (rgDoc?.file_url_back) {
+            try {
+              const rgBackBuffer = await downloadFile(supabase, rgDoc.file_url_back)
+              const matchRGBack = await compareTwoFaces(awsClient, region, selfieBuffer, rgBackBuffer)
+              console.log('Selfie vs RG (verso):', matchRGBack)
+
+              // Usar o melhor resultado
+              if (matchRGBack.similarity > matchRG.similarity) {
+                matchRG = matchRGBack
+              }
+            } catch (e) {
+              console.log('[FACE] Erro ao comparar com verso do RG:', e)
+            }
+          }
+        }
       } else {
         console.log('Pulando comparação com RG (não é imagem ou inexistente)')
       }

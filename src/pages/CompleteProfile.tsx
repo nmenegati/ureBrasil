@@ -545,7 +545,7 @@ export default function CompleteProfile() {
               {/* Formulário */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Bloco Endereço */}
-                <div className="bg-blue-100 p-4 sm:p-6 rounded-lg border border-blue/300 space-y-4">
+                <div className="bg-sky-100 p-4 sm:p-6 rounded-lg border border-blue/300 space-y-4">
                   <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
                     <span>Endereço Residencial</span>
@@ -719,7 +719,7 @@ export default function CompleteProfile() {
                 </div>
 
                 {/* Bloco Acadêmico */}
-                <div className="bg-blue-100 p-4 sm:p-6 rounded-lg border border-blue/300 space-y-4">
+                <div className="bg-sky-100 p-4 sm:p-6 rounded-lg border border-blue/300 space-y-4">
                   <h3 className="text-lg font-semibold mb-4 text-foreground flex items-center gap-2">
                     <GraduationCap className="w-5 h-5" />
                     <span>Dados Acadêmicos</span>

@@ -371,7 +371,7 @@ export default function Carteirinha() {
                     className="w-full h-auto"
                   />
                 ) : (
-                  <div ref={cardRef}>
+                  <div ref={cardRef} className="max-w-sm mx-auto">
                     <CardLayoutFront
                       mode={mode}
                       templateSrc={frontImageUrl}

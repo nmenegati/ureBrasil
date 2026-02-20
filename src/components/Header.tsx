@@ -278,14 +278,6 @@ export function Header({ variant = 'app' }: HeaderProps) {
     });
   }
   
-  avatarMenuItems.push({
-    label: 'Suporte',
-    icon: MessageCircle,
-    onClick: () => setSupportOpen(true),
-
-    badgeCount: openTicketsCount > 0 ? openTicketsCount : undefined,
-  });
-
   if (!isInstalled) {
     avatarMenuItems.push({
       label: 'Instalar App URE Brasil',
@@ -300,9 +292,17 @@ export function Header({ variant = 'app' }: HeaderProps) {
       icon: CheckCircle,
       onClick: () => {},
       disabled: true,
-      separatorAbove: true,
+
     });
   }
+
+  avatarMenuItems.push({
+    label: 'Suporte',
+    icon: MessageCircle,
+    onClick: () => setSupportOpen(true),
+    separatorAbove: true,
+    badgeCount: openTicketsCount > 0 ? openTicketsCount : undefined,
+  });
 
   avatarMenuItems.push({
     label: 'Sair',
