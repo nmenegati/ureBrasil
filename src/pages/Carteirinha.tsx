@@ -354,13 +354,13 @@ export default function Carteirinha() {
   return (
     <div className="min-h-screen bg-background">
       <Header variant="app" />
-      <main className="container mx-auto px-4 py-8 max-w-sm">
+      <main className="container mx-auto py-8 max-w-sm">
         <div className="relative group">
           <div
             ref={scrollRef}
             onScroll={handleScroll}
             className="flex overflow-x-auto snap-x snap-mandatory touch-pan-y select-none scroll-smooth"
-            style={{ scrollbarWidth: 'none' }}
+            style={{ scrollbarWidth: 'none', marginLeft: '-16px', marginRight: '-16px', width: 'calc(100% + 32px)' }}
           >
             <div className="min-w-full snap-center flex-shrink-0">
               <div className="bg-white rounded-lg overflow-hidden border border-border">
@@ -436,7 +436,7 @@ export default function Carteirinha() {
           )}
         </div>
 
-        <div className="flex justify-center gap-2 py-3">
+        <div className="flex justify-center gap-2 py-3 px-4">
           {[0, 1].map((i) => (
             <button
               key={i}
