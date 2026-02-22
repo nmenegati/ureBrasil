@@ -355,7 +355,7 @@ export default function Carteirinha() {
     <div className="min-h-screen bg-background">
       <Header variant="app" />
       <main className="container mx-auto py-8 max-w-sm">
-        <div className="relative group">
+        <div className="relative group" style={{ marginLeft: '-16px', marginRight: '-16px', width: 'calc(100% + 32px)' }}>
           <div
             ref={scrollRef}
             onScroll={handleScroll}

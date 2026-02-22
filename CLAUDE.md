@@ -1,0 +1,1 @@
+Always work directly on main branch. Never create feature branches.
