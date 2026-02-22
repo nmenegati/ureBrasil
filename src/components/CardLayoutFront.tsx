@@ -65,7 +65,7 @@ export function CardLayoutFront(props: CardLayoutFrontProps) {
         <div className="absolute left-[10.5%] right-[8%] top-[51%] text-[13px] leading-[1.5] text-slate-900">
           <div className="font-bold text-[13px] mb-1">{nameUpper}</div>
           <div>
-            <span className="font-bold">CPF:</span> {props.cpf}
+            <span className="font-bold">CPF:</span> {props.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
           </div>
           <div>
             <span className="font-bold">Data Nasc.:</span> {props.birthDate}

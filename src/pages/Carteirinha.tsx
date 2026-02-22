@@ -380,7 +380,7 @@ export default function Carteirinha() {
                         mode={mode}
                         templateSrc={frontImageUrl}
                         fullName={profile.full_name}
-                        cpf={profile.cpf}
+                        cpf={profile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}
                         birthDate={formatBirthDate(profile.birth_date)}
                         institution={profile.institution}
                         educationLabel={formatEducationLevel(profile.education_level)}
@@ -392,7 +392,7 @@ export default function Carteirinha() {
                             : null
                         }
                         usageCode={card.usage_code}
-                        validUntil={new Date(card.valid_until).toLocaleDateString('pt-BR')}
+                        validUntil={new Date(card.valid_until + 'T12:00:00').toLocaleDateString('pt-BR')}
                         photoUrl={profilePhotoUrl}
                         qrImageUrl={qrCodeUrl}
                       />
