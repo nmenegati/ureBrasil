@@ -9,7 +9,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ProgressBar } from '@/components/ProgressBar';
 import { CardLayoutFront } from '@/components/CardLayoutFront';
-import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 import { ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
@@ -195,6 +194,7 @@ export default function Carteirinha() {
 
       setGeneratingImage(true);
 
+      const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
         useCORS: true,
