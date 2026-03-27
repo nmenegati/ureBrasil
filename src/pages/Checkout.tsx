@@ -311,7 +311,7 @@ export default function Checkout() {
           if (profileRow?.id) {
             await supabase
               .from("student_profiles")
-              .update({ current_onboarding_step: "documents" })
+              .update({ current_onboarding_step: "upload_documents" })
               .eq("id", profileRow.id);
           }
 
