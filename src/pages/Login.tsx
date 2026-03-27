@@ -57,83 +57,109 @@ export default function Login() {
         return;
       }
       
-      // 2. Buscar perfil com is_law_student
-      const { data: profile } = await supabase
-        .from('student_profiles')
-        .select('id, profile_completed, is_law_student, education_level, manual_review_requested, face_validated, terms_accepted')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
+      try {
+        // Implementar Promise.race para timeout de 10 segundos global nas queries
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('TIMEOUT')), 10000)
+        );
 
-      if (!profile) {
-        // Perfil básico não existe - ir para completar perfil
-        window.location.href = '/complete-profile';
-        return;
+        const executeQueries = async () => {
+          // 2. Buscar perfil com is_law_student
+          const { data: profile, error: profileError } = await supabase
+            .from('student_profiles')
+            .select('id, profile_completed, is_law_student, education_level, manual_review_requested, face_validated, terms_accepted')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+
+          if (profileError) throw profileError;
+
+          if (!profile) {
+            // Perfil básico não existe - ir para completar perfil
+            window.location.href = '/complete-profile';
+            return;
+          }
+
+          // 3. Redireciono imediato se está em revisão manual
+          if (profile.manual_review_requested && !profile.face_validated) {
+            navigate('/aguardando-aprovacao');
+            return;
+          }
+
+          // 4. Verificar perfil completo (ANTES do pagamento no novo fluxo)
+          if (!profile.profile_completed) {
+            window.location.href = '/complete-profile';
+            return;
+          }
+
+          // 5. Verificar pagamento aprovado
+          const { data: payment, error: paymentError } = await supabase
+            .from('payments')
+            .select('id')
+            .eq('student_id', profile.id)
+            .eq('status', 'approved')
+            .limit(1)
+            .maybeSingle();
+
+          if (paymentError) throw paymentError;
+
+          if (!payment) {
+            // Sem pagamento aprovado - rota depende de is_law_student
+            if (profile.is_law_student) {
+              // Estudante de Direito pode escolher plano
+              window.location.href = '/escolher-plano';
+            } else {
+              // Não-Direito vai direto para pagamento com plano Geral
+              localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
+              window.location.href = '/pagamento';
+            }
+            return;
+          }
+
+          // 6. Verificar carteirinha ativa
+          const { data: card, error: cardError } = await supabase
+            .from('student_cards')
+            .select('status')
+            .eq('student_id', profile.id)
+            .maybeSingle();
+          
+          if (cardError) throw cardError;
+
+          if (card?.status === 'active') {
+            navigate('/carteirinha');
+            return;
+          }
+
+          // 7. Verificar documentos aprovados
+          const { count: docsApproved, error: docsError } = await supabase
+            .from('documents')
+            .select('id', { count: 'exact', head: true })
+            .eq('student_id', profile.id)
+            .eq('status', 'approved');
+
+          if (docsError) throw docsError;
+
+          const docsOk = (docsApproved || 0) === 4;
+          const faceOk = !!profile.face_validated;
+          const termsOk = !!profile.terms_accepted;
+
+          if (!docsOk || !faceOk || !termsOk) {
+            window.location.href = '/upload-documentos';
+            return;
+          }
+
+          // 8. Tudo OK para gerar carteira e ainda não há carteirinha ativa
+          navigate('/gerar-carteirinha');
+        };
+
+        // Executa as queries com o timeout
+        await Promise.race([executeQueries(), timeoutPromise]);
+
+      } catch (error) {
+        console.error('Erro durante o roteamento pós-login:', error);
+        toast.error('Erro de conexão. Tente novamente.');
+        setLoading(false);
+        return; // Retorna aqui para não executar o setLoading(false) final novamente se não precisar, embora não faça mal.
       }
-
-      // 3. Redireciono imediato se está em revisão manual
-      if (profile.manual_review_requested && !profile.face_validated) {
-        navigate('/aguardando-aprovacao');
-        return;
-      }
-
-      // 4. Verificar perfil completo (ANTES do pagamento no novo fluxo)
-      if (!profile.profile_completed) {
-        window.location.href = '/complete-profile';
-        return;
-      }
-
-      // 5. Verificar pagamento aprovado
-      const { data: payment } = await supabase
-        .from('payments')
-        .select('id')
-        .eq('student_id', profile.id)
-        .eq('status', 'approved')
-        .limit(1)
-        .maybeSingle();
-
-      if (!payment) {
-        // Sem pagamento aprovado - rota depende de is_law_student
-        if (profile.is_law_student) {
-          // Estudante de Direito pode escolher plano
-          window.location.href = '/escolher-plano';
-        } else {
-          // Não-Direito vai direto para pagamento com plano Geral
-          localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
-          window.location.href = '/pagamento';
-        }
-        return;
-      }
-
-      // 6. Verificar carteirinha ativa
-      const { data: card } = await supabase
-        .from('student_cards')
-        .select('status')
-        .eq('student_id', profile.id)
-        .maybeSingle();
-      
-      if (card?.status === 'active') {
-        navigate('/carteirinha');
-        return;
-      }
-
-      // 7. Verificar documentos aprovados
-      const { count: docsApproved } = await supabase
-        .from('documents')
-        .select('id', { count: 'exact', head: true })
-        .eq('student_id', profile.id)
-        .eq('status', 'approved');
-
-      const docsOk = (docsApproved || 0) === 4;
-      const faceOk = !!profile.face_validated;
-      const termsOk = !!profile.terms_accepted;
-
-      if (!docsOk || !faceOk || !termsOk) {
-        window.location.href = '/upload-documentos';
-        return;
-      }
-
-      // 8. Tudo OK para gerar carteira e ainda não há carteirinha ativa
-      navigate('/gerar-carteirinha');
       return;
     }
     
