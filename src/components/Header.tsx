@@ -134,31 +134,21 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
       const physicalCard = !!card && card.is_physical === true;
       setHasPhysicalCard(physicalCard);
+
+      const { data: ticketsData, error: ticketsError } = await supabase
+        .from('support_tickets')
+        .select('id')
+        .eq('student_id', profile.id)
+        .in('status', ['open', 'in_progress', 'waiting_user']);
+
+      if (ticketsError || !ticketsData) {
+        setOpenTicketsCount(0);
+      } else {
+        setOpenTicketsCount(ticketsData.length);
+      }
     };
     checkPhysicalCard();
   }, [user]);
-
-  useEffect(() => {
-    const fetchOpenTicketsCount = async () => {
-      if (!studentProfileId) {
-        setOpenTicketsCount(0);
-        return;
-      }
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select('id')
-        .eq('student_id', studentProfileId)
-        .in('status', ['open', 'in_progress', 'waiting_user']);
-
-      if (error || !data) {
-        setOpenTicketsCount(0);
-        return;
-      }
-      setOpenTicketsCount(data.length);
-    };
-
-    fetchOpenTicketsCount();
-  }, [studentProfileId]);
 
   useEffect(() => {
     const loadPhysicalAvulsaPrice = async () => {
