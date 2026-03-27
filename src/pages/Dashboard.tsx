@@ -192,7 +192,7 @@ export default function Dashboard() {
       // 3. Buscar último pagamento aprovado (pode haver múltiplos)
       const { data: paymentsApproved, error: paymentError } = await supabase
         .from('payments')
-        .select('*')
+        .select('id')
         .eq('student_id', profileData.id)
         .eq('status', 'approved')
         .order('created_at', { ascending: false })

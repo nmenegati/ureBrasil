@@ -300,7 +300,7 @@ export default function Perfil() {
         if (profileData.plan_id) {
           const { data: planData } = await supabase
             .from('plans')
-            .select('*')
+            .select('id, name')
             .eq('id', profileData.plan_id)
             .single();
           

@@ -74,7 +74,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
       const client = supabase as any;
       const { data, error } = await client
         .from('notifications')
-        .select('*')
+        .select('id, read, title, message, link, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
