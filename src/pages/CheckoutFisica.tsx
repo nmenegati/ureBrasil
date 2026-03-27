@@ -37,10 +37,10 @@ import {
 import gatewayMpLogo from "@/assets/gateway-mp.png";
 import gatewayPagseguroLogo from "@/assets/gateway-pagseguro.png";
 import gatewayEfiLogo from "@/assets/pagseguro-logo.png";
-import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.jpg";
-import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
-import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
-import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
+import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.webp";
+import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.webp";
+import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.webp";
+import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.webp";
 
 type PaymentMethod = "pix" | "card";
 

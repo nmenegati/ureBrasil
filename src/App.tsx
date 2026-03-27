@@ -11,23 +11,27 @@ import { PWAInstallBanner } from "./components/PWAInstallBanner";
 import { ChatWrapper } from "./components/ChatWrapper";
 
 // ========================================
-// CARREGAMENTO IMEDIATO (Fluxo de Aquisição + PWA)
+// CARREGAMENTO IMEDIATO (Landing Page)
 // ========================================
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import CompleteProfile from "./pages/CompleteProfile";
-import EscolherPlano from "./pages/EscolherPlano";
-import Pagamento from "./pages/Pagamento";
-import PaymentSuccessPage from "./pages/PaymentSuccessPage";
-import PagamentoPix from "./pages/PagamentoPix";
-import Checkout from "./pages/Checkout";
-import CheckoutFisica from "./pages/CheckoutFisica";
-import UploadDocumentos from "./pages/UploadDocumentos";
-import GerarCarteirinha from "./pages/GerarCarteirinha";
-import Carteirinha from "./pages/Carteirinha";
-import NotFound from "./pages/NotFound";
-import VerificarCarteirinha from "./pages/VerificarCarteirinha";
+
+// ========================================
+// LAZY LOADING (Fluxo de Aquisição + PWA)
+// ========================================
+const Login = React.lazy(() => import("./pages/Login"));
+const SignUp = React.lazy(() => import("./pages/SignUp"));
+const CompleteProfile = React.lazy(() => import("./pages/CompleteProfile"));
+const EscolherPlano = React.lazy(() => import("./pages/EscolherPlano"));
+const Pagamento = React.lazy(() => import("./pages/Pagamento"));
+const PaymentSuccessPage = React.lazy(() => import("./pages/PaymentSuccessPage"));
+const PagamentoPix = React.lazy(() => import("./pages/PagamentoPix"));
+const Checkout = React.lazy(() => import("./pages/Checkout"));
+const CheckoutFisica = React.lazy(() => import("./pages/CheckoutFisica"));
+const UploadDocumentos = React.lazy(() => import("./pages/UploadDocumentos"));
+const GerarCarteirinha = React.lazy(() => import("./pages/GerarCarteirinha"));
+const Carteirinha = React.lazy(() => import("./pages/Carteirinha"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const VerificarCarteirinha = React.lazy(() => import("./pages/VerificarCarteirinha"));
 
 // ========================================
 // LAZY LOADING (Páginas Secundárias)

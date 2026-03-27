@@ -28,25 +28,23 @@ import {
   Loader2,
 } from "lucide-react";
 import { Header } from "@/components/Header";
-import heroPhoneMockup from "@/assets/hero-phone-mockup.png";
-import jurisStudentImage from "@/assets/juris-student.jpg";
-import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.jpeg";
-import carteirinhaGeral2 from "@/assets/carteirinha-geral-2.jpeg";
-import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.jpg";
-import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.jpg";
+import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.webp";
+import carteirinhaGeral2 from "@/assets/carteirinha-geral-2.webp";
+import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.webp";
+import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.webp";
 import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
-import human01 from "@/assets/human-01.jpg";
-import human02 from "@/assets/human-02.jpg";
-import human03 from "@/assets/human-03.jpg";
-import human04 from "@/assets/human-04.jpg";
-import human05 from "@/assets/human-05.jpg";
-import human06 from "@/assets/human-06.jpg";
-import human07 from "@/assets/human-07.jpg";
-import human08 from "@/assets/human-08.jpg";
-import human09 from "@/assets/human-09.jpg";
-import human10 from "@/assets/human-10.jpg";
-import human11 from "@/assets/human-11.jpg";
-import human12 from "@/assets/human-12.jpg";
+import human01 from "@/assets/human-01.webp";
+import human02 from "@/assets/human-02.webp";
+import human03 from "@/assets/human-03.webp";
+import human04 from "@/assets/human-04.webp";
+import human05 from "@/assets/human-05.webp";
+import human06 from "@/assets/human-06.webp";
+import human07 from "@/assets/human-07.webp";
+import human08 from "@/assets/human-08.webp";
+import human09 from "@/assets/human-09.webp";
+import human10 from "@/assets/human-10.webp";
+import human11 from "@/assets/human-11.webp";
+import human12 from "@/assets/human-12.webp";
 import iconeCinema from "@/assets/icone-cinema.png";
 import iconeShow from "@/assets/icone-show.png";
 import iconeTeatro from "@/assets/icone-teatro.png";
@@ -71,6 +69,7 @@ const Index = () => {
   const [generalDigitalPrice, setGeneralDigitalPrice] = useState<number | null>(null);
   const [lawDigitalPrice, setLawDigitalPrice] = useState<number | null>(null);
   const [physicalUpsellPrice, setPhysicalUpsellPrice] = useState<number | null>(null);
+  const [loadedHumanImages, setLoadedHumanImages] = useState<number[]>([0]);
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
   
@@ -95,7 +94,13 @@ const Index = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       // Randomly select next image to keep it fresh, or sequential
-      setCurrentHumanSlide((prev) => (prev + 1) % humanImages.length);
+      setCurrentHumanSlide((prev) => {
+        const next = (prev + 1) % humanImages.length;
+        setLoadedHumanImages((loaded) => 
+          loaded.includes(next) ? loaded : [...loaded, next]
+        );
+        return next;
+      });
     }, 8000); // Change every 8 seconds
 
     return () => clearInterval(timer);
@@ -359,6 +364,8 @@ const Index = () => {
                         src={slide}
                         alt={`Carteirinha de estudante ${index + 1}`}
                         className="w-full h-full rounded-3xl shadow-2xl object-cover border-2 border-[hsl(var(--primary-foreground)/0.2)]"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
                       />
                     </div>
                   ))}
@@ -494,7 +501,7 @@ const Index = () => {
             {/* Card 1 - Cinema */}
             <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 flex items-center justify-center p-3">
-                <img src={iconeCinema} alt="Cinema" className="w-full h-full object-contain" />
+                <img src={iconeCinema} alt="Cinema" className="w-full h-full object-contain" loading="lazy" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Cinema</h3>
               <p className="text-muted-foreground text-center">
@@ -505,7 +512,7 @@ const Index = () => {
             {/* Card 2 - Shows */}
             <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-purple-100 flex items-center justify-center p-3">
-                <img src={iconeShow} alt="Shows" className="w-full h-full object-contain" />
+                <img src={iconeShow} alt="Shows" className="w-full h-full object-contain" loading="lazy" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Shows</h3>
               <p className="text-muted-foreground text-center">
@@ -516,7 +523,7 @@ const Index = () => {
             {/* Card 3 - Teatro */}
             <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center p-3">
-                <img src={iconeTeatro} alt="Teatro e Cultura" className="w-full h-full object-contain" />
+                <img src={iconeTeatro} alt="Teatro e Cultura" className="w-full h-full object-contain" loading="lazy" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Teatro e Cultura</h3>
               <p className="text-muted-foreground text-center">
@@ -527,7 +534,7 @@ const Index = () => {
             {/* Card 4 - Esportes */}
             <div className="bg-card p-8 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
               <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center p-3">
-                <img src={iconeEsporte} alt="Eventos Esportivos" className="w-full h-full object-contain" />
+                <img src={iconeEsporte} alt="Eventos Esportivos" className="w-full h-full object-contain" loading="lazy" />
               </div>
               <h3 className="text-2xl font-bold mb-3 text-foreground text-center">Eventos Esportivos</h3>
               <p className="text-muted-foreground text-center">
@@ -650,6 +657,7 @@ const Index = () => {
                   src={carteirinhaDireito1}
                   alt="Carteira do Estudante de Direito"
                   className="w-full h-auto rounded-xl shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
                 />
                 {/* Glow effect behind the card */}
                 <div className="absolute -inset-4 bg-ure-yellow/20 blur-xl -z-10 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-500" />
@@ -725,10 +733,12 @@ const Index = () => {
               index === currentHumanSlide ? "opacity-100" : "opacity-0"
             }`}
           >
-            <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
-              style={{ backgroundImage: `url(${image})` }}
-            />
+            {loadedHumanImages.includes(index) && (
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
+                style={{ backgroundImage: `url(${image})` }}
+              />
+            )}
           </div>
         ))}
         
@@ -1106,6 +1116,7 @@ const Index = () => {
                 src={ureBrasilLogo} 
                 alt="URE Brasil" 
                 className="h-16 w-auto mb-4" 
+                loading="lazy"
               />
               <p className="text-muted-foreground text-sm leading-relaxed font-medium">
                 Carteira estudantil digital e física, válida em todo território nacional. Economia real para

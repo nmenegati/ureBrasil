@@ -13,10 +13,10 @@ import {
   FileText, GraduationCap, Camera, UserCircle,
   Loader2, CheckCircle, XCircle, RefreshCw, Clock
 } from 'lucide-react';
-import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.jpg";
-import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.jpg";
-import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.jpeg";
-import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.jpeg";
+import carteirinhaDireitoImg1 from "@/assets/carteirinha-direito-pgto-1.webp";
+import carteirinhaDireitoImg2 from "@/assets/carteirinha-direito-pgto-2.webp";
+import carteirinhaGeralImg1 from "@/assets/carteirinha-geral-pagto-1.webp";
+import carteirinhaGeralImg2 from "@/assets/carteirinha-geral-pagto-2.webp";
 
 interface DocumentRecord {
   id: string;
