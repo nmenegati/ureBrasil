@@ -547,10 +547,10 @@ const Index = () => {
           <div className="mt-12 text-center">
             <div className="inline-block bg-green-100 border-2 border-green-500 p-8 rounded-2xl max-w-3xl">
               <h3 className="text-2xl md:text-3xl font-bold text-green-800 mb-4">
-                Cinema, shows, teatro e eventos culturais com meia-entrada.
+                Pague meia-entrada em cinemas, shows e eventos.
               </h3>
               <p className="text-muted-foreground text-lg mb-6">
-                Um benefício simples que, no uso do dia a dia, gera economia ao longo do ano.
+                Uma compra simples hoje, economia real garantida o ano todo.
               </p>
               <Button
                 variant="brand-primary"
@@ -800,7 +800,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
+                    <span className="text-sm text-foreground">Validade até 31/03/2027</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
@@ -869,7 +869,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Validade até 31/03/2026</span>
+                    <span className="text-sm text-foreground">Validade até 31/03/2027</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
