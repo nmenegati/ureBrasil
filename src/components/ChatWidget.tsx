@@ -19,9 +19,11 @@ interface Message {
 
 interface ChatWidgetProps {
   rejectedDocs?: { type: string; reason: string }[];
+  currentPage?: string;
+  suggestedQuestions?: string[];
 }
 
-export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
+export function ChatWidget({ rejectedDocs = [], currentPage, suggestedQuestions = [] }: ChatWidgetProps) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -109,7 +111,8 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
           context: {
             student_id: user?.id,
             student_name: user?.user_metadata?.full_name,
-            rejected_docs: rejectedDocs
+            rejected_docs: rejectedDocs,
+            current_page: currentPage
           }
         }
       });
@@ -264,6 +267,38 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
                   </div>
                 </div>
               )}
+
+              {/* Suggested Questions */}
+              {messages.length === 1 && suggestedQuestions.length > 0 && !isLoading && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex flex-col gap-2 pt-2"
+                >
+                  <p className="text-xs text-muted-foreground ml-11">Sugestões para esta etapa:</p>
+                  <div className="flex flex-wrap gap-2 ml-11">
+                    {suggestedQuestions.map((q, idx) => (
+                      <Button
+                        key={idx}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs rounded-full bg-white dark:bg-slate-800 hover:bg-primary hover:text-primary-foreground transition-colors"
+                        onClick={() => {
+                          setInputText(q);
+                          setTimeout(() => {
+                            // Simulando click no botão enviar após preencher o input
+                            const sendButton = document.getElementById('chat-send-btn');
+                            if (sendButton) sendButton.click();
+                          }, 50);
+                        }}
+                      >
+                        {q}
+                      </Button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Input Area */}
@@ -279,6 +314,7 @@ export function ChatWidget({ rejectedDocs = [] }: ChatWidgetProps) {
                   disabled={isLoading}
                 />
                 <Button 
+                  id="chat-send-btn"
                   size="icon" 
                   className={cn(
                     "absolute right-1 w-8 h-8 transition-all",

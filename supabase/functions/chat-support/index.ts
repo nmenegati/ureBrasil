@@ -228,6 +228,23 @@ SEMPRE RESPONDA:
     prompt += `\nO nome do estudante é: ${context.student_name}`
   }
 
+  if (context.current_page) {
+    const pageMap: Record<string, string> = {
+      '/complete-profile': 'Completar Perfil',
+      '/escolher-plano': 'Escolha do Plano',
+      '/pagamento': 'Pagamento',
+      '/upload-documentos': 'Envio de Documentos',
+      '/checkout': 'Carteira Física',
+      '/checkout-fisica': 'Carteira Física'
+    }
+    
+    // Encontra o nome amigável baseado no início da rota (para lidar com rotas que tem IDs/parâmetros)
+    const pageKey = Object.keys(pageMap).find(key => String(context.current_page).startsWith(key))
+    const friendlyPageName = pageKey ? pageMap[pageKey] : context.current_page
+
+    prompt += `\nO usuário está na etapa: [${friendlyPageName}]. Foque em ajudar com dúvidas desta etapa.`
+  }
+
   const rejectedDocs = Array.isArray(context.rejected_docs)
     ? (context.rejected_docs as Array<{ type: string; reason: string }>)
     : []

@@ -19,7 +19,21 @@ export function ChatWrapper() {
     '/checkout-fisica'
   ];
 
+  const suggestedQuestionsMap: Record<string, string[]> = {
+    '/complete-profile': ['Não achei minha instituição', 'Como preencho o endereço?'],
+    '/escolher-plano': ['Qual plano escolher?', 'Tenho direito ao plano de Direito?'],
+    '/pagamento': ['Como pagar com PIX?', 'Meu cartão foi recusado'],
+    '/upload-documentos': ['Quais documentos enviar?', 'Documento foi rejeitado'],
+    '/checkout': ['O que é a carteira física?', 'Como funciona o frete?'],
+    '/checkout-fisica': ['O que é a carteira física?', 'Como funciona o frete?']
+  };
+
   const shouldShowChat = allowedRoutes.some(route => location.pathname.startsWith(route));
+  
+  // Pegar as perguntas da rota atual ou array vazio
+  const currentQuestions = Object.entries(suggestedQuestionsMap).find(([route]) => 
+    location.pathname.startsWith(route)
+  )?.[1] || [];
 
   // Buscar documentos rejeitados se estiver na página de upload
   useEffect(() => {
@@ -68,5 +82,11 @@ export function ChatWrapper() {
 
   if (!shouldShowChat) return null;
 
-  return <ChatWidget rejectedDocs={rejectedDocs} />;
+  return (
+    <ChatWidget 
+      rejectedDocs={rejectedDocs} 
+      currentPage={location.pathname}
+      suggestedQuestions={currentQuestions}
+    />
+  );
 }
