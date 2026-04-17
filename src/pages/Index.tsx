@@ -365,7 +365,7 @@ const Index = () => {
                         alt={`Carteirinha de estudante ${index + 1}`}
                         className="w-full h-full rounded-3xl shadow-2xl object-cover border-2 border-[hsl(var(--primary-foreground)/0.2)]"
                         loading={index === 0 ? "eager" : "lazy"}
-                        fetchPriority={index === 0 ? "high" : "auto"}
+                        fetchpriority={index === 0 ? "high" : "auto"}
                       />
                     </div>
                   ))}
