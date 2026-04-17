@@ -857,45 +857,50 @@ const handleUpload = async (file: File, type: DocumentType) => {
         
       if (storageError) throw storageError;
       
-      const { data: existingDoc } = await supabase
-        .from('documents')
-        .select('id')
-        .eq('student_id', profile.id)
-        .eq('type', type)
-        .maybeSingle();
+      try {
+        const { data: existingDoc } = await supabase
+          .from('documents')
+          .select('id')
+          .eq('student_id', profile.id)
+          .eq('type', type)
+          .maybeSingle();
 
-      if (existingDoc) {
-        const { error: dbError } = await supabase
-          .from('documents')
-          .update({
-            file_url: filePath,
-            file_name: fileToUpload.name,
-            file_size: fileToUpload.size,
-            mime_type: fileToUpload.type,
-            status: 'pending',
-            rejection_reason: null,
-            rejection_notes: null,
-            rejection_reason_id: null,
-            validated_at: null,
-            validated_by: null
-          })
-          .eq('id', existingDoc.id);
-          
-        if (dbError) throw dbError;
-      } else {
-        const { error: dbError } = await supabase
-          .from('documents')
-          .insert({
-            student_id: profile.id,
-            type: type,
-            file_url: filePath,
-            file_name: fileToUpload.name,
-            file_size: fileToUpload.size,
-            mime_type: fileToUpload.type,
-            status: 'pending'
-          });
-          
-        if (dbError) throw dbError;
+        if (existingDoc) {
+          const { error: dbError } = await supabase
+            .from('documents')
+            .update({
+              file_url: filePath,
+              file_name: fileToUpload.name,
+              file_size: fileToUpload.size,
+              mime_type: fileToUpload.type,
+              status: 'pending',
+              rejection_reason: null,
+              rejection_notes: null,
+              rejection_reason_id: null,
+              validated_at: null,
+              validated_by: null
+            })
+            .eq('id', existingDoc.id);
+
+          if (dbError) throw dbError;
+        } else {
+          const { error: dbError } = await supabase
+            .from('documents')
+            .insert({
+              student_id: profile.id,
+              type: type,
+              file_url: filePath,
+              file_name: fileToUpload.name,
+              file_size: fileToUpload.size,
+              mime_type: fileToUpload.type,
+              status: 'pending'
+            });
+
+          if (dbError) throw dbError;
+        }
+      } catch (dbError) {
+        await supabase.storage.from('documents').remove([filePath]);
+        throw dbError;
       }
       
       clearInterval(progressInterval);
