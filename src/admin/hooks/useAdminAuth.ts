@@ -24,10 +24,6 @@ export function useAdminAuth() {
   const [loading, setLoading] = useState(true);
   const lastActivityRef = useRef<number>(Date.now());
 
-  console.log('[useAdminAuth] user:', user?.id);
-  console.log('[useAdminAuth] adminUser:', adminUser);
-  console.log('[useAdminAuth] isLoading:', loading);
-
   const loadAdminUser = useCallback(async (currentUser: User | null) => {
     if (!currentUser) {
       setAdminUser(null);

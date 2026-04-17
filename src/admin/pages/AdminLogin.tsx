@@ -43,14 +43,11 @@ export default function AdminLogin() {
       let adminRow: any | null = null;
 
       try {
-        console.log('[Admin Login] auth.uid:', data.user.id);
         const { data: byId, error: byIdError } = await adminClient
           .from('admin_users')
           .select('*')
           .eq('auth_user_id', data.user.id)
           .maybeSingle();
-
-        console.log('[Admin Login] query result (by auth_user_id):', byId, byIdError);
 
         if (!byIdError && byId) {
           adminRow = byId;
@@ -65,8 +62,6 @@ export default function AdminLogin() {
             .select('*')
             .eq('email', data.user.email)
             .maybeSingle();
-
-          console.log('[Admin Login] query result (by email):', byEmail, byEmailError);
 
           if (!byEmailError && byEmail) {
             adminRow = byEmail;

@@ -25,8 +25,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (loading) {
-    console.log('[AdminGuard] adminUser:', adminUser);
-    console.log('[AdminGuard] redirecting to:', 'loading-screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center">
@@ -38,8 +36,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   if (!adminUser) {
-    console.log('[AdminGuard] adminUser:', adminUser);
-    console.log('[AdminGuard] redirecting to:', '/admin/login');
     return <Navigate to="/admin/login" replace />;
   }
 

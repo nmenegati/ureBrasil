@@ -503,19 +503,10 @@ async function validateWithClaudeImage(
     rawContent = JSON.stringify(messageContent ?? {})
   }
 
-  console.log('=== RESPOSTA CLAUDE (RAW) ===')
-  console.log(rawContent)
-  console.log('=== FIM RESPOSTA ===')
-
   return parseResponse(rawContent)
 }
 
 async function validateWithClaudePdf(base64: string, prompt: string) {
-  console.log('=== PDF DEBUG ===')
-  console.log('Base64 length:', base64.length)
-  console.log('Base64 preview:', base64.substring(0, 100))
-  console.log('=== FIM PDF DEBUG ===')
-
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -556,10 +547,6 @@ async function validateWithClaudePdf(base64: string, prompt: string) {
   } else {
     rawContent = JSON.stringify(messageContent ?? {})
   }
-
-  console.log('=== RESPOSTA CLAUDE (RAW) ===')
-  console.log(rawContent)
-  console.log('=== FIM RESPOSTA ===')
 
   return parseResponse(rawContent)
 }

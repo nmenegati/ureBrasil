@@ -111,15 +111,6 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
 
-    console.log("🔍 [START] Recebido:", {
-      hasAuth: !!authHeader,
-      method: req.method,
-      bodyKeys:
-        rawBody && typeof rawBody === "object" && !Array.isArray(rawBody)
-          ? Object.keys(rawBody as Record<string, unknown>)
-          : [],
-    });
-
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Não autorizado" }),
@@ -152,14 +143,6 @@ serve(async (req) => {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser(token);
-
-    console.log("🔍 Debug auth:", {
-      hasToken: !!token,
-      hasUser: !!user,
-      userError: userError?.message,
-      userId: user?.id,
-      userEmail: user?.email,
-    });
 
     if (userError || !user) {
       return new Response(
@@ -201,14 +184,6 @@ serve(async (req) => {
     const card = body.card;
     const metadata = body.metadata || {};
 
-    console.log("🔍 [BODY]:", {
-      amount,
-      amountInCents,
-      installments,
-      hasCard: !!card,
-      metadata,
-    });
-
     const { data: profile } = await supabase
       .from("student_profiles")
       .select(
@@ -226,12 +201,6 @@ serve(async (req) => {
         },
       );
     }
-
-    console.log("🔍 [PROFILE]:", {
-      hasProfile: !!profile,
-      student_id: profile?.id,
-      plan_id: profile?.plan_id,
-    });
 
     const mode = (Deno.env.get("PAGBANK_MODE") || "sandbox").toLowerCase();
     const isSandbox = mode !== "prod";
@@ -322,15 +291,6 @@ serve(async (req) => {
       metadata,
     };
 
-    console.log("🔍 [PAYLOAD]:", JSON.stringify(orderPayload, null, 2));
-    console.log("MODE:", Deno.env.get("PAGBANK_MODE"));
-    console.log("KEY:", Deno.env.get("PAGBANK_SANDBOX_KEY") ? "OK" : "MISSING");
-
-    console.log("🔍 [PAGBANK] Enviando:", {
-      baseUrl,
-      referenceId,
-      amountInCents,
-    });
 
     // ✅ uso de fetchWithRetry
     const response = await fetchWithRetry(`${baseUrl}/orders`, {
