@@ -162,7 +162,6 @@ export default function Checkout() {
     if (paymentMethod !== "card") return;
     if (!studentProfile?.cpf) return;
     if (mpFormInitializedRef.current) {
-      console.info("[Checkout] CardForm MP já inicializado, ignorando");
       return;
     }
 
@@ -182,7 +181,6 @@ export default function Checkout() {
         installmentsId: "mp-installments",
         identificationTypeId: "mp-identification-type",
         identificationNumberId: "mp-identification-number",
-        onReady: () => console.info("[Checkout] CardForm MP pronto!"),
         onError: (err) => console.error("[Checkout] CardForm MP erro:", err),
       });
 
@@ -204,9 +202,6 @@ export default function Checkout() {
     if (upsellResolved) return;
 
     const resolveUpsell = async () => {
-      console.info("[CHECKOUT] resolveUpsell:", {
-        isUpsell: !!upsellState?.isUpsell,
-      });
 
       const fetchUpsellPrice = async () => {
         const { data } = await supabase
@@ -328,7 +323,6 @@ export default function Checkout() {
       }
 
       setResolvingUpsell(false);
-      console.info("[Checkout] resolveUpsell fallback, step redirect para fluxo principal");
       if (!user) {
         navigate("/complete-profile", { replace: true });
         return;
@@ -341,10 +335,6 @@ export default function Checkout() {
         .maybeSingle();
 
       if (error) {
-        console.error("[CHECKOUT] Erro ao buscar current_onboarding_step:", {
-          userId: user.id,
-          error: error.message,
-        });
         navigate("/complete-profile", { replace: true });
         return;
       }
@@ -442,10 +432,6 @@ export default function Checkout() {
         .maybeSingle();
 
       if (error) {
-        console.error("[CHECKOUT] Erro ao buscar current_onboarding_step (handleSubmit):", {
-          userId: user.id,
-          error: error.message,
-        });
         navigate("/complete-profile", { replace: true });
         return;
       }
@@ -561,9 +547,6 @@ export default function Checkout() {
       }
 
       if (resolvedUpsell.isUpsell && resolvedUpsell.originalPaymentId) {
-        console.info("[CHECKOUT] Processando upsell via gateway:", {
-          gateway: activeGateway,
-        });
 
         const [month, year] = cardExpiry.split("/");
         const expYear = year && year.length === 2 ? `20${year}` : year;
@@ -643,17 +626,10 @@ export default function Checkout() {
             .maybeSingle();
 
           if (profileRow?.id) {
-            const { error: stepError } = await supabase
+            await supabase
               .from("student_profiles")
               .update({ current_onboarding_step: "upload_documents" })
               .eq("id", profileRow.id);
-
-            if (stepError) {
-              console.warn(
-                "Erro ao atualizar current_onboarding_step (não crítico):",
-                stepError,
-              );
-            }
           }
         }
 

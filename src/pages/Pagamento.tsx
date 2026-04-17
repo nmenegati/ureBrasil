@@ -261,7 +261,6 @@ export default function Pagamento() {
     if (!cardAmountForGateway) return;
     if (paymentMethod !== "card") return;
     if (mpFormInitializedRef.current) {
-      console.info("[Pagamento] CardForm MP já inicializado, ignorando");
       return;
     }
 
@@ -284,8 +283,6 @@ export default function Pagamento() {
         installmentsId: "mp-installments",
         identificationTypeId: "mp-identification-type",
         identificationNumberId: "mp-identification-number",
-        onReady: () =>
-          console.info("CardForm MP pronto - iframes carregados!"),
         onError: (err) => console.error("CardForm MP erro:", err),
       });
 
@@ -452,22 +449,11 @@ export default function Pagamento() {
             .eq("user_id", user.id)
             .maybeSingle();
 
-          if (profileError) {
-            console.error("[PAGAMENTO] Erro ao buscar profileRow para atualizar step (PIX):", {
-              userId: user.id,
-              error: profileError.message,
-            });
-          }
-
           if (profileRow?.id) {
-            const { error: stepError } = await supabase
+            await supabase
               .from("student_profiles")
               .update({ current_onboarding_step: nextStep })
               .eq("id", profileRow.id);
-
-            if (stepError) {
-              console.warn("Erro ao atualizar current_onboarding_step (não crítico):", stepError);
-            }
           }
 
           const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/pagamento/sucesso";
@@ -603,21 +589,11 @@ export default function Pagamento() {
           .eq("user_id", user.id)
           .maybeSingle();
 
-        if (profileError) {
-          console.error("[PAGAMENTO] Erro ao buscar profileRow para atualizar step (cartão):", {
-            userId: user.id,
-            error: profileError.message,
-          });
-        }
         if (profileRow?.id) {
-          const { error: stepError } = await supabase
+          await supabase
             .from("student_profiles")
             .update({ current_onboarding_step: nextStep })
             .eq("id", profileRow.id);
-
-          if (stepError) {
-            console.warn("Erro ao atualizar current_onboarding_step (não crítico):", stepError);
-          }
         }
 
         const nextRoute = nextStep === "upload_documents" ? "/upload-documentos" : "/pagamento/sucesso";
@@ -641,24 +617,6 @@ export default function Pagamento() {
       console.error("Erro no pagamento:", err);
 
       const context = err?.context;
-      if (context) {
-        console.error("Contexto do erro de função Supabase:", context);
-      }
-
-      try {
-        const resp: Response | undefined =
-          context instanceof Response ? context : context?.response;
-        if (resp) {
-          const clone = resp.clone();
-          const errorBody = await clone.json().catch(async () => {
-            const text = await clone.text();
-            return { raw: text };
-          });
-          console.error("Detalhes do erro:", errorBody);
-        }
-      } catch (logError) {
-        console.warn("[Pagamento] Falha ao ler body da resposta:", logError);
-      }
 
       if (context?.status === 401) {
         toast.error("Sua sessão expirou. Faça login novamente.");
