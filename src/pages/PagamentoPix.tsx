@@ -29,7 +29,14 @@ export default function PagamentoPix() {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10 * 60); // 10 minutos em segundos
 
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!paymentData) {
+      toast.error("Sessão expirada. Inicie o pagamento novamente.");
+      navigate("/pagamento", { replace: true });
+    }
+  }, []);
 
   const amount = paymentData?.amount ?? 0;
   const pixCode = paymentData?.pix_code ?? "";
