@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
+import { Header } from "@/components/Header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,6 +123,7 @@ export default function VerificarCarteirinha() {
           headers: {
             "Content-Type": "application/json",
             apikey: anonKey,
+            Authorization: `Bearer ${anonKey}`,
           },
           body: JSON.stringify({
             usage_code: usageCode,
@@ -200,34 +201,8 @@ export default function VerificarCarteirinha() {
   const showResult = state === "success" && student;
  
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="border-b bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img
-              src={ureBrasilLogo}
-              alt="URE Brasil"
-              className="h-10 w-auto"
-            />
-            <div className="flex flex-col">
-              <h1 className="text-base font-semibold text-slate-900">
-                Verificar Carteirinha Estudantil
-              </h1>
-              <p className="text-xs text-slate-500">
-                Confirme a autenticidade de uma carteirinha URE Brasil
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-slate-600"
-            onClick={() => navigate("/")}
-          >
-            ← Voltar ao site
-          </Button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background">
+      <Header variant="app" />
  
       <main className="flex-1">
         <div className="max-w-3xl mx-auto px-4 py-8">
@@ -416,20 +391,6 @@ export default function VerificarCarteirinha() {
             )}
           </div>
  
-          <footer className="mt-10 border-t pt-4 text-center text-[11px] text-slate-500">
-            <p>URE Brasil - União Representativa dos Estudantes</p>
-            <p className="mt-1">
-              Verificação conforme Lei 12.933/13. Acesse a página oficial em{" "}
-              <button
-                type="button"
-                className="underline underline-offset-2"
-                onClick={() => navigate("/")}
-              >
-                urebrasil.com
-              </button>
-              .
-            </p>
-          </footer>
         </div>
       </main>
     </div>

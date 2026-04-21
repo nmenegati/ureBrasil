@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-digital-card]
 verify_jwt = true
+
+[functions.verify-student-card]
+verify_jwt = false
