@@ -157,7 +157,8 @@ serve(async (req) => {
       .maybeSingle()
     
     // 5. Selecionar prompt baseado no tipo (com contexto quando aplicável)
-    const prompt = getPromptForType(type, profileCtx || {})
+    const imageCount = backBase64 ? 2 : 1
+    const prompt = getPromptForType(type, profileCtx || {}, imageCount)
     
     // 6. Chamar Claude via OpenRouter
     let validation
@@ -211,7 +212,8 @@ serve(async (req) => {
 
 function getPromptForType(
   type: string,
-  context: { full_name?: string; institution?: string; course?: string; cpf?: string } = {}
+  context: { full_name?: string; institution?: string; course?: string; cpf?: string } = {},
+  imageCount: number = 1
 ): string {
   const prompts: Record<string, string> = {
     foto: `
@@ -324,39 +326,41 @@ FORMATO DE RESPOSTA:
 `,
     rg: `
 Você é um validador de RG/CNH/PASSAPORTE para carteirinha estudantil.
+
 DADOS FORNECIDOS DO CADASTRO:
 - Nome: ${context.full_name || 'N/A'}
 - CPF: ${context.cpf || 'N/A'}
+- Número de imagens enviadas: ${imageCount} (1 = apenas uma face, 2 = frente e verso separados)
 
-Se duas imagens forem enviadas, são a FRENTE e o VERSO do mesmo documento (em qualquer ordem). Analise ambas como um único documento.
+REGRAS POR TIPO DE DOCUMENTO:
 
-IMPORTANTE - IMAGENS COMBINADAS:
-A imagem pode conter DOIS LADOS do documento lado a lado (frente e verso combinados em uma única imagem).
-Neste caso:
-- Trate como UM ÚNICO documento, não como dois documentos diferentes
-- Extraia os dados considerando AMBOS os lados como partes do mesmo documento
-- O CPF e nome podem aparecer em apenas um dos lados — isso é normal
-- NÃO compare dados de um lado contra o outro como se fossem documentos distintos
-- Se for CNH ou RG combinada (frente e verso), é o mesmo documento — valide normalmente
-- Ao comparar CPFs, IGNORE toda formatação (pontos, traços, espaços). Exemplo: "780.123.254-20" e "78012325420" são o MESMO CPF.
+CNH ou PASSAPORTE:
+- 1 imagem é suficiente para aprovação
+- Valide nome, CPF (se visível) e validade
+
+RG — ATENÇÃO:
+- Se ${imageCount} === 1: verifique se a imagem contém VISIVELMENTE os dois lados lado a lado
+  - Se sim (imagem combinada com frente e verso claramente visíveis): valide normalmente
+  - Se não (apenas uma face do RG): REJEITAR com reason EXATAMENTE "VERSO_AUSENTE: Envie o verso do RG"
+- Se ${imageCount} === 2: frente e verso enviados separadamente — valide normalmente
 
 APROVAR SE:
-1. RG, CNH ou PASSAPORTE válido (frente E verso se RG)
-2. Documento dentro da validade
+1. CNH ou Passaporte válido com dados conferindo
+2. RG com frente E verso (combinados ou separados) com dados conferindo
 3. Foto do titular visível e clara
-4. Nome no documento CONFERE com cadastro
-5. CPF no documento CONFERE com cadastro (se visível)
+4. Nome confere com cadastro
+5. CPF confere com cadastro (se visível)
 6. Texto legível
 
 REJEITAR SE:
-- Nome DIFERENTE do cadastro
-- CPF DIFERENTE do cadastro (se visível)
+- Nome diferente do cadastro
+- CPF diferente do cadastro (se visível)
 - Documento vencido
 - Print de tela ou foto de foto
 - Ilegível ou rasurado
-- Apenas um lado do RG (precisa frente E verso)
+- RG com apenas uma face visível (sem o verso)
 
-Seja rigoroso na verificação de NOME e CPF.
+Ao comparar CPFs, IGNORE toda formatação (pontos, traços, espaços). Exemplo: "780.123.254-20" e "78012325420" são o MESMO CPF.
 
 TOM DAS MENSAGENS:
 - Trate o usuário como "você" (nunca "o titular", "o portador", "o indivíduo")
@@ -364,7 +368,7 @@ TOM DAS MENSAGENS:
 - Foque na SOLUÇÃO, não no problema
 - Exemplos de mensagens:
   - BOM: "O nome no documento não confere com o cadastro. Verifique se digitou corretamente em 'Meu Perfil' ou envie o documento correto."
-  - BOM: "Precisamos da frente e do verso do RG. Envie uma foto com os dois lados visíveis."
+  - BOM: "VERSO_AUSENTE: Envie o verso do RG"
   - BOM: "Seu documento parece estar vencido. Envie um documento dentro da validade."
   - BOM: "Não conseguimos ler o documento. Tente uma foto com melhor iluminação e sem reflexos."
   - BOM: "O CPF no documento é diferente do informado no cadastro. Confira seus dados em 'Meu Perfil'."
@@ -469,12 +473,14 @@ async function validateWithClaudeImage(
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': 'https://ure.vendatto.com',
+      'HTTP-Referer': 'https://www.urebrasil.com.br',
       'X-Title': 'URE Brasil Document Validation',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
+      model: 'google/gemini-2.5-flash',
+      temperature: 0,
+      response_format: { type: 'json_object' },
       messages: [{
         role: 'user',
         content: [
@@ -511,12 +517,14 @@ async function validateWithClaudePdf(base64: string, prompt: string) {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': 'https://ure.vendatto.com',
+      'HTTP-Referer': 'https://www.urebrasil.com.br',
       'X-Title': 'URE Brasil Document Validation',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'anthropic/claude-3.5-sonnet',
+      model: 'google/gemini-2.5-flash',
+      temperature: 0,
+      response_format: { type: 'json_object' },
       messages: [{
         role: 'user',
         content: [
@@ -560,6 +568,7 @@ interface ValidationResult {
 }
 
 function parseResponse(text: string): ValidationResult {
+  console.log('RAW:', typeof text, text?.substring(0, 300))
   let parsed: any | null = null
 
   try {

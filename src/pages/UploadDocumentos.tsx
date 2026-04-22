@@ -86,17 +86,7 @@ interface DocumentCardProps {
 
 function isRejectedForMissingSide(rejectionReason: string | null | undefined): boolean {
   if (!rejectionReason) return false;
-  const lower = rejectionReason.toLowerCase();
-  return (
-    lower.includes('verso') ||
-    lower.includes('frente') ||
-    lower.includes('um lado') ||
-    lower.includes('um único lado') ||
-    lower.includes('apenas um') ||
-    lower.includes('frente e verso') ||
-    lower.includes('outro lado') ||
-    lower.includes('ambos os lados')
-  );
+  return rejectionReason.includes('VERSO_AUSENTE');
 }
 
 const documentConfigs: DocumentConfig[] = [
