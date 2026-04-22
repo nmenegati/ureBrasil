@@ -816,7 +816,7 @@ const Index = () => {
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground">Suporte prioritário</span>
+                    <span className="text-sm text-foreground">Suporte via app e email</span>
                   </div>
                 </div>
 
@@ -881,19 +881,15 @@ const Index = () => {
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Benefícios exclusivos Direito</span>
+                    <span className="text-sm text-foreground">Acesso ilimitado ao app</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Material de estudo OAB</span>
+                    <span className="text-sm text-foreground">Suporte via app e email</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Descontos em cursos jurídicos</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="w-5 h-5 text-ure-green mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground font-bold">Rede de networking jurídico</span>
+                    <span className="text-sm font-bold text-foreground">Descontos exclusivos Direito (OAB, cursos, congressos, livrarias jurídicas, farmácias e óticas)</span>
                   </div>
                 </div>
 

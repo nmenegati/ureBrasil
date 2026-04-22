@@ -177,7 +177,7 @@ serve(async (req) => {
     console.log('Resultado da validação:', validation)
 
     // 7. Atualizar status no banco
-    await updateDocumentStatus(supabase, id, validation)
+    await updateDocumentStatus(supabase, id, file_url, validation)
     
     // 7.1. Se for foto 3x4 aprovada, atualizar foto de perfil
     if (type === 'foto' && validation.recommendation === 'approved') {
@@ -617,7 +617,7 @@ function parseResponse(text: string): ValidationResult {
   }
 }
 
-async function updateDocumentStatus(supabase: SupabaseClient, docId: string, validation: ValidationResult) {
+async function updateDocumentStatus(supabase: SupabaseClient, docId: string, validatedFileUrl: string, validation: ValidationResult) {
   const statusMap: Record<string, string> = {
     approved: 'approved',
     rejected: 'rejected',
@@ -637,7 +637,7 @@ async function updateDocumentStatus(supabase: SupabaseClient, docId: string, val
     rejection_reason: validation.recommendation === 'rejected' ? validation.reason : null,
     validation_confidence: validation.confidence,
     validated_at: new Date().toISOString()
-  }).eq('id', docId).select()
+  }).eq('id', docId).eq('file_url', validatedFileUrl).select()
 
   if (error) {
     console.error('Error updating document:', error)
