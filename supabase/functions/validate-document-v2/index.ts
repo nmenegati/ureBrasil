@@ -156,6 +156,9 @@ serve(async (req) => {
       .eq('id', student_id)
       .maybeSingle()
     
+    console.log('profileCtx:', JSON.stringify(profileCtx))
+    console.log('student_id usado:', student_id)
+
     // 5. Selecionar prompt baseado no tipo (com contexto quando aplicável)
     const imageCount = backBase64 ? 2 : 1
     const prompt = getPromptForType(type, profileCtx || {}, imageCount)
@@ -341,7 +344,7 @@ CNH ou PASSAPORTE:
 RG — ATENÇÃO:
 - Se ${imageCount} === 1: verifique se a imagem contém VISIVELMENTE os dois lados lado a lado
   - Se sim (imagem combinada com frente e verso claramente visíveis): valide normalmente
-  - Se não (apenas uma face do RG): REJEITAR com reason EXATAMENTE "VERSO_AUSENTE: Envie o verso do RG"
+  - Se não (apenas uma face do RG): REJEITAR e o campo reason DEVE sempre começar com "VERSO_AUSENTE:" — mesmo que haja outros problemas como nome divergente. Exemplo: "VERSO_AUSENTE: Envie o verso do RG. Além disso, o nome não confere."
 - Se ${imageCount} === 2: frente e verso enviados separadamente — valide normalmente
 
 APROVAR SE:

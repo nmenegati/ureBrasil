@@ -860,6 +860,7 @@ const handleUpload = async (file: File, type: DocumentType) => {
             .from('documents')
             .update({
               file_url: filePath,
+              file_url_back: null,
               file_name: fileToUpload.name,
               file_size: fileToUpload.size,
               mime_type: fileToUpload.type,
