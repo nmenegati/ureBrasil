@@ -108,7 +108,7 @@ const Termos = () => {
               </p>
               <p>
                 Em caso de dúvidas, solicitações ou pedidos de cancelamento, entre em contato pelo e-mail{" "}
-                <span className="font-medium text-foreground">contato@urebrasil.com.br</span>.
+                <span className="font-medium text-foreground">contato@ure.com.br</span>.
               </p>
               <p className="text-xs text-muted-foreground">
                 Última atualização: janeiro de 2026.

@@ -90,7 +90,7 @@ export function PolicyModal({ type, open, onOpenChange }: PolicyModalProps) {
 
           <p className="text-sm">
             Dúvidas? Fale conosco pelo e-mail{" "}
-            <span className="font-medium text-foreground">suporte@urebrasil.com.br</span>.
+            <span className="font-medium text-foreground">contato@ure.com.br</span>.
           </p>
         </div>
       );
@@ -181,7 +181,7 @@ export function PolicyModal({ type, open, onOpenChange }: PolicyModalProps) {
             </p>
             <p>
               Em caso de dúvidas, solicitações ou pedidos de cancelamento, entre em contato pelo e-mail{" "}
-              <span className="font-medium text-foreground">suporte@urebrasil.com.br</span>.
+              <span className="font-medium text-foreground">contato@ure.com.br</span>.
             </p>
             <p className="text-xs text-muted-foreground">
               Última atualização: janeiro de 2026.
@@ -273,7 +273,7 @@ export function PolicyModal({ type, open, onOpenChange }: PolicyModalProps) {
           </ul>
           <p>
             Para exercer esses direitos, entre em contato pelo e-mail{" "}
-            <span className="font-medium text-foreground">contato@urebrasil.com.br</span>.
+            <span className="font-medium text-foreground">contato@ure.com.br</span>.
           </p>
         </div>
 
@@ -294,7 +294,7 @@ export function PolicyModal({ type, open, onOpenChange }: PolicyModalProps) {
           </p>
           <p className="text-xs text-muted-foreground">
             Última atualização: janeiro de 2026. Em caso de dúvidas, entre em contato pelo e-mail
-            contato@urebrasil.com.br.
+            contato@ure.com.br.
           </p>
         </div>
       </div>

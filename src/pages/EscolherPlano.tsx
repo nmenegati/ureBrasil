@@ -322,7 +322,7 @@ export default function EscolherPlano() {
           {/* Footer */}
           <div className="mt-10 text-center text-sm text-muted-foreground">
             <p>🔒 Pagamento 100% seguro</p>
-            <p className="mt-2">Dúvidas? suporte@urebrasil.com.br</p>
+            <p className="mt-2">Dúvidas? contato@ure.com.br</p>
           </div>
         </div>
       </main>
