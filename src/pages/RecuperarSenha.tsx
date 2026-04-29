@@ -24,7 +24,7 @@ export default function RecuperarSenha() {
     setLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`
+      redirectTo: 'https://urebrasil.com.br/redefinir-senha'
     });
 
     if (error) {
