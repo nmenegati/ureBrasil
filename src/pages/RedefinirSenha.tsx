@@ -69,8 +69,8 @@ export default function RedefinirSenha() {
 
     if (error) {
       console.error('Erro ao redefinir senha:', error);
-      if (error.message.includes('same')) {
-        toast.error('A nova senha deve ser diferente da atual');
+      if (error.message.includes('different from the old password') || error.message.includes('same')) {
+        toast.error('A nova senha deve ser diferente da senha atual.');
       } else {
         toast.error('Erro ao redefinir senha. Tente novamente.');
       }
