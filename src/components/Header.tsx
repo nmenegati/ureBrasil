@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -12,7 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, Sun, Moon, User, LogOut, Download, CheckCircle, CreditCard, Bell, Package, MessageCircle } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { Menu, X, User, LogOut, Download, CheckCircle, CreditCard, Bell, Package, MessageCircle, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import ureBrasilLogo from '@/assets/ure-brasil-logo.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,8 +48,10 @@ export function Header({ variant = 'app' }: HeaderProps) {
   const [physicalAvulsaPrice, setPhysicalAvulsaPrice] = useState<number | null>(null);
   const [studentProfileId, setStudentProfileId] = useState<string | null>(null);
   const [openTicketsCount, setOpenTicketsCount] = useState(0);
-  
+  const [selectedNotification, setSelectedNotification] = useState<any | null>(null);
+
   const [isPWA, setIsPWA] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 640px)');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { canInstall, isInstalled, promptInstall } = usePWAInstall();
   const [supportOpen, setSupportOpen] = useState(false);
@@ -368,68 +378,104 @@ export function Header({ variant = 'app' }: HeaderProps) {
           {/* Right Section */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="relative text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
-                    <Bell className="h-5 w-5" />
-                    {notificationCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-0">
-                        {notificationCount}
-                      </Badge>
+                      <Bell className="h-5 w-5" />
+                      {notificationCount > 0 && (
+                        <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-0">
+                          {notificationCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72">
+                    <DropdownMenuLabel className="text-xs">
+                      Notificações
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {notifications.length === 0 && (
+                      <DropdownMenuItem className="text-xs text-slate-500">
+                        Nenhuma notificação.
+                      </DropdownMenuItem>
                     )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel className="text-xs">
-                    Notificações
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {notifications.length === 0 && (
-                    <DropdownMenuItem className="text-xs text-slate-500">
-                      Nenhuma notificação.
-                    </DropdownMenuItem>
-                  )}
-                  {notifications.map((notification: any) => (
+                    {notifications.map((notification: any) => (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className={`flex flex-col items-start gap-1 text-xs${!notification.read ? ' bg-muted' : ''}`}
+                        onClick={async () => {
+                          if (!notification.read) {
+                            const client = supabase as any;
+                            await client
+                              .from('notifications')
+                              .update({ read: true })
+                              .eq('id', notification.id);
+                            setNotifications(prev =>
+                              prev.map(item =>
+                                item.id === notification.id
+                                  ? { ...item, read: true }
+                                  : item
+                              )
+                            );
+                            setNotificationCount(count => Math.max(0, count - 1));
+                          }
+                          setSelectedNotification({ ...notification, read: true });
+                        }}
+                      >
+                        <span className={`${!notification.read ? 'font-semibold' : 'font-medium'} text-foreground`}>
+                          {notification.title}
+                        </span>
+                        <span className="text-muted-foreground truncate w-full">
+                          {notification.message}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      key={notification.id}
-                      className="flex flex-col items-start gap-1 text-xs"
-                      onClick={async () => {
-                        const client = supabase as any;
-                        if (!notification.read) {
-                          await client
-                            .from('notifications')
-                            .update({ read: true })
-                            .eq('id', notification.id);
-                          setNotifications(prev =>
-                            prev.map(item =>
-                              item.id === notification.id
-                                ? { ...item, read: true }
-                                : item
-                            )
-                          );
-                          setNotificationCount(count =>
-                            Math.max(0, count - 1)
-                          );
-                        }
-                        if (notification.link) {
-                          window.open(notification.link, '_blank');
-                        }
-                      }}
+                      className="text-xs text-primary justify-center font-medium"
+                      onClick={() => navigate('/notificacoes')}
                     >
-                      <span className="font-semibold text-slate-900">
-                        {notification.title}
-                      </span>
-                      <span className="text-slate-600 truncate w-full">
-                        {notification.message}
-                      </span>
+                      Ver todas
                     </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Sheet
+                  open={!!selectedNotification}
+                  onOpenChange={open => { if (!open) setSelectedNotification(null); }}
+                >
+                  <SheetContent side={isDesktop ? 'right' : 'bottom'} className="flex flex-col gap-4">
+                    <SheetHeader>
+                      <SheetTitle>{selectedNotification?.title}</SheetTitle>
+                      <SheetDescription className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {selectedNotification?.message}
+                      </SheetDescription>
+                    </SheetHeader>
+                    {selectedNotification?.link && (
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          const link: string = selectedNotification.link;
+                          if (link.startsWith('/')) {
+                            navigate(link);
+                          } else {
+                            window.open(link, '_blank', 'noopener,noreferrer');
+                          }
+                          setSelectedNotification(null);
+                        }}
+                      >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Abrir
+                      </Button>
+                    )}
+                  </SheetContent>
+                </Sheet>
+              </>
             )}
 
             {/* Auth Section */}

@@ -174,6 +174,7 @@ export function SendNotificationForm() {
         type: 'admin_broadcast',
         title: title.trim(),
         message: message.trim(),
+        link: link.trim() || null,
         read: false,
         created_at: nowIso,
       }));

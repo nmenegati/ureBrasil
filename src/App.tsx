@@ -40,6 +40,7 @@ const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const Perfil = React.lazy(() => import("./pages/Perfil"));
 const MeusPagamentos = React.lazy(() => import("./pages/MeusPagamentos"));
 const MeusTickets = React.lazy(() => import("./pages/MeusTickets"));
+const Notificacoes = React.lazy(() => import("./pages/Notificacoes"));
 const AdquirirFisica = React.lazy(() => import("./pages/AdquirirFisica"));
 const VerificarEmail = React.lazy(() => import("./pages/VerificarEmail"));
 const RecuperarSenha = React.lazy(() => import("./pages/RecuperarSenha"));
@@ -185,6 +186,11 @@ const App = () => {
               <Route path="/meus-tickets" element={
                 <ProtectedRoute>
                   <MeusTickets />
+                </ProtectedRoute>
+              } />
+              <Route path="/notificacoes" element={
+                <ProtectedRoute>
+                  <Notificacoes />
                 </ProtectedRoute>
               } />
               <Route path="/perfil" element={
