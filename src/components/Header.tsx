@@ -424,7 +424,8 @@ export function Header({ variant = 'app' }: HeaderProps) {
                             );
                             setNotificationCount(count => Math.max(0, count - 1));
                           }
-                          setSelectedNotification({ ...notification, read: true });
+                          const updated = { ...notification, read: true };
+                          setTimeout(() => setSelectedNotification(updated), 0);
                         }}
                       >
                         <span className={`${!notification.read ? 'font-semibold' : 'font-medium'} text-foreground`}>
