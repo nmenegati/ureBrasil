@@ -294,6 +294,9 @@ export default function CompleteProfile() {
   const [customCourseName, setCustomCourseName] = useState('');
 
   const config = fieldConfiguration[educationLevel];
+  const visibleEducationLevels = educationLevels.filter(
+    (level) => level.id !== 'fundamental' || educationLevel === 'fundamental'
+  );
   const basePeriodOptions =
     (config.showCourseField ? config.periodOptions : config.seriesOptions) || [];
   const canBeLawStudent =
@@ -728,7 +731,7 @@ export default function CompleteProfile() {
                   <div className="space-y-2">
                     <Label className="text-foreground">Nível de ensino *</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      {educationLevels.map((level) => (
+                      {visibleEducationLevels.map((level) => (
                         <Button
                           key={level.id}
                           type="button"
