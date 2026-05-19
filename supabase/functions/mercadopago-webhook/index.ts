@@ -72,7 +72,10 @@ serve(async (req) => {
     if (!paymentId) return new Response("no id", { status: 200 });
 
     // Buscar pagamento atualizado na API do MP
-    const accessToken = Deno.env.get("MP_ACCESS_TOKEN");
+    const mode = Deno.env.get("MP_MODE") || "sandbox";
+    const accessToken = mode === "production"
+      ? Deno.env.get("MP_PROD_ACCESS_TOKEN")
+      : Deno.env.get("MP_ACCESS_TOKEN");
     const mpResponse = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
