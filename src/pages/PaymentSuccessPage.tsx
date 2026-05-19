@@ -10,6 +10,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 import { useAuth } from "@/hooks/useAuth";
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 /**
  * FLUXO DO USUÁRIO:
  * 1. Chega em /pagamento/sucesso após pagamento aprovado do plano digital.
@@ -49,6 +55,7 @@ const PaymentSuccessPage = () => {
   const [isStandalonePhysical, setIsStandalonePhysical] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [upsellPrice, setUpsellPrice] = useState<number | null>(null);
+  const hasLocationState = location.state != null;
 
   const formatPrice = (price: number | null) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -112,6 +119,19 @@ const PaymentSuccessPage = () => {
 
     return () => clearTimeout(timeout);
   }, [isChecking, location.state]);
+
+  useEffect(() => {
+    if (!hasLocationState) return;
+    if (typeof amount !== "number" || !paymentId) return;
+    if (typeof window.gtag !== "function") return;
+
+    window.gtag("event", "conversion", {
+      send_to: "AW-18167800155/wkviCI-zia8cENvCitdD",
+      value: amount,
+      currency: "BRL",
+      transaction_id: paymentId,
+    });
+  }, [amount, paymentId, hasLocationState]);
 
   const handleAcceptUpsell = async () => {
     if (!upsellPrice) return;
