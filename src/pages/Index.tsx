@@ -1144,7 +1144,7 @@ const Index = () => {
                   </svg>
                 </a>
                 <a
-                  href="https://wa.me/5531999999999"
+                  href="https://wa.me/5531920064132"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110"
@@ -1223,7 +1223,7 @@ const Index = () => {
                 </li>
                 <li>
                   <a
-                    href="#"
+                    href="mailto:contato@ure.com.br"
                     className="text-muted-foreground text-sm hover:text-primary hover:underline transition-all duration-200 font-medium"
                   >
                     Contato
