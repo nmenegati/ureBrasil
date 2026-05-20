@@ -121,16 +121,36 @@ const PaymentSuccessPage = () => {
   }, [isChecking, location.state]);
 
   useEffect(() => {
-    if (!hasLocationState) return;
-    if (typeof amount !== "number" || !paymentId) return;
-    if (typeof window.gtag !== "function") return;
+    if (!hasLocationState) {
+      console.log("[GADS CONV] bloqueado: sem location.state");
+      return;
+    }
+    if (typeof amount !== "number" || !paymentId) {
+      console.log("[GADS CONV] bloqueado: amount/paymentId inválidos", {
+        amount,
+        paymentId,
+        typeOfAmount: typeof amount,
+      });
+      return;
+    }
+    if (typeof window.gtag !== "function") {
+      console.log("[GADS CONV] bloqueado: window.gtag não é função");
+      return;
+    }
 
+    console.log("[GADS CONV] disparando", {
+      paymentId,
+      amount,
+      currency: "BRL",
+      send_to: "AW-18167800155/wkviCI-zia8cENvCitdD",
+    });
     window.gtag("event", "conversion", {
       send_to: "AW-18167800155/wkviCI-zia8cENvCitdD",
       value: amount,
       currency: "BRL",
       transaction_id: paymentId,
     });
+    console.log("[GADS CONV] disparado com sucesso");
   }, [amount, paymentId, hasLocationState]);
 
   const handleAcceptUpsell = async () => {

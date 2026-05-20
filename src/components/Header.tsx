@@ -324,6 +324,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
 
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.replaceState(null, '', `#${sectionId}`);
       setIsMobileMenuOpen(false);
     }
   };

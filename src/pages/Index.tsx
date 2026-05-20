@@ -154,6 +154,20 @@ const Index = () => {
     loadPlanPrices();
   }, []);
 
+  useEffect(() => {
+    const sectionId = window.location.hash.replace(/^#/, "");
+    if (!sectionId) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
+
   const handleCTA = async () => {
     if (ctaLoading) return;
     setCtaLoading(true);
