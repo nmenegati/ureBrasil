@@ -487,7 +487,7 @@ export default function Checkout() {
               original_payment_id: resolvedUpsell.originalPaymentId,
             },
           });
-          if (!result.success) {
+          if (!result.success || result.status === 'rejected') {
             throw new Error(result.error || "Erro PIX");
           }
           data = result;
