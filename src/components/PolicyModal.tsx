@@ -13,7 +13,7 @@ export function PolicyModal({ type, open, onOpenChange }: PolicyModalProps) {
     privacy: "Política de Privacidade – URE Brasil",
     terms: "Termos de Uso – URE Brasil",
     delivery: "Política de Entregas – URE Brasil",
-    about: "Sobre Nós – URE Brasil",
+    about: "Sobre Nós - URE Brasil",
   };
 
   const descriptions: Record<PolicyType, string> = {
@@ -195,17 +195,17 @@ export function PolicyModal({ type, open, onOpenChange }: PolicyModalProps) {
       return (
         <div className="space-y-4 text-sm text-muted-foreground">
           <p>
-            A URE Brasil é uma entidade representativa focada em facilitar o acesso dos estudantes à
-            carteirinha estudantil e aos benefícios legais de meia-entrada, por meio de uma experiência digital
-            simples e segura.
+            A URE Brasil é uma associação estudantil com 24 anos de história, dedicada a facilitar o acesso
+            dos estudantes brasileiros à carteirinha estudantil e aos benefícios de meia-entrada garantidos
+            por lei.
           </p>
           <p>
-            Nossa atuação envolve tecnologia, atendimento e parcerias institucionais para garantir que o processo
-            de emissão, validação e uso da carteirinha seja transparente, confiável e alinhado à legislação vigente.
+            Nascemos para simplificar um processo que sempre foi burocrático e caro. Hoje, com tecnologia e
+            atendimento próximo, emitimos carteirinhas digitais e físicas de forma rápida, segura e 100%
+            online - sem DCE, sem fila, sem complicação.
           </p>
           <p>
-            Este texto é informativo e pode ser ajustado a qualquer momento para refletir a evolução dos serviços,
-            dos projetos e da missão institucional da URE Brasil.
+            Nossa missão é simples: garantir que todo estudante tenha acesso ao que é seu por direito.
           </p>
         </div>
       );
@@ -313,4 +313,3 @@ export function PolicyModal({ type, open, onOpenChange }: PolicyModalProps) {
     </Dialog>
   );
 }
-
