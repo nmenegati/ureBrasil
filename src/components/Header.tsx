@@ -329,6 +329,19 @@ export function Header({ variant = 'app' }: HeaderProps) {
     }
   };
 
+  const handleLogoClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isLandingPage) return;
+
+    event.preventDefault();
+    const element = document.getElementById('hero');
+
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.replaceState(null, '', '#hero');
+      setIsMobileMenuOpen(false);
+    }
+  };
+
   const menuItems = ['Como Funciona', 'Benefícios', 'Carteira de Direito', 'Modelos', 'Dúvidas'];
   
   // Header sempre claro; na rolagem adiciona apenas sombra sutil
@@ -342,7 +355,7 @@ export function Header({ variant = 'app' }: HeaderProps) {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-[72px]">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
+          <Link to="/#hero" onClick={handleLogoClick} className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
             <img
               src={ureBrasilLogo}
               alt="URE Brasil - União Representativa dos Estudantes"

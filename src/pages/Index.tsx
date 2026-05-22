@@ -270,7 +270,7 @@ const Index = () => {
       <Header variant="landing" />
 
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 md:pt-24 md:pb-20 gradient-hero overflow-hidden">
+      <section id="hero" className="relative pt-20 pb-16 md:pt-24 md:pb-20 gradient-hero overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-20 left-10 w-72 h-72 bg-[hsl(var(--primary-foreground)/0.92)] rounded-full blur-3xl"></div>
@@ -330,7 +330,13 @@ const Index = () => {
                   variant="brand-primary"
                   size="lg"
                   className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 h-auto w-full sm:w-auto shadow-xl hover:scale-105 transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={handleCTA}
+                  onClick={() => {
+                    const element = document.getElementById("planos");
+                    if (element) {
+                      element.scrollIntoView({ behavior: "smooth", block: "start" });
+                      window.history.replaceState(null, "", "#planos");
+                    }
+                  }}
                   disabled={checkingCard || ctaLoading}
                 >
                   {(checkingCard || ctaLoading) && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
