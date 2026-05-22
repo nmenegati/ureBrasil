@@ -788,11 +788,11 @@ const handleUpload = async (file: File, type: DocumentType) => {
       const isPDF = file.type === 'application/pdf';
 
       if (!isImage && !isPDF) {
-        const label =
+        toast.error(
           type === 'rg'
-            ? 'Documento de Identidade'
-            : 'Comprovante de Matrícula';
-        toast.error(`Apenas imagens ou PDFs são aceitos para ${label}`);
+            ? 'Apenas imagens JPG ou PNG são aceitas para o RG'
+            : 'Apenas imagens ou PDFs são aceitos para Matrícula'
+        );
         return;
       }
 
