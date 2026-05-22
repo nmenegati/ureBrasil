@@ -101,7 +101,7 @@ const documentConfigs: DocumentConfig[] = [
     type: 'rg',
     label: 'Documento de Identidade',
     icon: CreditCard,
-    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 3
   },
   {
@@ -275,8 +275,8 @@ const DocumentCard = ({
       return (
         <ul className="mt-1 space-y-1 text-xs text-slate-700">
           <li>🪪 RG (Frente e Verso)</li>
-          <li>🚗 CNH</li>
-          <li>🛂 Passaporte</li>
+          <li>🚗 CNH ou Passaporte</li>
+          <li>🖼️ Apenas imagem (JPG ou PNG)</li>
         </ul>
       );
     }
