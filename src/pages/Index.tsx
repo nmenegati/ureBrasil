@@ -1153,7 +1153,7 @@ const Index = () => {
                   <Instagram className="h-5 w-5" />
                 </a>
                 <a
-                  href="https://www.facebook.com/urebr"
+                  href="https://www.facebook.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-110"
