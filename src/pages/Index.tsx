@@ -450,7 +450,7 @@ const Index = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-8 space-y-4">
-            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua carteira do estudante emitida em minutos</h2>
+            <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Sua carteira digital do estudante emitida em minutos</h2>
             <p className="text-xl text-muted-foreground">Sem complicação.</p>
           </div>
 
