@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +54,7 @@ import { goToStudentCardFlow } from "@/lib/cardNavigation";
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [hasActiveCard, setHasActiveCard] = useState(false);
   const [checkingCard, setCheckingCard] = useState(false);
@@ -67,6 +68,9 @@ const Index = () => {
   const [lawDigitalPrice, setLawDigitalPrice] = useState<number | null>(null);
   const [physicalUpsellPrice, setPhysicalUpsellPrice] = useState<number | null>(null);
   const [loadedHumanImages, setLoadedHumanImages] = useState<number[]>([0]);
+  const hasPkceCode = new URLSearchParams(location.search).has("code");
+  const [pkceGraceExpired, setPkceGraceExpired] = useState(!hasPkceCode);
+  const [pkceRedirecting, setPkceRedirecting] = useState(false);
 
   const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
   
@@ -131,6 +135,35 @@ const Index = () => {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!hasPkceCode || user) {
+      setPkceGraceExpired(true);
+      return;
+    }
+
+    setPkceGraceExpired(false);
+
+    const timeout = window.setTimeout(() => {
+      setPkceGraceExpired(true);
+    }, 8000);
+
+    return () => window.clearTimeout(timeout);
+  }, [hasPkceCode, user]);
+
+  useEffect(() => {
+    if (!hasPkceCode || !user || pkceRedirecting) return;
+
+    setPkceRedirecting(true);
+    void goToStudentCardFlow(navigate);
+  }, [hasPkceCode, user, pkceRedirecting, navigate]);
+
+  useEffect(() => {
+    if (!hasPkceCode || pkceRedirecting) return;
+    if (!pkceGraceExpired || user) return;
+
+    navigate("/login", { replace: true });
+  }, [hasPkceCode, pkceGraceExpired, user, pkceRedirecting, navigate]);
+
+  useEffect(() => {
     const loadPlanPrices = async () => {
       const { data } = await supabase
         .from("plans")
@@ -181,6 +214,7 @@ const Index = () => {
       setCtaLoading(false);
     }
   };
+
   // Testimonial Rotation Logic
   const [currentTestimonialGroup, setCurrentTestimonialGroup] = useState(0);
   const [isTestimonialHovered, setIsTestimonialHovered] = useState(false);
@@ -264,6 +298,17 @@ const Index = () => {
 
     return () => clearInterval(interval);
   }, [isTestimonialHovered]);
+
+  if (hasPkceCode && ((!user && !pkceGraceExpired) || pkceRedirecting)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
+          <p className="text-muted-foreground mt-4">Confirmando seu acesso...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
