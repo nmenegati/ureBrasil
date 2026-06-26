@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -270,6 +270,7 @@ export default function CompleteProfile() {
   const { isChecking } = useOnboardingGuard('complete_profile');
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { fetchAddress, loading: cepLoading, error: cepError } = useViaCep();
 
   const [cep, setCep] = useState('');
@@ -292,6 +293,8 @@ export default function CompleteProfile() {
   const [openCourse, setOpenCourse] = useState(false);
   const [courseType, setCourseType] = useState<'direito' | 'outro'>('outro');
   const [customCourseName, setCustomCourseName] = useState('');
+  const hasPkceCode = new URLSearchParams(location.search).has('code');
+  const [pkceGraceExpired, setPkceGraceExpired] = useState(!hasPkceCode);
 
   const config = fieldConfiguration[educationLevel];
   const visibleEducationLevels = educationLevels.filter(
@@ -319,10 +322,25 @@ export default function CompleteProfile() {
     : 'Ex: MBA em Gestão, Especialização em Educação...';
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!hasPkceCode || user) {
+      setPkceGraceExpired(true);
+      return;
+    }
+
+    setPkceGraceExpired(false);
+
+    const timeout = window.setTimeout(() => {
+      setPkceGraceExpired(true);
+    }, 8000);
+
+    return () => window.clearTimeout(timeout);
+  }, [hasPkceCode, user]);
+
+  useEffect(() => {
+    if (!authLoading && pkceGraceExpired && !user) {
       navigate('/login', { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, pkceGraceExpired, navigate]);
 
   useEffect(() => {
     const prefill = async () => {
@@ -385,7 +403,7 @@ export default function CompleteProfile() {
   }, [user]);
 
   // Mostrar loading enquanto verifica autenticação
-  if (authLoading || isChecking) {
+  if (authLoading || isChecking || (hasPkceCode && !user && !pkceGraceExpired)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
