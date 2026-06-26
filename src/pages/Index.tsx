@@ -29,6 +29,7 @@ import carteirinhaGeral1 from "@/assets/carteirinha-geral-1.webp";
 import carteirinhaGeral2 from "@/assets/carteirinha-geral-2.webp";
 import carteirinhaDireito1 from "@/assets/carteirinha-direito-1.webp";
 import carteirinhaDireito2 from "@/assets/carteirinha-direito-2.webp";
+import carteirinhaDireito3 from "@/assets/carteirinha-direito-3.png";
 import ureBrasilLogo from "@/assets/ure-brasil-logo.png";
 import human01 from "@/assets/human-01.webp";
 import human02 from "@/assets/human-02.webp";
@@ -72,7 +73,7 @@ const Index = () => {
   const [pkceGraceExpired, setPkceGraceExpired] = useState(!hasPkceCode);
   const [pkceRedirecting, setPkceRedirecting] = useState(false);
 
-  const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2];
+  const carteirinhaSlides = [carteirinhaGeral1, carteirinhaGeral2, carteirinhaDireito1, carteirinhaDireito2, carteirinhaDireito3];
   
   // Array of human images for the atmospheric section
   const humanImages = [
@@ -688,7 +689,7 @@ const Index = () => {
                 </div>
                 <p className="text-white/60 text-xs leading-relaxed">
                   ⚠️ Não é a carteira de estagiário da OAB.<br />
-                  * Os benefícios variam conforme o estado e convênios ativos.
+                  * Os benefícios variam conforme o estado e convênios ativos e serão disponibilizados no site.
                 </p>
               </div>
 
@@ -723,7 +724,7 @@ const Index = () => {
                 className="relative w-full max-w-[320px] lg:max-w-[380px]"
               >
                 <img
-                  src={carteirinhaDireito1}
+                  src={carteirinhaDireito3}
                   alt="Carteira do Estudante de Direito"
                   className="w-full h-auto rounded-xl shadow-2xl transform hover:scale-105 transition-transform duration-500"
                   loading="lazy"
