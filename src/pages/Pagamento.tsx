@@ -542,7 +542,7 @@ export default function Pagamento() {
             is_upsell: isUpsell,
             cardType,
           });
-          if (!result.success || result.status === 'rejected') throw new Error(result.error || "Pagamento não autorizado");
+          if (!result.success || result.status !== 'approved') throw new Error(result.error || "Pagamento não autorizado. Tente novamente ou use outro cartão.");
           data = result;
           error = null;
         } else {

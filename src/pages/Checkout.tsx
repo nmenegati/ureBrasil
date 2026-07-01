@@ -563,9 +563,9 @@ export default function Checkout() {
             original_payment_id: resolvedUpsell.originalPaymentId,
             cardType,
           });
-          if (!result.success) {
+          if (!result.success || result.status !== 'approved') {
             throw new Error(
-              result.error || "Erro ao processar pagamento do upsell",
+              result.error || "Pagamento não autorizado. Tente novamente ou use outro cartão.",
             );
           }
           data = result;
