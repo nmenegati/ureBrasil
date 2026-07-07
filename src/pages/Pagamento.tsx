@@ -182,13 +182,13 @@ export default function Pagamento() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("student_profiles")
-          .select("plan_id, cpf, phone, birth_date")
+          .select("plan_id, cpf, phone, birth_date, is_law_student")
           .eq("user_id", user.id)
           .single();
 
-        if (profileError || !profile?.plan_id) {
-          toast.error("Nenhum plano selecionado");
-          navigate("/escolher-plano");
+        if (profileError || !profile) {
+          toast.error("Erro ao carregar perfil");
+          navigate("/login");
           return;
         }
 
@@ -198,16 +198,29 @@ export default function Pagamento() {
           birth_date: profile.birth_date,
         });
 
-        const { data: planData, error: planError } = await supabase
-          .from("plans")
-          .select("*")
-          .eq("id", profile.plan_id)
-          .single();
+        let planQuery = supabase.from("plans").select("*");
+
+        if (profile.plan_id) {
+          planQuery = planQuery.eq("id", profile.plan_id);
+        } else {
+          const planType = profile.is_law_student ? "direito_digital" : "geral_digital";
+          planQuery = planQuery.eq("type", planType).eq("is_active", true);
+        }
+
+        const { data: planData, error: planError } = await planQuery.single();
 
         if (planError || !planData) {
           toast.error("Erro ao carregar plano");
           navigate("/escolher-plano");
           return;
+        }
+
+        // Auto-assign plan_id se ainda não tinha (apenas para planos digitais)
+        if (!profile.plan_id && !isStandalonePhysical) {
+          await supabase
+            .from("student_profiles")
+            .update({ plan_id: planData.id })
+            .eq("user_id", user.id);
         }
 
         if (standaloneSelectedPlan?.is_standalone) {

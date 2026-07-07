@@ -50,7 +50,7 @@ Data da auditoria: 2026-06-30
 
 - `src/pages/Pagamento.tsx` inicializa `activeGateway` localmente como `"pagbank"` em `:147`, mas busca o gateway ativo em `payment_gateway_config` em `:238`.
 - No fluxo PIX Mercado Pago, `processPixPayment()` e chamado em `src/pages/Pagamento.tsx:405`; depois o fluxo define `nextStep` em `:444`, atualiza `current_onboarding_step` em `:455` e decide a rota em `:459`.
-- No fluxo de cartao Mercado Pago, `processCardPayment()` e chamado em `src/pages/Pagamento.tsx:538`, com bloqueio explicito de `status === 'rejected'` em `:545`, depois repetindo a atualizacao de `nextStep` em `:584-599`.
+- No fluxo de cartao Mercado Pago, `processCardPayment()` e chamado em `src/pages/Pagamento.tsx:538`, com bloqueio de `status !== 'approved'` em `:545` (corrigido em 2026-07-01; antes bloqueava apenas `=== 'rejected'`), depois repetindo a atualizacao de `nextStep` em `:584-599`.
 - O hook `src/hooks/useMercadoPago.ts` usa a Edge Function `mercadopago-payment` no cartao em `:172-174` e hoje rejeita apenas `!data.success` em `:189`.
 - O mesmo hook usa `payment_method: 'pix'` em `src/hooks/useMercadoPago.ts:285-287` e faz a mesma validacao apenas por `!data.success` em `:298` e novamente em `:301`, sem bloqueio explicito de `status === 'rejected'`.
 - A tela `src/pages/PagamentoPix.tsx` polla `payments.status` em `:65-70`, considera confirmado apenas quando `status === "approved"` em `:76`, salva `recent_payment_id` logo depois e retorna para `returnTo || "/upload-documentos"` no fluxo normal.
@@ -61,8 +61,8 @@ Data da auditoria: 2026-06-30
 
 - `src/pages/Checkout.tsx` usa `CHECKOUT_RESOLVE_RETRY_KEY` em `:64`, inicia `activeGateway` como `"pagbank"` em `:131` e ainda navega para `/dashboard` em `:226`, `:265` e `:367`.
 - No PIX Mercado Pago do upsell, `processPixPayment()` e chamado em `src/pages/Checkout.tsx:478`, com bloqueio de `status === 'rejected'` em `:490`.
-- No cartao Mercado Pago do upsell, `processCardPayment()` e chamado em `src/pages/Checkout.tsx:558`, mas o grep auditado nao mostrou cheque explicito de `status === 'rejected'` nesse ramo; depois o fluxo marca `is_physical: true` em `:611` e move o onboarding para `upload_documents` em `:631`.
-- `src/pages/CheckoutFisica.tsx` inicia `activeGateway` como `"pagbank"` em `:94`, monta metadata com `is_physical_avulsa: true` em `:311` e `original_payment_id` em `:315`, bloqueia PIX apenas por `!result.success` em `:330` e o pagamento de cartao apenas por `!result.success` em `:385-386`.
+- No cartao Mercado Pago do upsell, `processCardPayment()` e chamado em `src/pages/Checkout.tsx:558`, com bloqueio de `result.status !== 'approved'` em `:566` (corrigido em 2026-07-01; antes verificava apenas `!result.success`); depois o fluxo marca `is_physical: true` em `:611` e move o onboarding para `upload_documents` em `:631`.
+- `src/pages/CheckoutFisica.tsx` inicia `activeGateway` como `"pagbank"` em `:94`, monta metadata com `is_physical_avulsa: true` em `:311` e `original_payment_id` em `:315`, bloqueia PIX por `!result.success` em `:330` e o pagamento de cartao por `!result.success || result.status !== 'approved'` em `:385` (corrigido em 2026-07-01; antes verificava apenas `!result.success`).
 - A entrada da compra avulsa esta em `src/pages/AdquirirFisica.tsx`, que leva para `/checkout-fisica` em `:47`.
 
 ## Upload, validacao, face e carteirinha
@@ -179,7 +179,7 @@ Data da auditoria: 2026-06-30
 
 ### Faixa vermelha
 
-- Mercado Pago ainda tem pontos do frontend que podem aceitar resposta funcionalmente rejeitada porque verificam apenas `success`: `src/hooks/useMercadoPago.ts:189`, `:298`, `:301`; `src/pages/Checkout.tsx:558` (ramo cartao auditado sem cheque explicito de `status === 'rejected'`); `src/pages/CheckoutFisica.tsx:385-386`.
+- ✅ CORRIGIDO (2026-07-01, commit a012066): `src/pages/Pagamento.tsx:545`, `src/pages/Checkout.tsx:566` e `src/pages/CheckoutFisica.tsx:385` agora bloqueiam qualquer status diferente de `approved` (antes, Pagamento bloqueava apenas `rejected`, e Checkout/CheckoutFisica nao verificavam status). O hook `src/hooks/useMercadoPago.ts` (`:189`, `:298`, `:301`) continua validando apenas `!data.success`, mas isso e esperado porque a validacao de status de negocio e responsabilidade do chamador (Pagamento/Checkout/CheckoutFisica), nao do hook.
 - `supabase/functions/mercadopago-payment/index.ts:211` retorna `success: true` mesmo quando o `statusMap` pode resultar em `rejected`, conforme `:149-161`.
 - `src/pages/UploadDocumentos.tsx:786` e `:940` ainda aceitam PDF para RG, enquanto `supabase/functions/validate-document-v2/index.ts:97` tambem aceita PDF para RG no backend.
 - `supabase/functions/create-payment/index.ts:24-38`, `supabase/functions/pagbank-payment-v2/index.ts:95-145` e `supabase/functions/generate-digital-card/index.ts:37-65` usam `supabase` antes de instanciar o client, indicando bugs estruturais reais nesses caminhos.

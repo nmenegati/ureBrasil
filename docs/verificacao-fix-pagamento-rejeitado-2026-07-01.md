@@ -283,3 +283,30 @@ Criar uma página/estado para pagamentos em análise, com:
 | P2: Webhook avança onboarding | Médio | Complementar | 1 arquivo |
 | P3: UX de aguardando | Nenhum | Complementar | UX |
 | ❌ Mudar edge function `success` | **Alto** (quebra PIX) | Sim mas perigoso | 1 arquivo |
+
+---
+
+## 9. CORREÇÃO APLICADA
+
+**Data**: 2026-07-01
+**Commit**: `a012066983e33679162a714ea3e46b62929d8183`
+**Mensagem**: `fix: bloquear pagamentos não-approved de avançar onboarding`
+
+### Alterações deployadas
+
+| Arquivo | Linha | Antes | Depois |
+|---|---|---|---|
+| `src/pages/Pagamento.tsx` | 545 | `result.status === 'rejected'` | `result.status !== 'approved'` |
+| `src/pages/Checkout.tsx` | 566 | `!result.success` (sem cheque de status) | `!result.success \|\| result.status !== 'approved'` |
+| `src/pages/CheckoutFisica.tsx` | 385 | `!result.success` (sem cheque de status) | `!result.success \|\| result.status !== 'approved'` |
+
+### Abordagem aplicada
+
+Foi aplicada a **Prioridade 1** (correção cirúrgica nos 3 frontends). Apenas o status `approved` permite avanço do onboarding agora. Todos os demais status (`in_process`, `pending`, `rejected`, `cancelled`, `refunded`, `processing` e qualquer status desconhecido) são bloqueados.
+
+### O que NÃO foi alterado (permanece como pendência futura)
+
+- Edge function `mercadopago-payment/index.ts` continua retornando `success: true` para todos os status — intencional, porque o fluxo PIX depende disso.
+- Webhook `mercadopago-webhook/index.ts` continua sem avançar `current_onboarding_step` quando `in_process` → `approved` — pagamentos legitimamente aprovados após análise antifraude precisarão de atendimento manual ou implementação futura da Prioridade 2.
+- Hook `useMercadoPago.ts` continua validando apenas `!data.success` — correto, pois a responsabilidade de validar status de negócio é dos chamadores.
+- Nenhuma página de "aguardando pagamento" foi criada (Prioridade 3).

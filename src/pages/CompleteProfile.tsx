@@ -516,30 +516,26 @@ export default function CompleteProfile() {
     toast.success('Perfil completado com sucesso!');
     setLoading(false);
 
-    // Redirecionar baseado em is_law_student
-    if (isLawStudent) {
-      // Atualizar step de onboarding para escolha de plano
-      await supabase
-        .from('student_profiles')
-        .update({ current_onboarding_step: 'choose_plan' })
-        .eq('user_id', user.id);
+    // Buscar plano correto baseado em is_law_student
+    const planType = isLawStudent ? 'direito_digital' : 'geral_digital';
+    const { data: autoPlan } = await supabase
+      .from('plans')
+      .select('id')
+      .eq('type', planType)
+      .eq('is_active', true)
+      .single();
 
-      navigate('/escolher-plano');
-    } else {
-      // Não é Direito → plano Geral Digital automaticamente
-      localStorage.setItem('selected_plan_id', PLAN_GERAL_DIGITAL_ID);
-      
-      // Atualizar plan_id e onboarding_step no banco
+    if (autoPlan) {
       await supabase
         .from('student_profiles')
         .update({
-          plan_id: PLAN_GERAL_DIGITAL_ID,
+          plan_id: autoPlan.id,
           current_onboarding_step: 'payment',
         })
         .eq('user_id', user.id);
-      
-      window.location.href = '/pagamento';
     }
+
+    window.location.href = '/pagamento';
   };
 
   return (
