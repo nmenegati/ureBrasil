@@ -81,7 +81,18 @@ export default function PagamentoPix() {
         if (paymentId) {
           localStorage.setItem("recent_payment_id", paymentId);
         }
-  
+
+        // Meta Pixel — conversão de compra (PIX digital apenas)
+        if (typeof window.fbq === 'function' && returnTo === '/pagamento/sucesso') {
+          window.fbq('track', 'Purchase', {
+            value: amount,
+            currency: 'BRL',
+            content_ids: [paymentId],
+            content_type: 'product',
+            content_name: 'Carteira Estudantil Digital',
+          });
+        }
+
         toast.success(successMessage || "Pagamento confirmado!");
         setTimeout(() => {
           window.location.href = returnTo || "/upload-documentos";

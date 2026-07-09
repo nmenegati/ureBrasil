@@ -63,6 +63,7 @@ interface Plan {
 declare global {
   interface Window {
     EfiJs?: any;
+    fbq?: (...args: unknown[]) => void;
   }
 }
 
@@ -613,6 +614,17 @@ export default function Pagamento() {
 
         const paymentId =
           (data && (data.payment_id || data.orderId || data.id)) || undefined;
+
+        // Meta Pixel — conversão de compra (cartão digital)
+        if (typeof window.fbq === 'function') {
+          window.fbq('track', 'Purchase', {
+            value: paymentAmount,
+            currency: 'BRL',
+            content_ids: [paymentId],
+            content_type: 'product',
+            content_name: plan.name,
+          });
+        }
 
         navigate("/pagamento/sucesso", {
           state: {
