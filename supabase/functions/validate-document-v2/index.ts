@@ -449,7 +449,27 @@ JSON:
   
   const specific = prompts[type] || prompts.rg
 
+  // Referência temporal para o modelo (evita rejeitar datas de 2026 como "futuras")
+  const TZ = 'America/Sao_Paulo'
+  const dateFmt: Intl.DateTimeFormatOptions = {
+    timeZone: TZ, day: '2-digit', month: 'long', year: 'numeric'
+  }
+  const hoje = new Date().toLocaleDateString('pt-BR', dateFmt) // ex.: "10 de julho de 2026"
+  const corteRef = new Date()
+  corteRef.setMonth(corteRef.getMonth() - 6)
+  const dataCorte = corteRef.toLocaleDateString('pt-BR', dateFmt)
+
+  const referenciaTemporal = `
+REFERÊNCIA TEMPORAL:
+- Hoje é ${hoje} (timezone America/Sao_Paulo). NÃO trate datas de ${new Date().getFullYear()} como futuras.
+- Datas no documento seguem o formato brasileiro DD/MM/AAAA (dia/mês/ano), não MM/DD.
+- DATA DE EMISSÃO / EXPEDIÇÃO (ex.: comprovante de matrícula): deve ser recente — aceitar se estiver entre ${dataCorte} e até 2 dias após hoje. Rejeitar se for anterior a ${dataCorte} (mais de 6 meses) ou mais de 2 dias no futuro.
+- DATA DE VALIDADE / VENCIMENTO (ex.: CNH, RG): deve estar NO FUTURO. O documento é válido enquanto o vencimento for igual ou posterior a hoje; rejeitar apenas se já vencido.
+- Extraia a data do documento e reporte em extracted_data.date ANTES de julgar.
+`
+
   const basePrompt = `
+${referenciaTemporal}
 ${specific}
 
 IMPORTANTE: Responda APENAS com JSON válido no formato:
