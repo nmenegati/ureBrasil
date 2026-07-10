@@ -94,7 +94,7 @@ const documentConfigs: DocumentConfig[] = [
     type: 'matricula',
     label: 'Comprovante de Matrícula',
     icon: FileText,
-    acceptedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    acceptedTypes: ['image/jpeg', 'image/png'],
     maxSizeMB: 3
   },
   {
@@ -785,14 +785,9 @@ const handleUpload = async (file: File, type: DocumentType) => {
 
     if (type === 'rg' || type === 'matricula') {
       const isImage = file.type.startsWith('image/');
-      const isPDF = file.type === 'application/pdf';
 
-      if (!isImage && !isPDF) {
-        toast.error(
-          type === 'rg'
-            ? 'Apenas imagens JPG ou PNG são aceitas para o RG'
-            : 'Apenas imagens ou PDFs são aceitos para Matrícula'
-        );
+      if (!isImage) {
+        toast.error('Envie uma foto ou captura de tela do documento (JPG ou PNG). PDF não é aceito.');
         return;
       }
 
@@ -819,9 +814,6 @@ const handleUpload = async (file: File, type: DocumentType) => {
         fileToUpload = await compressImage(file, maxSize, maxSize, quality);
       }
       
-      const fileIsImage = fileToUpload.type.startsWith('image/');
-      const fileIsPDF = fileToUpload.type === 'application/pdf';
-
       let maxSizeMB = config.maxSizeMB;
 
       if (fileToUpload.size > maxSizeMB * 1024 * 1024) {
@@ -937,8 +929,8 @@ const handleUpload = async (file: File, type: DocumentType) => {
     const config = documentConfigs.find(d => d.type === 'rg');
     if (!config) return;
 
-    if (!secondFile.type.startsWith('image/') && secondFile.type !== 'application/pdf') {
-      toast.error('Apenas imagens ou PDFs são aceitos');
+    if (!secondFile.type.startsWith('image/')) {
+      toast.error('Envie uma foto ou captura de tela do documento (JPG ou PNG). PDF não é aceito.');
       return;
     }
     if (secondFile.size > 3 * 1024 * 1024) {
