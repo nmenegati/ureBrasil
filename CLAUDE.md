@@ -20,6 +20,53 @@ Data da auditoria: 2026-06-30
 - O upload de RG esta desalinhado entre UX declarada e runtime/backend: a UI principal foi endurecida em parte, mas ainda existem caminhos que aceitam PDF para RG no frontend e na validacao backend.
 - A trilha SQL versionada mostra triggers e endurecimento de seguranca relevantes, mas nao foi localizada a definicao SQL de `advance_to_review` nem a criacao versionada dos buckets usados em runtime.
 
+## Mudancas da sessao 2026-07-10
+
+Registro datado das alteracoes feitas nesta sessao. Cada item aponta arquivo/linha atual quando aplicavel.
+
+### 1. Meta Pixel — evento Purchase (commit 9690840, 2026-07-08)
+
+- Adicionado `fbq('track', 'Purchase', {...})` em dois pontos, apos aprovacao do pagamento:
+  - Cartao: `src/pages/Pagamento.tsx:619-627` (guard `typeof window.fbq === 'function'`), antes do `navigate('/pagamento/sucesso')` em `:629`.
+  - PIX: `src/pages/PagamentoPix.tsx:86-94` (guard `typeof window.fbq === 'function' && returnTo === '/pagamento/sucesso'`), dentro do callback de polling, antes do `window.location.href` em `:98`.
+- Payload usa `value: paymentAmount` (nao `plan.price`) e `content_ids: [paymentId]` (const local; no cartao vem de `data.payment_id || data.orderId || data.id` em `Pagamento.tsx:615-616`, pode ser `undefined`).
+- Declaracao de tipo `fbq?: (...args: unknown[]) => void` adicionada ao `declare global` em `src/pages/Pagamento.tsx:66`.
+- Guard PIX so dispara no funil digital: `returnTo` vem de `location.state` (`PagamentoPix.tsx:25`) e vale `/pagamento/sucesso` para plano digital (`Pagamento.tsx:452`); para compra fisica vale `/upload-documentos`, entao Purchase corretamente NAO dispara.
+- Snippet do pixel em `index.html:26-37` (`<head>`, ID `982937931195255`), noscript em `:95` (`<body>`). Nao ha CSP no `index.html`.
+- LIMITACAO CONHECIDA (faixa vermelha): o `fbq` client-side do PIX so executa se o comprador continua na aba do checkout quando o polling de 5s detecta `approved`. Como no PIX o usuario paga no app do banco e frequentemente nao volta (e navegadores mobile congelam `setInterval` em aba de fundo), o evento nao roda — mesmo com o pagamento confirmado pelo webhook. A race com `window.location.href` e BAIXA (ha `setTimeout(..., 2000)` antes do redirect); a causa real e arquitetural, nao timing. Ver `docs/verificacao-fbq-nao-dispara-2026-07-10.md`.
+
+### 2. Upload de documentos — remocao de PDF (commit df0b878, 2026-07-10)
+
+- `src/pages/UploadDocumentos.tsx`: removido `'application/pdf'` de `acceptedTypes` da matricula (`:97`); agora todos os campos aceitam apenas `image/jpeg`/`image/png`.
+- Corrigido bug em que o segundo lado do RG (`handleAddRgSecondSide`, `:940`) aceitava PDF — agora so imagem, consistente com os demais campos.
+- Condicao de validacao rg/matricula simplificada para `if (!isImage)` com mensagem clara: "Envie uma foto ou captura de tela do documento (JPG ou PNG). PDF nao e aceito."
+- Removidas variaveis mortas: `isPDF`, `fileIsPDF`, `fileIsImage`. Helper text (`:446`) passa a exibir so "JPEG, PNG" automaticamente (deriva de `acceptedTypes`).
+- Nenhuma UI renderiza PDF inline (Perfil/Upload/Admin so exibem `<img>` para `mime_type` de imagem), entao PDFs ja enviados nao sao afetados na visualizacao/download.
+- PENDENTE (faixa vermelha ainda aberta): o backend `supabase/functions/validate-document-v2/index.ts:97` continua aceitando PDF para rg/matricula, e nao ha `allowed_mime_types` no bucket `documents` — upload de PDF via API direta ainda passa. Gate de backend nao foi feito nesta sessao.
+- Contexto do drift original de motivo de rejeicao de PDF em `docs/verificacao-rejeicao-documentos-2026-07-10.md` e da remocao em `docs/verificacao-remover-pdf-upload-2026-07-10.md`.
+
+### 3. Trigger `on_payment_approved()` — fix de cast UUID + versionamento (2026-07-10)
+
+- Bug corrigido: `v_original_payment_id` (TEXT, de `metadata->>'original_payment_id'`) era comparado com `student_cards.payment_id` (UUID) sem `::uuid`, causando `operator does not exist: uuid = text` e abortando a transacao — o upsell fisico nunca saia de `pending`.
+- A funcao `on_payment_approved()` NAO era versionada (existia so no banco de producao). Agora versionada em `supabase/migrations/20260710_versionar_on_payment_approved.sql`, com o cast `::uuid` no CASO 1 (upsell fisico) e CASO 2 (fisica avulsa). O CASO 3 (pagamento principal digital) nao era afetado.
+- A migration tambem versiona o trigger `trigger_on_payment_approved` (`AFTER UPDATE ON payments`, `WHEN NEW.status = 'approved' AND OLD.status IS DISTINCT FROM 'approved'`), com `DROP TRIGGER IF EXISTS` idempotente.
+- Analise completa em `docs/verificacao-fix-trigger-on-payment-approved-2026-07-10.md`.
+
+### 4. Triggers em `payments` (coexistencia — documentar naming confuso)
+
+Existem funcoes/triggers distintas reagindo ao approve de `payments`:
+
+- Trigger `on_payment_approved` (nome do trigger) → chama a funcao **`create_student_card_on_payment()`** (versionada desde o inicio em `supabase/migrations/20260102205259_*.sql:16` e `20251228151731_*.sql:2`). Faz INSERT da carteira no pagamento principal e UPDATE `is_physical` no upsell; ja usa `(NEW.metadata->>'original_payment_id')::UUID` com cast correto e `ON CONFLICT (payment_id) DO NOTHING`.
+- Trigger `trigger_on_payment_approved` → chama a funcao **`on_payment_approved()`** (versionada agora). Gerencia `current_onboarding_step` e atualiza `is_physical` para upsell/fisica avulsa.
+- Trigger `update_payments_updated_at` (`BEFORE UPDATE`) → `update_updated_at_column()`.
+- ATENCAO ao naming: o trigger chamado `on_payment_approved` NAO chama a funcao `on_payment_approved()` — ele chama `create_student_card_on_payment()`. Sao coisas diferentes de mesmo nome-base. Para upsell as duas funcoes atualizam `is_physical = true` (redundante, mas sem duplicar carteira gracas ao guard `is_upsell`/`ON CONFLICT`). O binding real deve ser confirmado no banco com `SELECT ... FROM pg_trigger` antes de mexer.
+
+### Pendencias abertas apos esta sessao
+
+- Meta Conversions API server-side (a partir de `mercadopago-webhook`) para capturar Purchase de PIX quando o browser nao esta aberto — o pixel client-side nao cobre esse caso.
+- Google Ads: a conversao de PIX tem o MESMO problema do `fbq` (gtag client-side em `PaymentSuccessPage.tsx` depende do usuario chegar na pagina de sucesso) — precisa de Enhanced Conversions/CAPI server-side.
+- Gate de backend para PDF em `supabase/functions/validate-document-v2/index.ts:97` e, opcionalmente, `allowed_mime_types` no bucket `documents`.
+
 ## Fluxo real do frontend
 
 ### 1. Entrada publica, auth e PKCE
