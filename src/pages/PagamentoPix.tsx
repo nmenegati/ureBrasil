@@ -90,7 +90,7 @@ export default function PagamentoPix() {
             content_ids: [paymentId],
             content_type: 'product',
             content_name: 'Carteira Estudantil Digital',
-          });
+          }, { eventID: paymentId });
         }
 
         toast.success(successMessage || "Pagamento confirmado!");

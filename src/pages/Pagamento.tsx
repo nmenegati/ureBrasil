@@ -623,7 +623,7 @@ export default function Pagamento() {
             content_ids: [paymentId],
             content_type: 'product',
             content_name: plan.name,
-          });
+          }, { eventID: paymentId });
         }
 
         navigate("/pagamento/sucesso", {
