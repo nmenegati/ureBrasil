@@ -123,8 +123,15 @@ export default function Carteirinha() {
         .getPublicUrl(profile.profile_photo_url);
 
       if (publicData?.publicUrl) {
-        setProfilePhotoUrl(publicData.publicUrl);
-        return;
+        try {
+          const res = await fetch(publicData.publicUrl, { method: 'HEAD' });
+          if (res.ok) {
+            setProfilePhotoUrl(publicData.publicUrl);
+            return;
+          }
+        } catch {
+          // Falhou - tentar fallback
+        }
       }
 
       const { data, error } = await supabase.storage
@@ -195,6 +202,24 @@ export default function Carteirinha() {
       setGeneratingImage(true);
 
       const html2canvas = (await import('html2canvas')).default;
+
+      if (cardRef.current) {
+        const imgs = cardRef.current.querySelectorAll('img');
+        if (imgs.length > 0) {
+          await Promise.all(
+            Array.from(imgs).map((img) =>
+              img.complete
+                ? Promise.resolve()
+                : new Promise<void>((resolve) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                  })
+            )
+          );
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+      }
+
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
         useCORS: true,
