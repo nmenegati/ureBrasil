@@ -70,6 +70,7 @@ export default function Carteirinha() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [photoLoaded, setPhotoLoaded] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -112,36 +113,42 @@ export default function Carteirinha() {
   }, [navigate]);
 
   useEffect(() => {
+    setPhotoLoaded(false);
+
     const loadProfilePhoto = async () => {
-      if (!profile?.profile_photo_url) {
-        setProfilePhotoUrl(null);
-        return;
-      }
-
-      const { data: publicData } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(profile.profile_photo_url);
-
-      if (publicData?.publicUrl) {
-        try {
-          const res = await fetch(publicData.publicUrl, { method: 'HEAD' });
-          if (res.ok) {
-            setProfilePhotoUrl(publicData.publicUrl);
-            return;
-          }
-        } catch {
-          // Falhou - tentar fallback
+      try {
+        if (!profile?.profile_photo_url) {
+          setProfilePhotoUrl(null);
+          return;
         }
-      }
 
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .createSignedUrl(profile.profile_photo_url, 600);
+        const { data: publicData } = supabase.storage
+          .from('profile-photos')
+          .getPublicUrl(profile.profile_photo_url);
 
-      if (!error && data?.signedUrl) {
-        setProfilePhotoUrl(data.signedUrl);
-      } else {
-        setProfilePhotoUrl(null);
+        if (publicData?.publicUrl) {
+          try {
+            const res = await fetch(publicData.publicUrl, { method: 'HEAD' });
+            if (res.ok) {
+              setProfilePhotoUrl(publicData.publicUrl);
+              return;
+            }
+          } catch {
+            // Falhou - tentar fallback
+          }
+        }
+
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(profile.profile_photo_url, 600);
+
+        if (!error && data?.signedUrl) {
+          setProfilePhotoUrl(data.signedUrl);
+        } else {
+          setProfilePhotoUrl(null);
+        }
+      } finally {
+        setPhotoLoaded(true);
       }
     };
 
@@ -298,11 +305,12 @@ export default function Carteirinha() {
   useEffect(() => {
     if (!profile || !card) return;
     if (!qrCodeUrl) return;
+    if (!photoLoaded) return;
     if (card.digital_card_url || generatingImage) return;
     if (!cardRef.current) return;
 
     generateAndSaveCard();
-  }, [profile, card, qrCodeUrl, generatingImage, generateAndSaveCard]);
+  }, [profile, card, qrCodeUrl, photoLoaded, generatingImage, generateAndSaveCard]);
 
   if (isChecking || loading) {
     return (
