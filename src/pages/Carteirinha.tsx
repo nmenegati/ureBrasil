@@ -233,10 +233,12 @@ export default function Carteirinha() {
         throw new Error('Não foi possível obter a URL pública da carteirinha');
       }
 
+      const cacheBuster = `${publicUrl}?t=${Date.now()}`;
+
       const { error: updateError } = await supabase
         .from('student_cards')
         .update({
-          digital_card_url: publicUrl,
+          digital_card_url: cacheBuster,
           digital_card_generated: true,
         })
         .eq('student_id', studentProfile.id)
@@ -251,7 +253,7 @@ export default function Carteirinha() {
         current
           ? {
               ...current,
-              digital_card_url: publicUrl,
+              digital_card_url: cacheBuster,
               digital_card_generated: true,
             }
           : current
