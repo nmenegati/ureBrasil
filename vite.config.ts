@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => ({
         display: "standalone",
         orientation: "portrait",
         scope: "/",
-        start_url: "/",
+        start_url: "/carteirinha",
         icons: [
           {
             src: "/icons/icon-192x192.png",
