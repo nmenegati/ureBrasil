@@ -8,19 +8,18 @@ const corsHeaders = {
 }
 
 interface CpfHubSuccess {
-  success: true
+  code: 200
   data: {
-    name: string
-    birthDate: string
-    gender?: string
+    nome: string
+    data_nascimento: string
+    genero?: string
   }
 }
 
 interface CpfHubError {
-  success: false
-  error?: {
-    message?: string
-  }
+  code: number
+  message?: string
+  error?: string
 }
 
 type CpfHubResponse = CpfHubSuccess | CpfHubError | Record<string, unknown>
@@ -172,32 +171,43 @@ serve(async (req) => {
       )
     }
 
-    const response = await fetch(`https://api.cpfhub.io/cpf/${cpf}`, {
+    const response = await fetch(`https://apicpf.com/api/consulta?cpf=${cpf}`, {
       headers: {
-        "x-api-key": apiKey,
+        "X-API-KEY": apiKey,
         Accept: "application/json",
       },
     })
 
+    // Tratar 429 (rate limit diário da APICPF) antes de parsear JSON
+    if (response.status === 429) {
+      return new Response(
+        JSON.stringify({
+          valid: false,
+          error: "Serviço de consulta de CPF temporariamente indisponível. Tente novamente mais tarde.",
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
     const result = (await response.json()) as CpfHubResponse
 
-    const isSuccess = "success" in result ? result.success === true : response.ok
+    const isSuccess = "code" in result ? result.code === 200 : response.ok
 
     if (isSuccess && "data" in result && result.data) {
       const data = (result as CpfHubSuccess).data
 
       await supabase.from("cpf_validations").insert({
         cpf_hash: cpfHash,
-        name: data.name,
-        birth_date: data.birthDate,
+        name: data.nome,
+        birth_date: data.data_nascimento,
       })
 
       return new Response(
         JSON.stringify({
           valid: true,
-          nome: data.name,
-          dataNascimento: data.birthDate,
-          genero: data.gender ?? null,
+          nome: data.nome,
+          dataNascimento: data.data_nascimento,
+          genero: data.genero ?? null,
           fromCache: false,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -205,9 +215,11 @@ serve(async (req) => {
     }
 
     const errorMessage =
-      "error" in result && result.error && typeof result.error.message === "string"
-        ? result.error.message
-        : "CPF não encontrado"
+      "message" in result && typeof result.message === "string"
+        ? result.message
+        : "error" in result && typeof result.error === "string"
+          ? result.error
+          : "CPF não encontrado"
 
     return new Response(
       JSON.stringify({ valid: false, error: errorMessage }),

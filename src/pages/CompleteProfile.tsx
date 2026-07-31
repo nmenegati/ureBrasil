@@ -281,7 +281,7 @@ export default function CompleteProfile() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [institution, setInstitution] = useState('');
-  const [course, setCourse] = useState('');
+  const [course, setCourse] = useState('Direito');
   const [period, setPeriod] = useState('');
   const [enrollmentNumber, setEnrollmentNumber] = useState('');
   const [educationLevel, setEducationLevel] = useState<
@@ -291,7 +291,7 @@ export default function CompleteProfile() {
   const [isCepResolved, setIsCepResolved] = useState(false);
   const [openInstitution, setOpenInstitution] = useState(false);
   const [openCourse, setOpenCourse] = useState(false);
-  const [courseType, setCourseType] = useState<'direito' | 'outro'>('outro');
+  const [courseType, setCourseType] = useState<'direito' | 'outro'>('direito');
   const [customCourseName, setCustomCourseName] = useState('');
   const hasPkceCode = new URLSearchParams(location.search).has('code');
   const [pkceGraceExpired, setPkceGraceExpired] = useState(!hasPkceCode);
@@ -476,11 +476,16 @@ export default function CompleteProfile() {
 
     setLoading(true);
 
-    const isLawStudent =
-      (educationLevel === 'graduacao' ||
-        educationLevel === 'pos_lato' ||
-        educationLevel === 'stricto_sensu') &&
-      courseType === 'direito';
+    const isEligibleLevel =
+      educationLevel === 'graduacao' ||
+      educationLevel === 'pos_lato' ||
+      educationLevel === 'stricto_sensu';
+
+    const courseIndicatesDireito =
+      courseType === 'direito' ||
+      (course && course.trim().toLowerCase().includes('direito'));
+
+    const isLawStudent = isEligibleLevel && courseIndicatesDireito;
 
     // ID do plano Geral Digital para não-Direito
     const PLAN_GERAL_DIGITAL_ID = 'a20e423f-c222-47b0-814f-e532f1bbe0c4';
@@ -756,9 +761,10 @@ export default function CompleteProfile() {
                           }
                           onClick={() => {
                             setEducationLevel(level.id as typeof educationLevel);
-                            setCourse('');
+                            const levelCanBeLaw = level.id === 'graduacao' || level.id === 'pos_lato';
+                            setCourse(levelCanBeLaw ? 'Direito' : '');
                             setPeriod('');
-                            setCourseType('outro');
+                            setCourseType(levelCanBeLaw ? 'direito' : 'outro');
                             setCustomCourseName('');
                           }}
                           >
@@ -839,21 +845,6 @@ export default function CompleteProfile() {
                         <div className="grid grid-cols-2 gap-2">
                           <Button
                             type="button"
-                            variant={courseType === 'outro' ? 'default' : 'outline'}
-                            className={
-                              'justify-start flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ' +
-                              (courseType === 'outro' ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
-                            }
-                            onClick={() => {
-                              setCourseType('outro');
-                              setCourse(customCourseName);
-                            }}
-                          >
-                            <NotebookPen className="h-4 w-4" />
-                            <span>Outros cursos</span>
-                          </Button>
-                          <Button
-                            type="button"
                             variant={courseType === 'direito' ? 'default' : 'outline'}
                             className={
                               'justify-start flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ' +
@@ -867,6 +858,21 @@ export default function CompleteProfile() {
                           >
                             <Scale className="h-4 w-4" />
                             <span>Curso de Direito</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={courseType === 'outro' ? 'default' : 'outline'}
+                            className={
+                              'justify-start flex items-center gap-2 px-2 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm ' +
+                              (courseType === 'outro' ? '' : 'bg-sky-200 border-sky-500 hover:bg-sky-300')
+                            }
+                            onClick={() => {
+                              setCourseType('outro');
+                              setCourse(customCourseName);
+                            }}
+                          >
+                            <NotebookPen className="h-4 w-4" />
+                            <span>Outros cursos</span>
                           </Button>
                         </div>
                         <div className="space-y-2">
