@@ -382,23 +382,20 @@ export default function CompleteProfile() {
           setEducationLevel('pos_lato');
         }
 
+        const effectiveLevel = data.education_level || 'graduacao';
         const isGradOrPost =
-          data.education_level === 'graduacao' ||
-          data.education_level === 'pos_lato' ||
-          data.education_level === 'stricto_sensu';
+          effectiveLevel === 'graduacao' ||
+          effectiveLevel === 'pos_lato' ||
+          effectiveLevel === 'stricto_sensu';
 
-        if (isGradOrPost && data.course === 'Direito') {
+        if (isGradOrPost && (!data.course || !data.course.trim() || data.course?.trim() === 'Direito')) {
+          setCourse('Direito');
           setCourseType('direito');
           setCustomCourseName('');
         } else if (isGradOrPost) {
-          if (!data.course || !data.course.trim()) {
-            setCourse('Direito');
-            setCourseType('direito');
-            setCustomCourseName('');
-          } else {
-            setCourseType('outro');
-            setCustomCourseName(data.course);
-          }
+          setCourseType('outro');
+          setCustomCourseName(data.course || '');
+          setCourse(data.course || '');
         } else {
           setCourseType('outro');
           setCustomCourseName('');
