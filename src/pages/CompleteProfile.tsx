@@ -391,8 +391,14 @@ export default function CompleteProfile() {
           setCourseType('direito');
           setCustomCourseName('');
         } else if (isGradOrPost) {
-          setCourseType('outro');
-          setCustomCourseName(data.course || '');
+          if (!data.course || !data.course.trim()) {
+            setCourse('Direito');
+            setCourseType('direito');
+            setCustomCourseName('');
+          } else {
+            setCourseType('outro');
+            setCustomCourseName(data.course);
+          }
         } else {
           setCourseType('outro');
           setCustomCourseName('');
