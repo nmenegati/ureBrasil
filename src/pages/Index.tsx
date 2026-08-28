@@ -988,13 +988,15 @@ const Index = () => {
                   </h4>
                 </div>
                 
-                <p className="text-muted-foreground mb-4">
-                  Após o pagamento, você poderá adquirir a carteira física  
-                  por apenas{" "}
+                <p className="text-muted-foreground">
+                  Adicione a carteira física por{" "}
                   <strong className="text-foreground">
                     {physicalUpsellPrice !== null ? formatPrice(physicalUpsellPrice) : "R$ ..."}
                   </strong>
-                  .
+                  {" "}no mesmo pedido da Carteira Digital.
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Compra avulsa da carteira física após a contratação da digital: R$ 24,00.
                 </p>
                 
                 <div className="flex flex-wrap justify-center gap-4 text-sm">

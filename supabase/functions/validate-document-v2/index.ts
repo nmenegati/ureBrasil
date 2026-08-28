@@ -298,7 +298,16 @@ REJEITAR SE:
 - Ilegível ou adulterado
 - Não é documento oficial (ex: histórico escolar não serve)
 
-Seja rigoroso na verificação de NOME e INSTITUIÇÃO.
+COMPARAÇÃO DE NOME — TOLERÂNCIAS:
+- Ordem de sobrenomes diferente: ACEITAR
+- Acentuação diferente: ACEITAR (ex: "André" vs "Andre")
+- Abreviações leves: ACEITAR quando o restante do nome confere (ex: "José Carlos Silva" vs "J. Carlos Silva")
+- REJEITAR quando o nome for materialmente incompatível com o cadastro
+
+COMPARAÇÃO DE INSTITUIÇÃO — TOLERÂNCIAS:
+- Siglas vs nome completo: ACEITAR (ex: "UFJF" vs "Universidade Federal de Juiz de Fora")
+- Nome parcial: ACEITAR (ex: "Estácio" vs "Faculdade Estácio de Sá")
+- REJEITAR quando a instituição for claramente diferente
 
 TOM DAS MENSAGENS:
 - Trate o usuário como "você" (nunca "o aluno", "o discente", "o indivíduo")
@@ -335,32 +344,53 @@ DADOS FORNECIDOS DO CADASTRO:
 - CPF: ${context.cpf || 'N/A'}
 - Número de imagens enviadas: ${imageCount} (1 = apenas uma face, 2 = frente e verso separados)
 
-REGRAS POR TIPO DE DOCUMENTO:
+ORIENTAÇÃO DE LEITURA:
+- O documento pode estar ROTACIONADO (90°, 180° ou 270°). Tente ler em todas as orientações antes de concluir que é ilegível.
+- Campos podem estar na vertical ou invertidos. Gire mentalmente a imagem se necessário.
 
-CNH ou PASSAPORTE:
-- 1 imagem é suficiente para aprovação
-- Valide nome, CPF (se visível) e validade
+REGRAS DE VALIDADE POR TIPO DE DOCUMENTO:
 
-RG — ATENÇÃO:
+CNH:
+- TEM data de validade explícita impressa no documento
+- Rejeitar SOMENTE se a data de validade já passou (está no passado em relação a hoje)
+- A data de EMISSÃO da CNH é irrelevante para rejeição
+
+PASSAPORTE:
+- TEM data de validade explícita
+- Rejeitar SOMENTE se a data de validade já passou
+
+RG:
+- NÃO tem data de validade. A data impressa no RG é a DATA DE EXPEDIÇÃO (quando foi emitido)
+- NUNCA rejeitar RG por ser "antigo" ou "vencido". RG NÃO VENCE para fins de carteirinha estudantil
+- A data de expedição do RG é IRRELEVANTE para aprovação ou rejeição
+
+REGRAS POR FORMATO DE ENVIO (RG):
 - Se ${imageCount} === 1: verifique se a imagem contém VISIVELMENTE os dois lados lado a lado
   - Se sim (imagem combinada com frente e verso claramente visíveis): valide normalmente
-  - Se não (apenas uma face do RG): REJEITAR e o campo reason DEVE sempre começar com "VERSO_AUSENTE:" — mesmo que haja outros problemas como nome divergente. Exemplo: "VERSO_AUSENTE: Envie o verso do RG. Além disso, o nome não confere."
+  - Se não (apenas uma face do RG): REJEITAR e o campo reason DEVE sempre começar com "VERSO_AUSENTE:" — mesmo que haja outros problemas. Exemplo: "VERSO_AUSENTE: Envie o verso do RG."
 - Se ${imageCount} === 2: frente e verso enviados separadamente — valide normalmente
 
 APROVAR SE:
-1. CNH ou Passaporte válido com dados conferindo
-2. RG com frente E verso (combinados ou separados) com dados conferindo
+1. CNH ou Passaporte com dados conferindo e validade NÃO expirada
+2. RG com frente E verso (combinados ou separados) e dados conferindo
 3. Foto do titular visível e clara
-4. Nome confere com cadastro
+4. Nome COMPATÍVEL com cadastro (ver tolerâncias abaixo)
 5. CPF confere com cadastro (se visível)
-6. Texto legível
+6. Texto legível (considerar rotação)
+
+COMPARAÇÃO DE NOME — TOLERÂNCIAS:
+- Ordem de sobrenomes diferente: ACEITAR (ex: "Maria Silva Santos" vs "Maria Santos Silva")
+- Acentuação diferente: ACEITAR (ex: "André" vs "Andre", "João" vs "Joao")
+- Abreviações leves: ACEITAR quando o restante do nome confere (ex: "José Carlos Silva" vs "J. Carlos Silva")
+- Nome social diferente do civil: marcar como "review", não rejeitar
+- REJEITAR quando o nome for materialmente incompatível com o cadastro (ex: "João Silva" vs "Maria Souza" — pessoa completamente diferente)
 
 REJEITAR SE:
-- Nome diferente do cadastro
-- CPF diferente do cadastro (se visível)
-- Documento vencido
+- Nome materialmente incompatível com cadastro (pessoa diferente)
+- CPF diferente do cadastro (se visível no documento)
+- CNH ou Passaporte com validade EXPIRADA (data de validade no passado)
 - Print de tela ou foto de foto
-- Ilegível ou rasurado
+- Ilegível ou rasurado (mesmo após tentar ler em diferentes orientações)
 - RG com apenas uma face visível (sem o verso)
 
 Ao comparar CPFs, IGNORE toda formatação (pontos, traços, espaços). Exemplo: "780.123.254-20" e "78012325420" são o MESMO CPF.
@@ -372,12 +402,12 @@ TOM DAS MENSAGENS:
 - Exemplos de mensagens:
   - BOM: "O nome no documento não confere com o cadastro. Verifique se digitou corretamente em 'Meu Perfil' ou envie o documento correto."
   - BOM: "VERSO_AUSENTE: Envie o verso do RG"
-  - BOM: "Seu documento parece estar vencido. Envie um documento dentro da validade."
-  - BOM: "Não conseguimos ler o documento. Tente uma foto com melhor iluminação e sem reflexos."
+  - BOM: "Sua CNH está com a validade expirada. Envie uma CNH dentro da validade ou outro documento com foto."
+  - BOM: "Não conseguimos ler o documento. Tente uma foto com melhor iluminação, sem cortes e com o documento na posição correta (não rotacionado)."
   - BOM: "O CPF no documento é diferente do informado no cadastro. Confira seus dados em 'Meu Perfil'."
   - RUIM: "Documento do titular não confere com cadastro"
   - RUIM: "RG rejeitado por inconsistência de dados"
-  - RUIM: "Documento ilegível"
+  - RUIM: "Seu documento parece estar vencido"
 
 FORMATO DE RESPOSTA:
 {
@@ -464,7 +494,8 @@ REFERÊNCIA TEMPORAL:
 - Hoje é ${hoje} (timezone America/Sao_Paulo). NÃO trate datas de ${new Date().getFullYear()} como futuras.
 - Datas no documento seguem o formato brasileiro DD/MM/AAAA (dia/mês/ano), não MM/DD.
 - DATA DE EMISSÃO / EXPEDIÇÃO (ex.: comprovante de matrícula): deve ser recente — aceitar se estiver entre ${dataCorte} e até 2 dias após hoje. Rejeitar se for anterior a ${dataCorte} (mais de 6 meses) ou mais de 2 dias no futuro.
-- DATA DE VALIDADE / VENCIMENTO (ex.: CNH, RG): deve estar NO FUTURO. O documento é válido enquanto o vencimento for igual ou posterior a hoje; rejeitar apenas se já vencido.
+- DATA DE VALIDADE / VENCIMENTO (ex.: CNH, Passaporte): deve estar NO FUTURO. O documento é válido enquanto o vencimento for igual ou posterior a hoje; rejeitar apenas se já vencido.
+- RG: a data impressa no RG é de EXPEDIÇÃO, NÃO de validade. RG NÃO VENCE. NUNCA rejeitar RG por data de expedição antiga.
 - Extraia a data do documento e reporte em extracted_data.date ANTES de julgar.
 `
 
