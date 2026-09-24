@@ -338,6 +338,7 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           digital_card_url: string | null
+          generated_at: string | null
           id: string
           is_physical: boolean
           issued_at: string
@@ -358,6 +359,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           digital_card_url?: string | null
+          generated_at?: string | null
           id?: string
           is_physical?: boolean
           issued_at?: string
@@ -380,6 +382,7 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           digital_card_url?: string | null
+          generated_at?: string | null
           id?: string
           is_physical?: boolean
           issued_at?: string

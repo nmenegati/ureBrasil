@@ -272,6 +272,7 @@ export default function Carteirinha() {
         .update({
           digital_card_url: cacheBuster,
           digital_card_generated: true,
+          generated_at: new Date().toISOString(),
         })
         .eq('student_id', studentProfile.id)
         .eq('status', 'active');

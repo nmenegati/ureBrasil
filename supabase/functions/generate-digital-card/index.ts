@@ -339,6 +339,7 @@ Dimensões finais: 1024x1536 (2:3).
       .update({
         digital_card_url: publicDigital.publicUrl,
         digital_card_generated: true,
+        generated_at: new Date().toISOString(),
         generation_attempts: attemptNumber + 1,
         last_generation_error: null,
       })
