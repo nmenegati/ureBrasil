@@ -925,10 +925,10 @@ export default function Perfil() {
                         }))
                       }
                       disabled={academicLocked}
-                      maxLength={14}
+                      maxLength={12}
                     />
                     <span className="text-xs text-muted-foreground block text-right mt-1">
-                      {academicForm.enrollment_number.length}/14
+                      {academicForm.enrollment_number.length}/12
                     </span>
                   </div>
                 </div>

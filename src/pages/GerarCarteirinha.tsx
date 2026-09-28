@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, MessageCircle } from 'lucide-react';
 import { ProgressBar } from '@/components/ProgressBar';
 import { formatBirthDate } from '@/lib/dateUtils';
-import { formatEnrollmentNumber } from '@/lib/validators';
 import { useOnboardingGuard } from '@/hooks/useOnboardingGuard';
 import { toast } from 'sonner';
 import { SupportModal } from '@/components/SupportModal';
@@ -220,7 +219,7 @@ export default function GerarCarteirinha() {
               <p>
                 <strong>Matrícula:</strong>{" "}
                 {profile.enrollment_number
-                  ? formatEnrollmentNumber(String(profile.enrollment_number))
+                  ? String(profile.enrollment_number)
                   : 'Não informado'}
               </p>
             </div>

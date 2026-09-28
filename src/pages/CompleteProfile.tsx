@@ -1057,12 +1057,12 @@ export default function CompleteProfile() {
                         id="enrollmentNumber"
                         type="text"
                         inputMode="numeric"
-                        placeholder="Ex: 345.678"
+                        placeholder="Ex: 123456789012"
                         value={enrollmentNumber}
                         onChange={(e) => {
                           setEnrollmentNumber(formatEnrollmentNumber(e.target.value));
                         }}
-                        maxLength={11}
+                        maxLength={12}
                         className="bg-background text-foreground placeholder:text-muted-foreground border-input focus:border-primary focus:ring-primary/20 h-11 text-base"
                         required
                       />

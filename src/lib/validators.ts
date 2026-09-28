@@ -73,20 +73,9 @@ export function formatCEP(value: string): string {
   return !match[2] ? match[1] : `${match[1]}-${match[2]}`;
 }
 
-// Formatar número de matrícula em blocos com ponto (ex: 1.234.567.890)
+// Limpar matrícula para dígitos e limitar em 12 caracteres
 export function formatEnrollmentNumber(value: string): string {
-  const cleaned = value.replace(/\D/g, '');
-  if (!cleaned) return '';
-  if (cleaned.length <= 3) return cleaned;
-
-  const firstGroupLength = cleaned.length % 3 || 3;
-  const groups = [cleaned.slice(0, firstGroupLength)];
-
-  for (let i = firstGroupLength; i < cleaned.length; i += 3) {
-    groups.push(cleaned.slice(i, i + 3));
-  }
-
-  return groups.join('.');
+  return value.replace(/\D/g, '').slice(0, 12);
 }
 
 // Formatar data de nascimento (dd/mm/aaaa)

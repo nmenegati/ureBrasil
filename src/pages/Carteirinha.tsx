@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
 import { formatBirthDate } from '@/lib/dateUtils';
-import { formatEnrollmentNumber } from '@/lib/validators';
 import { Header } from '@/components/Header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -424,7 +423,7 @@ export default function Carteirinha() {
                         course={profile.course}
                         enrollmentNumber={
                           profile.enrollment_number
-                            ? formatEnrollmentNumber(String(profile.enrollment_number))
+                            ? String(profile.enrollment_number)
                             : null
                         }
                         usageCode={card.usage_code}
