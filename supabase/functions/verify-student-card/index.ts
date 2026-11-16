@@ -162,14 +162,37 @@ serve(async (req) => {
     let photoUrl: string | null = null;
 
     if (profile?.profile_photo_url) {
+      const photoPath = profile.profile_photo_url;
+
       const { data: signed, error: signedError } = await supabase.storage
         .from("profile-photos")
-        .createSignedUrl(profile.profile_photo_url, 300);
+        .createSignedUrl(photoPath, 300);
 
       if (!signedError && signed?.signedUrl) {
         photoUrl = signed.signedUrl;
+      } else {
+        console.warn(
+          "[VERIFY_STUDENT_CARD] Foto nao encontrada em profile-photos. Tentando documents.",
+          { studentId: card.student_id },
+        );
+
+        const { data: signedFallback, error: signedFallbackError } =
+          await supabase.storage
+            .from("documents")
+            .createSignedUrl(photoPath, 300);
+
+        if (!signedFallbackError && signedFallback?.signedUrl) {
+          photoUrl = signedFallback.signedUrl;
+        } else {
+          console.warn(
+            "[VERIFY_STUDENT_CARD] Foto nao encontrada em nenhum bucket para profile_photo_url.",
+            { studentId: card.student_id },
+          );
+        }
       }
-    } else if (profile?.user_id) {
+    }
+
+    if (!photoUrl && profile?.user_id) {
       const candidatePath = `${profile.user_id}/foto`;
       const { data: signed, error: signedError } = await supabase.storage
         .from("profile-photos")
@@ -177,6 +200,11 @@ serve(async (req) => {
 
       if (!signedError && signed?.signedUrl) {
         photoUrl = signed.signedUrl;
+      } else {
+        console.warn(
+          "[VERIFY_STUDENT_CARD] Fallback legado de foto tambem falhou.",
+          { studentId: card.student_id },
+        );
       }
     }
 
