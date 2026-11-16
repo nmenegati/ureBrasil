@@ -81,16 +81,123 @@ serve(async (req) => {
       metadata = {},
     } = body;
 
-    // 3. Buscar perfil do estudante
+    // 3. Buscar perfil do estudante (inclui plan_id para validação de preço)
     const { data: profile } = await supabase
       .from("student_profiles")
-      .select("id, full_name, cpf, phone, cep, street, number, neighborhood, city, state")
+      .select("id, full_name, cpf, phone, cep, street, number, neighborhood, city, state, plan_id")
       .eq("user_id", user.id)
       .single();
 
     if (!profile) throw new Error("Perfil não encontrado");
 
-    // 4. Determinar ambiente
+    // 4. VALIDAÇÃO SERVER-SIDE: determinar tipo de compra e preço correto
+    // Flags podem vir no nível de cima OU dentro de metadata (cada tela monta diferente).
+    const effectiveIsUpsell = is_upsell === true || metadata?.is_upsell === true;
+    const effectiveIsAvulsa = metadata?.is_physical_avulsa === true;
+    const effectiveOriginalPaymentId =
+      original_payment_id ||
+      (typeof metadata?.original_payment_id === "string" ? metadata.original_payment_id : null);
+
+    let validatedIsUpsell = false;
+    let validatedIsAvulsa = false;
+    let validatedOriginalPaymentId: string | null = null;
+    let resolvedPlanId: string | null = null;
+    let serverAmount: number;
+
+    if (effectiveIsUpsell && effectiveOriginalPaymentId) {
+      const { data: origPayment } = await supabase
+        .from("payments")
+        .select("id, student_id, status")
+        .eq("id", effectiveOriginalPaymentId)
+        .single();
+
+      if (origPayment && origPayment.student_id === profile.id && origPayment.status === "approved") {
+        validatedIsUpsell = true;
+        validatedOriginalPaymentId = origPayment.id;
+      } else {
+        console.error(`🚫 UPSELL RECUSADO: student_id=${profile.id} original_payment_id=${effectiveOriginalPaymentId} motivo=${!origPayment ? "não encontrado" : origPayment.student_id !== profile.id ? "pertence a outro aluno" : "status=" + origPayment.status}`);
+        return new Response(JSON.stringify({ success: false, error: "Pagamento original não encontrado ou não pertence a este aluno" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (!validatedIsUpsell && effectiveIsAvulsa && effectiveOriginalPaymentId) {
+      const { data: origPayment } = await supabase
+        .from("payments")
+        .select("id, student_id, status")
+        .eq("id", effectiveOriginalPaymentId)
+        .single();
+
+      if (origPayment && origPayment.student_id === profile.id && origPayment.status === "approved") {
+        validatedIsAvulsa = true;
+        validatedOriginalPaymentId = origPayment.id;
+      } else {
+        console.error(`🚫 AVULSA RECUSADA: student_id=${profile.id} original_payment_id=${effectiveOriginalPaymentId} motivo=${!origPayment ? "não encontrado" : origPayment.student_id !== profile.id ? "pertence a outro aluno" : "status=" + origPayment.status}`);
+        return new Response(JSON.stringify({ success: false, error: "Pagamento original não encontrado ou não pertence a este aluno" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    if (validatedIsUpsell) {
+      const { data: upsellPlan } = await supabase
+        .from("plans")
+        .select("id, price")
+        .eq("type", "fisica_upsell")
+        .eq("is_active", true)
+        .single();
+
+      if (!upsellPlan) {
+        return new Response(JSON.stringify({ success: false, error: "Plano de upsell não encontrado ou inativo" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      serverAmount = upsellPlan.price;
+      resolvedPlanId = upsellPlan.id;
+    } else if (validatedIsAvulsa) {
+      const { data: avulsaPlan } = await supabase
+        .from("plans")
+        .select("id, price")
+        .eq("type", "fisica_avulsa")
+        .eq("is_active", true)
+        .single();
+
+      if (!avulsaPlan) {
+        return new Response(JSON.stringify({ success: false, error: "Plano de carteira física não encontrado ou inativo" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      serverAmount = avulsaPlan.price;
+      resolvedPlanId = avulsaPlan.id;
+    } else {
+      if (!profile.plan_id) {
+        return new Response(JSON.stringify({ success: false, error: "Nenhum plano vinculado ao perfil" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: mainPlan } = await supabase
+        .from("plans")
+        .select("id, price")
+        .eq("id", profile.plan_id)
+        .eq("is_active", true)
+        .single();
+
+      if (!mainPlan) {
+        return new Response(JSON.stringify({ success: false, error: "Plano não encontrado ou inativo" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      serverAmount = mainPlan.price;
+      resolvedPlanId = mainPlan.id;
+    }
+
+    if (typeof amount === "number" && Number(amount) !== serverAmount) {
+      console.warn(`⚠️ AMOUNT MISMATCH: student_id=${profile.id} body_amount=${amount} server_amount=${serverAmount} is_upsell=${validatedIsUpsell} is_avulsa=${validatedIsAvulsa}`);
+    }
+
+    // 5. Determinar ambiente
     const mode = Deno.env.get("MP_MODE") || "sandbox";
     const accessToken = mode === "production"
       ? Deno.env.get("MP_PROD_ACCESS_TOKEN")
@@ -98,18 +205,19 @@ serve(async (req) => {
 
     if (!accessToken) throw new Error("MP_ACCESS_TOKEN não configurado");
 
-    // 5. Montar payload Mercado Pago
+    // 6. Montar payload Mercado Pago (valor do SERVIDOR, dados do BANCO)
+    const payerCpf = profile.cpf?.replace(/\D/g, "") || "";
     let mpPayload: any = {
-      transaction_amount: Number(amount),
+      transaction_amount: serverAmount,
       description,
       external_reference: `ure_${profile.id}_${Date.now()}`,
       payer: {
-        email: payer_email || user.email,
+        email: user.email,
         first_name: profile.full_name?.split(" ")[0] || "Estudante",
         last_name: profile.full_name?.split(" ").slice(1).join(" ") || "URE",
         identification: {
-          type: payer_doc_type,
-          number: payer_doc_number || profile.cpf?.replace(/\D/g, ""),
+          type: "CPF",
+          number: payerCpf,
         },
       },
     };
@@ -125,7 +233,7 @@ serve(async (req) => {
       mpPayload.payment_method_id = "pix";
     }
 
-    // 6. Enviar para Mercado Pago
+    // 7. Enviar para Mercado Pago
     const idempotencyKey = crypto.randomUUID();
 
     const mpResponse = await fetch("https://api.mercadopago.com/v1/payments", {
@@ -145,7 +253,7 @@ serve(async (req) => {
       throw new Error(mpData.message || `Erro Mercado Pago: ${mpResponse.status}`);
     }
 
-    // 7. Mapear status MP → nosso status
+    // 8. Mapear status MP → nosso status
     const statusMap: Record<string, string> = {
       approved: "approved",
       pending: "pending",
@@ -160,7 +268,7 @@ serve(async (req) => {
 
     const paymentStatus = statusMap[mpData.status] || "pending";
 
-    // 8. Preparar dados PIX (se aplicável)
+    // 9. Preparar dados PIX (se aplicável)
     let pixData: any = {};
     if (payment_method === "pix" && mpData.point_of_interaction?.transaction_data) {
       const txData = mpData.point_of_interaction.transaction_data;
@@ -171,13 +279,13 @@ serve(async (req) => {
       };
     }
 
-    // 9. Salvar no banco
+    // 10. Salvar no banco (valores validados pelo servidor)
     const { data: payment, error: insertError } = await supabase
       .from("payments")
       .insert({
         student_id: profile.id,
-        plan_id,
-        amount: Number(amount),
+        plan_id: resolvedPlanId,
+        amount: serverAmount,
         payment_method: payment_method === "credit_card" ? "credit_card" : "pix",
         status: paymentStatus,
         gateway_name: "mercadopago",
@@ -192,9 +300,13 @@ serve(async (req) => {
           mp_status: mpData.status,
           mp_status_detail: mpData.status_detail,
           mp_payment_type: mpData.payment_type_id,
-          is_upsell,
-          original_payment_id,
+          is_upsell: validatedIsUpsell,
+          is_physical_avulsa: validatedIsAvulsa,
+          original_payment_id: validatedOriginalPaymentId,
           idempotency_key: idempotencyKey,
+          ...(typeof amount === "number" && Number(amount) !== serverAmount
+            ? { body_amount_override: amount }
+            : {}),
         },
         ...pixData,
       })
@@ -206,7 +318,7 @@ serve(async (req) => {
       throw new Error("Erro ao salvar pagamento");
     }
 
-    // 10. Retornar resposta
+    // 11. Retornar resposta
     return new Response(JSON.stringify({
       success: true,
       payment_id: payment.id,
