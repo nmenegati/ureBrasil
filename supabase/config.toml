@@ -14,3 +14,8 @@ verify_jwt = true
 
 [functions.verify-student-card]
 verify_jwt = false
+
+# Igual ao publicado em produção (conferido em 27/11/2026): o trigger
+# trigger_validate_document chama com a chave do Vault, sem JWT de usuário.
+[functions.validate-document-v2]
+verify_jwt = false

@@ -26,6 +26,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY')!
+// Modelo da validação: secret OPENROUTER_DOC_MODEL; sem ele, o padrão abaixo.
+// google/gemini-2.5-flash expira na OpenRouter em 01/12/2026.
+const MODELO_DOCUMENTOS = Deno.env.get('OPENROUTER_DOC_MODEL') ?? 'google/gemini-3.8-flash'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
@@ -532,7 +535,7 @@ async function validateWithClaudeImage(
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: MODELO_DOCUMENTOS,
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [{
@@ -576,7 +579,7 @@ async function validateWithClaudePdf(base64: string, prompt: string) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: MODELO_DOCUMENTOS,
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [{
